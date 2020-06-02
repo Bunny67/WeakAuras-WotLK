@@ -839,8 +839,8 @@ function WeakAuras.RefreshTooltipButtons()
       end
     end
   end
-  --local importWidth = importButton.Text:GetStringWidth()
-  importButton:SetWidth(30)
+  local importWidth = WeakAurasTooltipImportButtonText:GetStringWidth()
+  importButton:SetWidth(importWidth + 30)
 end
 buttonAnchor:SetScript("OnEvent", WeakAuras.RefreshTooltipButtons)
 

@@ -110,7 +110,7 @@ local matchDataByTrigger = {}
 local matchDataChanged = {}
 
 local function UnitInSubgroupOrPlayer(unit)
-  return UnitInSubgroup(unit) or UnitIsUnit("player", unit)
+  return UnitIsUnit("player", unit)
 end
 
 local function GetOrCreateSubTable(base, next, ...)

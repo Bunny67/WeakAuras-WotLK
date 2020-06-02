@@ -1,0 +1,17 @@
+## Interface: 80300
+## Title: Archivist
+## Author: emptyrivers
+## Version: 5d67e47
+## Notes: Flexible data archive.
+## SavedVariables: ACHV_DB
+## X-Curse-Project-ID: 354259
+
+# externals
+libs/LibStub/LibStub.lua
+libs/LibDeflate/LibDeflate.lua
+
+Archivist.lua
+
+# builtin stores
+stores/RawData.lua
+stores/ReadOnly.lua

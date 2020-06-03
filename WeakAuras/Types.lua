@@ -1555,11 +1555,8 @@ WeakAuras.gtfo_types = {
 WeakAuras.pet_behavior_types = {
   aggressive = PET_MODE_AGGRESSIVE,
   passive = PET_MODE_PASSIVE,
-  defensive = PET_MODE_DEFENSIVE,
-  assist = PET_MODE_ASSIST
+  defensive = PET_MODE_DEFENSIVE
 }
-
-WeakAuras.pet_spec_types = {}
 
 WeakAuras.cooldown_progress_behavior_types = {
   showOnCooldown = L["On Cooldown"],

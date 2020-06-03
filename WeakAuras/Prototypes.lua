@@ -1259,18 +1259,6 @@ WeakAuras.event_prototypes = {
         conditionType = "select"
       },
       {
-        name = "role",
-        display = L["Assigned Role"],
-        type = "select",
-        init = "UnitGroupRolesAssigned(unit)",
-        values = "role_types",
-        store = true,
-        conditionType = "select",
-        enable = function(trigger)
-           return not WeakAuras.IsClassic() and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")
-         end
-      },
-      {
         name = "hostility",
         display = L["Hostility"],
         type = "select",
@@ -5627,19 +5615,13 @@ WeakAuras.event_prototypes = {
         ret = [[
             local inverse = %s
             local check_behavior = %s
-            local name, i, active, behavior, _
+            local name, i, token, active, behavior, _
             for index = 1, NUM_PET_ACTION_SLOTS do
-              name, i, _, active = GetPetActionInfo(index)
+              name, _, i, token, active = GetPetActionInfo(index)
               if active then
-                activeIcon = _G[i]
+                activeIcon = not token and i or _G[i]
                 if name == "PET_MODE_AGGRESSIVE" then
                   behavior = "aggressive"
-                  break
-                elseif name == "PET_MODE_ASSIST" then
-                  behavior = "assist"
-                  break
-                elseif name == "PET_MODE_DEFENSIVEASSIST" then
-                  behavior = "defensive"
                   break
                 elseif name == "PET_MODE_DEFENSIVE" then
                   behavior = "defensive"
@@ -5671,12 +5653,6 @@ WeakAuras.event_prototypes = {
         type = "toggle",
         test = "true",
         enable = function(trigger) return trigger.use_behavior end
-      },
-      {
-        name = "petspec",
-        display = L["Pet Specialization"],
-        type = "select",
-        values = "pet_spec_types",
       },
       {
         hidden = true,

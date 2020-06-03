@@ -5382,7 +5382,7 @@ WeakAuras.event_prototypes = {
         tinsert(events, "PLAYER_ENTERING_WORLD")
       end
       if trigger.use_mounted ~= nil then
-        tinsert(events, "PLAYER_MOUNT_DISPLAY_CHANGED")
+        tinsert(events, "COMPANION_UPDATE")
         tinsert(events, "PLAYER_ENTERING_WORLD")
       end
       local unit_events = {}
@@ -5424,10 +5424,6 @@ WeakAuras.event_prototypes = {
     internal_events = function(trigger, untrigger)
       local events = { "CONDITIONS_CHECK"};
 
-      if (trigger.use_ismoving ~= nil) then
-        tinsert(events, "PLAYER_MOVING_UPDATE");
-      end
-
       if (trigger.use_HasPet ~= nil) then
         AddUnitChangeInternalEvents("pet", events)
       end
@@ -5436,11 +5432,6 @@ WeakAuras.event_prototypes = {
     end,
     force_events = "CONDITIONS_CHECK",
     name = L["Conditions"],
-    loadFunc = function(trigger)
-      if (trigger.use_ismoving ~= nil) then
-        WeakAuras.WatchForPlayerMoving();
-      end
-    end,
     init = function(trigger)
       return "";
     end,
@@ -5493,12 +5484,6 @@ WeakAuras.event_prototypes = {
         type = "tristate",
         init = "UnitExists('pet') and not UnitIsDead('pet')"
       },
-      --{
-      --  name = "ismoving",
-      --  display = L["Is Moving"],
-      --  type = "tristate",
-      --  init = "IsPlayerMoving()"
-      --},
       {
         name = "ingroup",
         display = L["In Group"],
@@ -5543,31 +5528,22 @@ WeakAuras.event_prototypes = {
     force_events = "SPELLS_CHANGED",
     name = L["Spell Known"],
     init = function(trigger)
-      local spellName;
-      if (trigger.use_exact_spellName) then
-        spellName = trigger.spellName or "";
-        local ret = [[
-          local spellName = tonumber(%q);
-          local usePet = %s;
-        ]]
-        return ret:format(spellName, trigger.use_petspell and "true" or "false");
-      else
-        local name = type(trigger.spellName) == "number" and GetSpellInfo(trigger.spellName) or trigger.spellName or "";
-        local ret = [[
-          local spellName = select(7, GetSpellInfo(%q));
-          local usePet = %s;
-        ]]
-        return ret:format(name, trigger.use_petspell and "true" or "false");
-      end
+      local spellId = trigger.spellId or "";
+      local ret = [[
+        local spellId = tonumber(%q);
+        local usePet = %s;
+      ]]
+      return ret:format(spellId, trigger.use_petspell and "true" or "false");
     end,
     args = {
       {
-        name = "spellName",
+        name = "spellId",
         required = true,
-        display = L["Spell"],
+        display = L["Spell Id"],
         type = "spell",
         test = "true",
-        showExactOption = true,
+        conditionType = "number",
+        forceExactOption = true
       },
       {
         name = "petspell",
@@ -5577,14 +5553,14 @@ WeakAuras.event_prototypes = {
       },
       {
         hidden = true,
-        test = "spellName and WeakAuras.IsSpellKnown(spellName, usePet)";
+        test = "spellId and WeakAuras.IsSpellKnown(spellId, usePet)";
       }
     },
     nameFunc = function(trigger)
-      return GetSpellInfo(trigger.spellName or 0)
+      return GetSpellInfo(trigger.spellId or 0)
     end,
     iconFunc = function(trigger)
-      local _, _, icon = GetSpellInfo(trigger.spellName or 0);
+      local _, _, icon = GetSpellInfo(trigger.spellId or 0);
       return icon;
     end,
     automaticrequired = true

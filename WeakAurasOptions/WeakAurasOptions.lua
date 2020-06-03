@@ -2785,7 +2785,7 @@ end
 -- Thus Reload the options after a very small delay.
 function WeakAuras.ScheduleReloadOptions(data)
   if (type(data.id) ~= "table") then
-    C_Timer:After(0.1, function()
+    C_Timer.After(0.1, function()
       WeakAuras.ReloadOptions(data.id)
     end );
   end

@@ -97,7 +97,7 @@ local function ScanForUnitFrames(noDelay)
         callbacks:Fire("GETFRAME_REFRESH")
     elseif not wait then
         wait = true
-        C_Timer:After(1, function()
+        C_Timer.After(1, function()
             wipe(GetFramesCache)
             ScanFrames(0, UIParent)
             wait = false

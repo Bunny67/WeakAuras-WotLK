@@ -33,7 +33,7 @@ WeakAuras.versionMismatchPrint = function()
 end
 
 if versionString ~= versionStringFromToc and versionStringFromToc ~= "Dev" then
-  C_Timer:After(1, WeakAuras.versionMismatchPrint)
+  C_Timer.After(1, WeakAuras.versionMismatchPrint)
 end
 
 WeakAuras.PowerAurasPath = "Interface\\Addons\\WeakAuras\\PowerAurasMedia\\Auras\\"

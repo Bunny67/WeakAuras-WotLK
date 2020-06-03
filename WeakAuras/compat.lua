@@ -1,5 +1,6 @@
 local ipairs = ipairs
 local pairs = pairs
+local select = select
 local ceil, floor = math.ceil, math.floor
 
 local GetInstanceInfo = GetInstanceInfo
@@ -14,7 +15,7 @@ function tInvert(tbl)
 	return inverted;
 end
 
-function Mixin(object, ...)
+local function Mixin(object, ...)
 	for i = 1, select("#", ...) do
 		local mixin = select(i, ...);
 		for k, v in pairs(mixin) do
@@ -236,15 +237,15 @@ if not C_Timer or C_Timer._version ~= 2 then
 		return ticker
 	end
 
-	function C_Timer:After(duration, callback)
+	function C_Timer.After(duration, callback)
 		return CreateTicker(duration, callback, 1)
 	end
 
-	function C_Timer:NewTimer(duration, callback)
+	function C_Timer.NewTimer(duration, callback)
 		return CreateTicker(duration, callback, 1)
 	end
 
-	function C_Timer:NewTicker(duration, callback, iterations)
+	function C_Timer.NewTicker(duration, callback, iterations)
 		return CreateTicker(duration, callback, iterations)
 	end
 

@@ -164,6 +164,8 @@ local function modifyThumbnail(parent, region, data)
     model:SetPosition(data.model_z, data.model_x, data.model_y);
     model:SetFacing(rad(data.rotation));
   end);
+  region:SetScript("OnShow", function() model:Show() end);
+  region:SetScript("OnHide", function() model:Hide() end);
 
   model:SetPosition(data.model_z, data.model_x, data.model_y);
   model:SetFacing(rad(data.rotation));

@@ -832,6 +832,14 @@ function WeakAuras.CheckRaidFlags(flags, flagToCheck)
   end
 end
 
+function WeakAuras.GetSpellCritChance()
+  local spellCrit = GetSpellCritChance(2)
+  for i = 3, MAX_SPELL_SCHOOLS do
+    spellCrit = min(spellCrit, GetSpellCritChance(i))
+  end
+  return spellCrit
+end
+
 function WeakAuras.IsSpellKnownForLoad(spell, exact)
   local result = WeakAuras.IsSpellKnown(spell)
   if exact or result then
@@ -5089,7 +5097,7 @@ WeakAuras.event_prototypes = {
       }
     },
     internal_events = function(trigger, untrigger)
-      local events = { "WA_DELAYED_PLAYER_ENTERING_WORLD", "PLAYER_MOVING_UPDATE" }
+      local events = { "WA_DELAYED_PLAYER_ENTERING_WORLD" }
       if trigger.use_moveSpeed then
         tinsert(events, "PLAYER_MOVE_SPEED_UPDATE")
       end
@@ -5099,106 +5107,121 @@ WeakAuras.event_prototypes = {
       if trigger.use_moveSpeed then
         WeakAuras.WatchPlayerMoveSpeed()
       end
-      WeakAuras.WatchForPlayerMoving()
     end,
     force_events = "CONDITIONS_CHECK",
     statesParameter = "one",
     args = {
       {
-        name = "mainstat",
-        display = L["Main Stat"],
-        type = "number",
-        init = "UnitStat('player', main_stat or 1)",
-        store = true,
-        enable = not WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = WeakAuras.IsClassic()
-      },
-      {
         name = "strength",
         display = L["Strength"],
         type = "number",
-        init = "UnitStat('player', LE_UNIT_STAT_STRENGTH or 1)",
+        init = "UnitStat('player', 1)",
         store = true,
-        enable = WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = not WeakAuras.IsClassic()
+        conditionType = "number"
       },
       {
         name = "agility",
         display = L["Agility"],
         type = "number",
-        init = "UnitStat('player', LE_UNIT_STAT_AGILITY or 1)",
+        init = "UnitStat('player', 2)",
         store = true,
-        enable = WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = not WeakAuras.IsClassic()
-      },
-     {
-        name = "intellect",
-        display = L["Intellect"],
-        type = "number",
-        init = "UnitStat('player', LE_UNIT_STAT_INTELLECT or 1)",
-        store = true,
-        enable = WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = not WeakAuras.IsClassic()
+        conditionType = "number"
       },
       {
         name = "stamina",
         display = L["Stamina"],
         type = "number",
-        init = "select(2, UnitStat('player', LE_UNIT_STAT_STAMINA or 1)) * GetUnitMaxHealthModifier('player')",
+        init = "UnitStat('player', 3)",
         store = true,
         conditionType = "number"
       },
       {
-        name = "criticalrating",
-        display = L["Critical Rating"],
+        name = "intellect",
+        display = L["Intellect"],
         type = "number",
-        init = "GetCombatRating(CR_CRIT_SPELL or 1)",
+        init = "UnitStat('player', 4)",
         store = true,
-        enable = not WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = WeakAuras.IsClassic()
+        conditionType = "number"
       },
       {
-        name = "criticalpercent",
-        display = L["Critical (%)"],
+        name = "spirit",
+        display = L["Spirit"],
+        type = "number",
+        init = "UnitStat('player', 5)",
+        store = true,
+        conditionType = "number"
+      },
+      {
+        name = "meleecriticalrating",
+        display = L["Melee Critical Rating"],
+        type = "number",
+        init = "GetCombatRating(CR_CRIT_MELEE)",
+        store = true,
+        conditionType = "number",
+      },
+      {
+        name = "rangedcriticalrating",
+        display = L["Ranged Critical Rating"],
+        type = "number",
+        init = "GetCombatRating(CR_CRIT_RANGED)",
+        store = true,
+        conditionType = "number",
+      },
+      {
+        name = "spellcriticalrating",
+        display = L["Spell Critical Rating"],
+        type = "number",
+        init = "GetCombatRating(CR_CRIT_SPELL)",
+        store = true,
+        conditionType = "number",
+      },
+      {
+        name = "meleecriticalpercent",
+        display = L["Mele Critical (%)"],
         type = "number",
         init = "GetCritChance()",
         store = true,
         conditionType = "number"
       },
       {
-        name = "hasterating",
-        display = L["Haste Rating"],
+        name = "rangedcriticalpercent",
+        display = L["Ranged Critical (%)"],
         type = "number",
-        init = "GetCombatRating(CR_HASTE_SPELL or 1)",
+        init = "GetRangedCritChance()",
         store = true,
-        enable = not WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = WeakAuras.IsClassic()
+        conditionType = "number"
       },
       {
-        name = "masteryrating",
-        display = L["Mastery Rating"],
+        name = "spellcriticalpercent",
+        display = L["Spell Critical (%)"],
         type = "number",
-        init = "GetCombatRating(CR_MASTERY or 1)",
+        init = "WeakAuras.GetSpellCritChance()",
         store = true,
-        enable = not WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = WeakAuras.IsClassic()
+        conditionType = "number"
       },
       {
-        name = "versatilityrating",
-        display = L["Versatility Rating"],
+        name = "meleehasterating",
+        display = L["Melee Haste Rating"],
         type = "number",
-        init = "GetCombatRating(CR_VERSATILITY_DAMAGE_DONE or 1)",
+        init = "GetCombatRating(CR_HASTE_MELEE)",
         store = true,
-        enable = not WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = WeakAuras.IsClassic()
+        conditionType = "number"
+      },
+      {
+        name = "rangedhasterating",
+        display = L["Ranged Haste Rating"],
+        type = "number",
+        init = "GetCombatRating(CR_HASTE_RANGED)",
+        store = true,
+        conditionType = "number"
+      },
+      {
+        name = "spellhasterating",
+        display = L["Spell Haste Rating"],
+        type = "number",
+        init = "GetCombatRating(CR_HASTE_SPELL)",
+        store = true,
+        conditionType = "number"
       },
       {
         name = "resistancefire",
@@ -5206,9 +5229,7 @@ WeakAuras.event_prototypes = {
         type = "number",
         init = "select(2, UnitResistance('player', 2))",
         store = true,
-        enable = WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = not WeakAuras.IsClassic()
+        conditionType = "number"
       },
       {
         name = "resistancenature",
@@ -5216,9 +5237,7 @@ WeakAuras.event_prototypes = {
         type = "number",
         init = "select(2, UnitResistance('player', 3))",
         store = true,
-        enable = WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = not WeakAuras.IsClassic()
+        conditionType = "number"
       },
       {
         name = "resistancefrost",
@@ -5226,9 +5245,7 @@ WeakAuras.event_prototypes = {
         type = "number",
         init = "select(2, UnitResistance('player', 4))",
         store = true,
-        enable = WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = not WeakAuras.IsClassic()
+        conditionType = "number"
       },
       {
         name = "resistanceshadow",
@@ -5236,9 +5253,7 @@ WeakAuras.event_prototypes = {
         type = "number",
         init = "select(2, UnitResistance('player', 5))",
         store = true,
-        enable = WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = not WeakAuras.IsClassic()
+        conditionType = "number"
       },
       {
         name = "resistancearcane",
@@ -5246,29 +5261,7 @@ WeakAuras.event_prototypes = {
         type = "number",
         init = "select(2, UnitResistance('player', 6))",
         store = true,
-        enable = WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = not WeakAuras.IsClassic()
-      },
-      {
-        name = "leechrating",
-        display = L["Leech Rating"],
-        type = "number",
-        init = "GetCombatRating(CR_LIFESTEAL or 1)",
-        store = true,
-        enable = not WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = WeakAuras.IsClassic()
-      },
-      {
-        name = "movespeedrating",
-        display = L["Movement Speed Rating"],
-        type = "number",
-        init = "GetCombatRating(CR_SPEED or 1)",
-        store = true,
-        enable = not WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = WeakAuras.IsClassic()
+        conditionType = "number"
       },
       {
         name = "moveSpeed",
@@ -5286,24 +5279,12 @@ WeakAuras.event_prototypes = {
         conditionType = "number"
       },
       {
-        name = "avoidancerating",
-        display = L["Avoidance Rating"],
-        type = "number",
-        init = "GetCombatRating(CR_AVOIDANCE or 1)",
-        store = true,
-        enable = not WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = WeakAuras.IsClassic()
-      },
-      {
         name = "dodgerating",
         display = L["Dodge Rating"],
         type = "number",
-        init = "GetCombatRating(CR_DODGE or 1)",
+        init = "GetCombatRating(CR_DODGE)",
         store = true,
-        enable = not WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = WeakAuras.IsClassic()
+        conditionType = "number"
       },
       {
         name = "dodgepercent",
@@ -5317,17 +5298,23 @@ WeakAuras.event_prototypes = {
         name = "parryrating",
         display = L["Parry Rating"],
         type = "number",
-        init = "GetCombatRating(CR_PARRY or 1)",
+        init = "GetCombatRating(CR_PARRY)",
         store = true,
-        enable = not WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = WeakAuras.IsClassic()
+        conditionType = "number"
       },
       {
         name = "parrypercent",
         display = L["Parry (%)"],
         type = "number",
         init = "GetParryChance()",
+        store = true,
+        conditionType = "number"
+      },
+      {
+        name = "blockrating",
+        display = L["Block Rating"],
+        type = "number",
+        init = "GetCombatRating(CR_BLOCK)",
         store = true,
         conditionType = "number"
       },
@@ -5353,9 +5340,7 @@ WeakAuras.event_prototypes = {
         type = "number",
         init = "PaperDollFrame_GetArmorReduction(select(2, UnitArmor('player')), UnitLevel('player'))",
         store = true,
-        enable = not WeakAuras.IsClassic(),
-        conditionType = "number",
-        hidden = WeakAuras.IsClassic()
+        conditionType = "number"
       },
     },
     automaticrequired = true
@@ -5506,9 +5491,7 @@ WeakAuras.event_prototypes = {
         display = L["Instance Difficulty"],
         type = "multiselect",
         values = "difficulty_types",
-        init = "WeakAuras.InstanceDifficulty()",
-        enable = not WeakAuras.IsClassic(),
-        hidden = WeakAuras.IsClassic(),
+        init = "WeakAuras.InstanceDifficulty()"
       },
     },
     automaticrequired = true

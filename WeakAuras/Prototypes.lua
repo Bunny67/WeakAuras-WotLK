@@ -872,20 +872,6 @@ function WeakAuras.IsSpellKnownIncludingPet(spell)
   end
 end
 
-function WeakAuras.UnitPowerDisplayMod(powerType)
-  if (powerType == 7) then
-    return 10;
-  end
-  return 1;
-end
-
-function WeakAuras.UseUnitPowerThirdArg(powerType)
-  if (powerType == 7) then
-    return true;
-  end
-  return nil;
-end
-
 function WeakAuras.GetNumSetItemsEquipped(setID)
   if not setID or not type(setID) == "number" then return end
   if not WeakAuras.IsClassic() then
@@ -1437,18 +1423,6 @@ WeakAuras.event_prototypes = {
         conditionType = "select"
       },
       {
-        name = "role",
-        display = L["Assigned Role"],
-        type = "select",
-        init = "UnitGroupRolesAssigned(unit)",
-        values = "role_types",
-        store = true,
-        conditionType = "select",
-        enable = function(trigger)
-          return not WeakAuras.IsClassic() and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")
-        end
-      },
-      {
         name = "name",
         hidden = true,
         init = "UnitName(unit)",
@@ -1467,20 +1441,18 @@ WeakAuras.event_prototypes = {
     events = function(trigger)
       local unit = trigger.unit
       local result = {}
-      AddUnitEventForEvents(result, unit, "UNIT_POWER_FREQUENT")
-      AddUnitEventForEvents(result, unit, "UNIT_MAXPOWER")
+      AddUnitEventForEvents(result, unit, "UNIT_MANA")
+      AddUnitEventForEvents(result, unit, "UNIT_RAGE")
+      AddUnitEventForEvents(result, unit, "UNIT_FOCUS")
+      AddUnitEventForEvents(result, unit, "UNIT_ENERGY")
+      AddUnitEventForEvents(result, unit, "UNIT_RUNIC_POWER")
+      AddUnitEventForEvents(result, unit, "UNIT_MAXMANA")
+      AddUnitEventForEvents(result, unit, "UNIT_MAXRAGE")
+      AddUnitEventForEvents(result, unit, "UNIT_MAXFOCUS")
+      AddUnitEventForEvents(result, unit, "UNIT_MAXENERGY")
+      AddUnitEventForEvents(result, unit, "UNIT_MAXRUNIC_POWER")
       AddUnitEventForEvents(result, unit, "UNIT_DISPLAYPOWER")
-
-      -- The api for spell power costs is not meant to be for other units
-      if trigger.use_showCost and trigger.unit == "player" then
-        AddUnitEventForEvents(result, "player", "UNIT_SPELLCAST_START")
-        AddUnitEventForEvents(result, "player", "UNIT_SPELLCAST_STOP")
-        AddUnitEventForEvents(result, "player", "UNIT_SPELLCAST_FAILED")
-        AddUnitEventForEvents(result, "player", "UNIT_SPELLCAST_SUCCEEDED")
-      end
-      if trigger.use_powertype and trigger.powertype == 99 then
-        AddUnitEventForEvents(result, unit, "UNIT_ABSORB_AMOUNT_CHANGED")
-      end
+      AddUnitEventForEvents(result, unit, "UNIT_HAPPINESS")
 
       return result;
     end,
@@ -1502,73 +1474,10 @@ WeakAuras.event_prototypes = {
         local powerType = %s;
         local unitPowerType = UnitPowerType(unit);
         local powerTypeToCheck = powerType or unitPowerType;
-        local powerThirdArg = WeakAuras.UseUnitPowerThirdArg(powerTypeToCheck);
-        if WeakAuras.IsClassic() and powerType == 99 then powerType = 1 end
       ]=];
       ret = ret:format(trigger.unit == "group" and "true" or "false", trigger.use_powertype and trigger.powertype or "nil");
 
       ret = ret .. unitHelperFunctions.SpecificUnitCheck(trigger)
-
-      if (trigger.use_powertype and trigger.powertype == 99 and not WeakAuras.IsClassic()) then
-        ret = ret .. [[
-          local UnitPower = UnitStagger;
-          local UnitPowerMax = UnitHealthMax;
-        ]]
-        if (trigger.use_scaleStagger and trigger.scaleStagger) then
-          ret = ret .. string.format([[
-            local UnitPowerMax = function(unit)
-              return UnitHealthMax(unit) * %s
-            end
-          ]], trigger.scaleStagger)
-        else
-          ret = ret .. [[
-          local UnitPowerMax = UnitHealthMax;
-        ]]
-        end
-      end
-      local canEnableShowCost = (not trigger.use_powertype or trigger.powertype ~= 99) and trigger.unit == "player";
-      if (canEnableShowCost and trigger.use_showCost) then
-        ret = ret .. [[
-          if (event == "UNIT_SPELLCAST_START" and unit == "player") then
-            local spellID = select(9, WeakAuras.UnitCastingInfo("player"))
-            if spellID then
-              local costTable = GetSpellPowerCost(spellID);
-              for _, costInfo in pairs(costTable) do
-                if costInfo.type == powerTypeToCheck then
-                  state.cost = costInfo.cost;
-                  break;
-                end
-              end
-            end
-            state.changed = true;
-          elseif (event == "UNIT_DISPLAYPOWER") then
-            local spellID;
-            if WeakAuras.IsClassic() then
-              spellID = select(9, CastingInfo());
-            else
-              spellID = select(9, UnitCastingInfo("player"));
-            end
-            if spellID then
-              local costTable = GetSpellPowerCost(spellID);
-              local cost;
-              for _, costInfo in pairs(costTable) do
-                if costInfo.type == powerTypeToCheck then
-                  cost = costInfo.cost;
-                  break;
-                end
-              end
-              if (state.cost ~= cost) then
-                state.cost = cost;
-                state.changed = true;
-              end
-            end
-            state.changed = true;
-          elseif ( (event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_SUCCEEDED") and unit == "player") then
-            state.cost = "";
-            state.changed = true;
-          end
-        ]]
-      end
 
       return ret
     end,
@@ -1588,7 +1497,7 @@ WeakAuras.event_prototypes = {
         name = "powertype",
         display = L["Power Type"],
         type = "select",
-        values = function() return WeakAuras.IsClassic() and WeakAuras.power_types or WeakAuras.power_types_with_stagger end,
+        values = "power_types",
         init = "unitPowerType",
         test = "true",
         store = true,
@@ -1604,31 +1513,10 @@ WeakAuras.event_prototypes = {
         end,
       },
       {
-        name = "showCost",
-        display = L["Overlay Cost of Casts"],
-        type = "toggle",
-        test = "true",
-        enable = function(trigger)
-          return (not trigger.use_powertype or trigger.powertype ~= 99) and trigger.unit == "player";
-        end,
-        reloadOptions = true
-      },
-      {
-        name = "scaleStagger",
-        display = L["Stagger Scale"],
-        type = "string",
-        validate = WeakAuras.ValidateNumeric,
-        enable = function(trigger)
-          return trigger.use_powertype and trigger.powertype == 99
-        end,
-        test = "true"
-      },
-      {
         name = "power",
         display = L["Power"],
         type = "number",
-        init = WeakAuras.IsClassic() and "powerType == 4 and GetComboPoints(unit, unit .. '-target') or UnitPower(unit, powerType, powerThirdArg)"
-                                     or "UnitPower(unit, powerType, powerThirdArg) / WeakAuras.UnitPowerDisplayMod(powerTypeToCheck)",
+        init = "UnitPower(unit, powerType)",
         store = true,
         conditionType = "number",
       },
@@ -1642,8 +1530,7 @@ WeakAuras.event_prototypes = {
       {
         name = "total",
         hidden = true,
-        init = WeakAuras.IsClassic() and "powerType == 4 and (math.max(1, UnitPowerMax(unit, 14))) or math.max(1, UnitPowerMax(unit, powerType, powerThirdArg))"
-                                      or "math.max(1, UnitPowerMax(unit, powerType, powerThirdArg)) / WeakAuras.UnitPowerDisplayMod(powerTypeToCheck)",
+        init = "math.max(1, UnitPowerMax(unit, powerType))",
         store = true,
         test = "true"
       },
@@ -1695,31 +1582,8 @@ WeakAuras.event_prototypes = {
         conditionType = "select"
       },
       {
-        name = "role",
-        display = L["Assigned Role"],
-        type = "select",
-        init = "UnitGroupRolesAssigned(unit)",
-        values = "role_types",
-        store = true,
-        conditionType = "select",
-        enable = function(trigger)
-          return not WeakAuras.IsClassic() and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")
-        end
-      },
-      {
         hidden = true,
         test = "WeakAuras.UnitExistsFixed(unit, smart) and specificUnitCheck"
-      }
-    },
-    overlayFuncs = {
-      {
-        name = L["Spell Cost"],
-        func = function(trigger, state)
-          return "back", type(state.cost) == "number" and state.cost;
-        end,
-        enable = function(trigger)
-          return trigger.use_showCost and (not trigger.use_powertype or trigger.powertype ~= 99) and trigger.unit == "player";
-        end
       }
     },
     automaticrequired = true

@@ -109,10 +109,6 @@ local matchDataByTrigger = {}
 
 local matchDataChanged = {}
 
-local function UnitInSubgroupOrPlayer(unit)
-  return UnitIsUnit("player", unit)
-end
-
 local function GetOrCreateSubTable(base, next, ...)
   if not next then
     return base
@@ -892,11 +888,11 @@ local function TriggerInfoApplies(triggerInfo, unit)
   if triggerInfo.unit == "group" and triggerInfo.groupSubType == "party" then
     if IsInRaid() then
       -- Filter our player/party# while in raid and keep only raid units that are correct
-      if not WeakAuras.multiUnitUnits.raid[unit] or not UnitInSubgroupOrPlayer(unit) then
+      if not WeakAuras.multiUnitUnits.raid[unit] or not UnitIsUnit("player", unit) then
         return false
       end
     else
-      if not UnitInSubgroupOrPlayer(unit) then
+      if not UnitIsUnit("player", unit) then
         return false
       end
     end

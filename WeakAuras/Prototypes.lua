@@ -9,7 +9,6 @@ local ceil, min = ceil, min
 -- WoW APIs
 local GetTalentInfo = GetTalentInfo
 local UnitClass, UnitHealth, UnitHealthMax, UnitName, UnitStagger, UnitPower, UnitPowerMax = UnitClass, UnitHealth, UnitHealthMax, UnitName, UnitStagger, UnitPower, UnitPowerMax
-local UnitAlternatePowerInfo, UnitAlternatePowerTextureInfo = UnitAlternatePowerInfo, UnitAlternatePowerTextureInfo
 local GetSpellInfo, GetItemInfo, GetItemCount, GetItemIcon = GetSpellInfo, GetItemInfo, GetItemCount, GetItemIcon
 local GetShapeshiftFormInfo, GetShapeshiftForm = GetShapeshiftFormInfo, GetShapeshiftForm
 local GetRuneCooldown, UnitCastingInfo, UnitChannelInfo = GetRuneCooldown, UnitCastingInfo, UnitChannelInfo
@@ -75,206 +74,6 @@ local function RangeCacheUpdate()
 end
 
 LibRangeCheck:RegisterCallback(LibRangeCheck.CHECKERS_CHANGED, RangeCacheUpdate)
-
-local encounter_list = ""
-local zoneId_list = ""
-local zoneGroupId_list = ""
-function WeakAuras.InitializeEncounterAndZoneLists()
-  if encounter_list ~= "" then
-    return
-  end
-  if WeakAuras.IsClassic() then
-
-    local classic_raids = {
-      [L["Black Wing Lair"]] = {
-          { L["Razorgore the Untamed"], 610 },
-          { L["Vaelastrasz the Corrupt"], 611 },
-          { L["Broodlord Lashlayer"], 612 },
-          { L["Firemaw"], 613 },
-          { L["Ebonroc"], 614 },
-          { L["Flamegor"], 615 },
-          { L["Chromaggus"], 616 },
-          { L["Nefarian"], 617 }
-      },
-      [L["Molten Core"]] = {
-          { L["Lucifron"], 663 },
-          { L["Magmadar"], 664 },
-          { L["Gehennas"], 665 },
-          { L["Garr"], 666 },
-          { L["Shazzrah"], 667 },
-          { L["Baron Geddon"], 668 },
-          { L["Sulfuron Harbinger"], 669 },
-          { L["Golemagg the Incinerator"], 670 },
-          { L["Majordomo Executus"], 671 },
-          { L["Ragnaros"], 672 }
-      },
-      [L["Ahn'Qiraj"]] = {
-          { L["The Prophet Skeram"], 709 },
-          { L["Silithid Royalty"], 710 },
-          { L["Battleguard Sartura"], 711 },
-          { L["Fankriss the Unyielding"], 712 },
-          { L["Viscidus"], 713 },
-          { L["Princess Huhuran"], 714 },
-          { L["Twin Emperors"], 715 },
-          { L["Ouro"], 716 },
-          { L["C'thun"], 717 }
-      },
-      [L["Ruins of Ahn'Qiraj"]] = {
-          { L["Kurinnaxx"], 718 },
-          { L["General Rajaxx"], 719 },
-          { L["Moam"], 720 },
-          { L["Buru the Gorger"], 721 },
-          { L["Ayamiss the Hunter"], 722 },
-          { L["Ossirian the Unscarred"], 723 }
-      },
-      [L["Zul'Gurub"]] = {
-          { L["High Priest Venoxis"], 784 },
-          { L["High Priestess Jeklik"], 785 },
-          { L["High Priestess Mar'li"], 786 },
-          { L["Bloodlord Mandokir"], 787 },
-          { L["Edge of Madness"], 788 },
-          { L["High Priest Thekal"], 789 },
-          { L["Gahz'ranka"], 790 },
-          { L["High Priestess Arlokk"], 791 },
-          { L["Jin'do the Hexxer"], 792 },
-          { L["Hakkar"], 793 }
-      },
-      [L["Onyxia's Lair"]] = {
-          { L["Onyxia"], 1084 }
-      },
-      [L["Naxxramas"]] = {
-          -- The Arachnid Quarter
-          { L["Anub'Rekhan"], 1107 },
-          { L["Grand Widow Faerlina"], 1110 },
-          { L["Maexxna"], 1116 },
-          -- The Plague Quarter
-          { L["Noth the Plaguebringer"], 1117 },
-          { L["Heigan the Unclean"], 1112 },
-          { L["Loatheb"], 1115 },
-          -- The Military Quarter
-          { L["Instructor Razuvious"], 1113 },
-          { L["Gothik the Harvester"], 1109 },
-          { L["The Four Horsemen"], 1121 },
-          -- The Construct Quarter
-          { L["Patchwerk"], 1118 },
-          { L["Grobbulus"], 1111 },
-          { L["Gluth"], 1108 },
-          { L["Thaddius"], 1120 },
-          -- Frostwyrm Lair
-          { L["Sapphiron"], 1119 },
-          { L["Kel'Thuzad"], 1114 }
-      }
-    }
-    for instance_name, instance_boss in pairs(classic_raids) do
-      encounter_list = ("%s|cffffd200%s|r\n"):format(encounter_list, instance_name)
-      for _, data in ipairs(instance_boss) do
-          encounter_list = ("%s%s: %d\n"):format(encounter_list, data[1], data[2])
-      end
-      encounter_list = encounter_list .. "\n"
-    end
-  else
-    EJ_SelectTier(EJ_GetNumTiers())
-
-    for _, inRaid in ipairs({false, true}) do
-      local instance_index = 1
-      local instance_id = EJ_GetInstanceByIndex(instance_index, inRaid)
-
-      local title = inRaid and L["Raids"] or L["Dungeons"]
-      zoneId_list = ("%s|cffffd200%s|r\n"):format(zoneId_list, title)
-      zoneGroupId_list = ("%s|cffffd200%s|r\n"):format(zoneGroupId_list, title)
-
-      while instance_id do
-        EJ_SelectInstance(instance_id)
-        local instance_name, _, _, _, _, _, dungeonAreaMapID = EJ_GetInstanceInfo(instance_id)
-        local ej_index = 1
-        local boss, _, _, _, _, _, encounter_id = EJ_GetEncounterInfoByIndex(ej_index, instance_id)
-
-        -- zone ids and zone group ids
-        if dungeonAreaMapID and dungeonAreaMapID ~= 0 then
-          local mapGroupId = C_Map.GetMapGroupID(dungeonAreaMapID)
-          if mapGroupId then
-            zoneGroupId_list = ("%s%s: %d\n"):format(zoneGroupId_list, instance_name, mapGroupId)
-            local maps = ""
-            for k, map in ipairs(C_Map.GetMapGroupMembersInfo(mapGroupId)) do
-              if map.mapID then
-                maps = maps .. map.mapID .. ", "
-              end
-            end
-            maps = maps:match "^(.*), \n?$" or "" -- trim last ", "
-            zoneId_list = ("%s%s: %s\n"):format(zoneId_list, instance_name, maps)
-          else
-            zoneId_list = ("%s%s: %d\n"):format(zoneId_list, instance_name, dungeonAreaMapID)
-          end
-        end
-
-        -- Encounter ids
-        if inRaid then
-          while boss do
-            if encounter_id then
-              if instance_name then
-                encounter_list = ("%s|cffffd200%s|r\n"):format(encounter_list, instance_name)
-                instance_name = nil -- Only add it once per section
-              end
-              encounter_list = ("%s%s: %d\n"):format(encounter_list, boss, encounter_id)
-            end
-            ej_index = ej_index + 1
-            boss, _, _, _, _, _, encounter_id = EJ_GetEncounterInfoByIndex(ej_index, instance_id)
-          end
-          encounter_list = encounter_list .. "\n"
-        end
-        instance_index = instance_index + 1
-        instance_id = EJ_GetInstanceByIndex(instance_index, inRaid)
-      end
-      zoneId_list = zoneId_list .. "\n"
-      zoneGroupId_list = zoneGroupId_list .. "\n"
-    end
-  end
-
-  encounter_list = encounter_list:sub(1, -3) .. "\n\n" .. L["Supports multiple entries, separated by commas\n"]
-end
-
-local function get_encounters_list()
-  return encounter_list
-end
-
-local function get_zoneId_list()
-  if WeakAuras.IsClassic() then return "" end
-  local currentmap_id = C_Map.GetBestMapForUnit("player")
-  local currentmap_info = C_Map.GetMapInfo(currentmap_id)
-  local currentmap_name = currentmap_info and currentmap_info.name or ""
-  local mapGroupId = C_Map.GetMapGroupID(currentmap_id)
-  if mapGroupId then
-    -- if map is in a group, its real name is (or should be?) found in GetMapGroupMembersInfo
-    for k, map in ipairs(C_Map.GetMapGroupMembersInfo(mapGroupId)) do
-      if map.mapID and map.mapID == currentmap_id and map.name then
-        currentmap_name = map.name
-        break
-      end
-    end
-  end
-  return ("%s|cffffd200%s|r%s: %d\n\n%s"):format(
-    zoneId_list,
-    L["Current Zone\n"],
-    currentmap_name,
-    currentmap_id,
-    L["Supports multiple entries, separated by commas"]
-  )
-end
-
-local function get_zoneGroupId_list()
-  if WeakAuras.IsClassic() then return "" end
-  local currentmap_id = C_Map.GetBestMapForUnit("player")
-  local currentmap_info = C_Map.GetMapInfo(currentmap_id)
-  local currentmap_name = currentmap_info and currentmap_info.name
-  local currentmapgroup_id = C_Map.GetMapGroupID(currentmap_id)
-  return ("%s|cffffd200%s|r\n%s%s\n\n%s"):format(
-    zoneGroupId_list,
-    L["Current Zone Group"],
-    currentmapgroup_id and currentmap_name and currentmap_name..": " or "",
-    currentmapgroup_id or L["None"],
-    L["Supports multiple entries, separated by commas"]
-  )
-end
 
 WeakAuras.function_strings = {
   count = [[
@@ -712,26 +511,6 @@ function WeakAuras.CheckTalentByIndex(index)
   return rank and rank > 0;
 end
 
-function WeakAuras.CheckNumericIds(loadids, currentId)
-  if (not loadids or not currentId) then
-    return false;
-  end
-
-  local searchFrom = 0;
-  local startI, endI = string.find(loadids, currentId, searchFrom);
-  while (startI) do
-    searchFrom = endI + 1; -- start next search from end
-    if (startI == 1 or tonumber(string.sub(loadids, startI - 1, startI - 1)) == nil) then
-      -- Either right at start, or character before is not a number
-      if (endI == string.len(loadids) or tonumber(string.sub(loadids, endI + 1, endI + 1)) == nil) then
-        return true;
-      end
-    end
-    startI, endI = string.find(loadids, currentId, searchFrom);
-  end
-  return false;
-end
-
 function WeakAuras.CheckString(ids, currentId)
   if (not ids or not currentId) then
     return false;
@@ -762,18 +541,6 @@ function WeakAuras.ValidateNumericOrPercent(info, val)
     end
   end
   return true
-end
-
-function WeakAuras.CheckMPlusAffixIds(loadids, currentId)
-  if (not loadids or not currentId) or type(currentId) ~= "table" then
-    return false
-  end
-  for i=1, #currentId do
-    if loadids == currentId[i] then
-      return true
-    end
-  end
-  return false
 end
 
 function WeakAuras.CheckChargesDirection(direction, triggerDirection)
@@ -1108,20 +875,6 @@ local function AddUnitChangeInternalEvents(triggerUnit, t)
   end
 end
 
-local function AddUnitRoleChangeInternalEvents(triggerUnit, t)
-  if (triggerUnit == nil) then
-    return
-  end
-
-  if WeakAuras.multiUnitUnits[triggerUnit] then
-    for unit in pairs(WeakAuras.multiUnitUnits[triggerUnit]) do
-      tinsert(t, "UNIT_ROLE_CHANGED_" .. string.lower(unit))
-    end
-  else
-    tinsert(t, "UNIT_ROLE_CHANGED_" .. string.lower(triggerUnit))
-  end
-end
-
 local function AddUnitEventForEvents(result, unit, event)
   if unit then
     if not result.unit_events then
@@ -1186,7 +939,6 @@ WeakAuras.event_prototypes = {
       if trigger.unitisunit then
         AddUnitChangeInternalEvents(trigger.unitisunit, result)
       end
-      AddUnitRoleChangeInternalEvents(unit, result)
       return result
     end,
     force_events = unitHelperFunctions.UnitChangedForceEvents,
@@ -1315,7 +1067,6 @@ WeakAuras.event_prototypes = {
       local unit = trigger.unit
       local result = {}
       AddUnitChangeInternalEvents(unit, result)
-      AddUnitRoleChangeInternalEvents(unit, result)
       return result
     end,
     force_events = unitHelperFunctions.UnitChangedForceEvents,
@@ -1443,7 +1194,6 @@ WeakAuras.event_prototypes = {
       local unit = trigger.unit
       local result = {}
       AddUnitChangeInternalEvents(unit, result)
-      AddUnitRoleChangeInternalEvents(unit, result)
 
       return result
     end,
@@ -4807,7 +4557,6 @@ WeakAuras.event_prototypes = {
       local unit = trigger.unit
       local result = {"CAST_REMAINING_CHECK"}
       AddUnitChangeInternalEvents(unit, result)
-      AddUnitRoleChangeInternalEvents(unit, result)
       return result
     end,
     force_events = unitHelperFunctions.UnitChangedForceEvents,

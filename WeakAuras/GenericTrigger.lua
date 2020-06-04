@@ -2518,8 +2518,6 @@ function WeakAuras.WatchUnitChange(unit)
     watchUnitChange:SetScript("OnEvent", function(self, event, unit)
       WeakAuras.StartProfileSystem("generictrigger unit change");
       local inRaid = IsInRaid()
-      local inRaidChanged = inRaid ~= watchUnitChange.inRaid
-      local UnitGroupRolesAssigned = not WeakAuras.IsClassic() and UnitGroupRolesAssigned or function() return "DAMAGER" end
 
       for unit, guid in pairs(watchUnitChange.unitChangeGUIDS) do
         local newGuid = WeakAuras.UnitExistsFixed(unit) and UnitGUID(unit) or ""
@@ -2528,14 +2526,8 @@ function WeakAuras.WatchUnitChange(unit)
           watchUnitChange.unitChangeGUIDS[unit] = newGuid
         elseif WeakAuras.multiUnitUnits.group[unit] then
           -- If in raid changed we send a UNIT_CHANGED for the group units
-          if inRaidChanged then
+          if inRaid ~= watchUnitChange.inRaid then
             WeakAuras.ScanEvents("UNIT_CHANGED_" .. unit, unit)
-          else
-            local newRole = UnitGroupRolesAssigned(unit)
-            if watchUnitChange.unitRoles[unit] ~= newRole then
-              watchUnitChange.unitRoles[unit] = newRole
-              WeakAuras.ScanEvents("UNIT_ROLE_CHANGED_" .. unit, unit)
-            end
           end
         end
       end

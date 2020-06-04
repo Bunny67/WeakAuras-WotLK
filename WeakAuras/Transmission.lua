@@ -1424,7 +1424,6 @@ function WeakAuras.ShowDisplayTooltip(data, children, matchInfo, icon, icons, im
   local hasDescription = data.desc and data.desc ~= "";
   local hasUrl = data.url and data.url ~= "";
   local hasVersion = (data.semver and data.semver ~= "") or (data.version and data.version ~= "");
-  local tocbuild = data.tocbuild;
 
   if hasDescription or hasUrl or hasVersion then
     tinsert(tooltip, {1, " "});
@@ -1589,14 +1588,6 @@ function WeakAuras.ShowDisplayTooltip(data, children, matchInfo, icon, icons, im
     if (highestVersion > WeakAuras.InternalVersion()) then
       tinsert(tooltip, {1, L["This aura was created with a newer version of WeakAuras."], 1, 0, 0})
       tinsert(tooltip, {1, L["It might not work correctly with your version!"], 1, 0, 0})
-    end
-
-    if WeakAuras.IsClassic() and (not tocbuild or tocbuild > 20000) then
-      tinsert(tooltip, {1, L["This aura was created with the retail version of World of Warcraft."], 1, 0, 0})
-      tinsert(tooltip, {1, L["It might not work correctly on Classic!"], 1, 0, 0})
-    elseif tocbuild and not WeakAuras.IsClassic() and tocbuild < 20000 then
-      tinsert(tooltip, {1, L["This aura was created with the Classic version of World of Warcraft."], 1, 0, 0})
-      tinsert(tooltip, {1, L["It might not work correctly on Retail!"], 1, 0, 0})
     end
 
     tinsert(tooltip, {2, " ", "                         ", 0, 1, 0})

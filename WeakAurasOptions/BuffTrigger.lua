@@ -845,23 +845,6 @@ local function GetBuffTriggerOptions(data, optionTriggerChoices)
         WeakAuras.UpdateDisplayButton(data);
       end
     },
-    useGroupRole = {
-      type = "toggle",
-      width = WeakAuras.normalWidth,
-      name = L["Filter by Group Role"],
-      order = 47.1,
-      hidden = function() return not (trigger.type == "aura" and trigger.unit == "group"); end,
-    },
-    group_role = {
-      type = "select",
-      width = WeakAuras.normalWidth,
-      name = L["Group Role"],
-      values = WeakAuras.role_types,
-      hidden = function() return not (trigger.type == "aura" and trigger.unit == "group"); end,
-      disabled = function() return not trigger.useGroupRole; end,
-      get = function() return trigger.group_role; end,
-      order = 47.2
-    },
     ignoreSelf = {
       type = "toggle",
       name = L["Ignore self"],

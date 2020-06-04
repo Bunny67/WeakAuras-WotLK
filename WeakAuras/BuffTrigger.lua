@@ -672,12 +672,8 @@ function WeakAuras.ScanAuras(unit)
               end
             end
 
-            local satisfies_role = true
-            if data.group_role then
-              satisfies_role = data.group_role == "ANY" or UnitGroupRolesAssigned(unit) == data.group_role
-            end
             local satisfies_ignoreSelf = not data.ignoreSelf or not UnitIsUnit(unit, "player")
-            if not satisfies_role or not satisfies_ignoreSelf then
+            if not satisfies_ignoreSelf then
               active = false
             end
 
@@ -715,17 +711,9 @@ function WeakAuras.ScanAuras(unit)
               if(data.group_count) then
                 -- Query count from aura cache
                 local aura_count = aura_object:GetNumber(id, triggernum, data)
-                local max
-                if (data.group_role) then
-                  max = aura_cache[data.group_role]
-                  if (data.ignoreSelf and aura_cache.playerRole == data.group_role) then
-                    max = max - 1;
-                  end
-                else
-                  max = aura_object:GetMaxNumber();
-                  if (data.ignoreSelf) then
-                    max = max - 1;
-                  end
+                local max = aura_object:GetMaxNumber();
+                if (data.ignoreSelf) then
+                  max = max - 1;
                 end
                 local satisfies_count = data.group_count(aura_count, max);
 
@@ -1597,7 +1585,6 @@ function BuffTrigger.Add(data)
           hideAlone = trigger.hideAlone,
           stack_info = trigger.stack_info,
           name_info = trigger.name_info,
-          group_role =  trigger.useGroupRole and trigger.group_role,
           ignoreSelf = trigger.ignoreSelf
         };
       end

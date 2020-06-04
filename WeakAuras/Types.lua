@@ -1284,18 +1284,7 @@ WeakAuras.group_types = {
 WeakAuras.difficulty_types = {
   none = L["None"],
   normal = PLAYER_DIFFICULTY1,
-  heroic = PLAYER_DIFFICULTY2,
-  mythic = PLAYER_DIFFICULTY6,
-  timewalking = PLAYER_DIFFICULTY_TIMEWALKER,
-  lfr = PLAYER_DIFFICULTY3,
-  challenge = PLAYER_DIFFICULTY5
-}
-
--- TODO
-WeakAuras.role_types = {
-  TANK = "INLINE_TANK_ICON".." "..TANK,
-  DAMAGER = "INLINE_DAMAGER_ICON".." "..DAMAGER,
-  HEALER = "INLINE_HEALER_ICON".." "..HEALER
+  heroic = PLAYER_DIFFICULTY2
 }
 
 WeakAuras.classification_types = {

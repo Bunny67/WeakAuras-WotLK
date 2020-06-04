@@ -1548,7 +1548,7 @@ end
 do
   local mh = GetInventorySlotInfo("MainHandSlot")
   local oh = GetInventorySlotInfo("SecondaryHandSlot")
-  local ranged = WeakAuras.IsClassic() and GetInventorySlotInfo("RangedSlot")
+  local ranged = GetInventorySlotInfo("RangedSlot")
 
   local swingTimerFrame;
   local lastSwingMain, lastSwingOff, lastSwingRange;
@@ -1564,8 +1564,6 @@ do
       local name, _, _, _, _, _, _, _, _, icon = GetItemInfo(itemId or 0);
       if(lastSwingMain) then
         return swingDurationMain, lastSwingMain + swingDurationMain - mainSwingOffset, name, icon;
-      elseif not WeakAuras.IsClassic() and lastSwingRange then
-        return swingDurationRange, lastSwingRange + swingDurationRange, name, icon;
       else
         return 0, math.huge, name, icon;
       end
@@ -1611,14 +1609,14 @@ do
         local currentTime = GetTime();
         mainSpeed, offSpeed = UnitAttackSpeed("player");
         offSpeed = offSpeed or 0;
-        if not(isOffHand) then
+        if not(lastSwingMain) then
           lastSwingMain = currentTime;
           swingDurationMain = mainSpeed;
           mainSwingOffset = 0;
           event = "SWING_TIMER_START";
           timer:CancelTimer(mainTimer);
           mainTimer = timer:ScheduleTimerFixed(swingEnd, mainSpeed, "main");
-        elseif(isOffHand) then
+        elseif(OffhandHasWeapon() and not lastSwingOff) then
           lastSwingOff = currentTime;
           swingDurationOff = offSpeed;
           event = "SWING_TIMER_START";
@@ -1698,22 +1696,14 @@ do
         local currentTime = GetTime();
         local speed = UnitRangedDamage("player");
         if(lastSwingRange) then
-          if WeakAuras.IsClassic() then
-            timer:CancelTimer(rangeTimer, true)
-          else
-            timer:CancelTimer(mainTimer, true)
-          end
+          timer:CancelTimer(rangeTimer, true)
           event = "SWING_TIMER_CHANGE";
         else
           event = "SWING_TIMER_START";
         end
         lastSwingRange = currentTime;
         swingDurationRange = speed;
-        if WeakAuras.IsClassic() then
-          rangeTimer = timer:ScheduleTimerFixed(swingEnd, speed, "ranged");
-        else
-          mainTimer = timer:ScheduleTimerFixed(swingEnd, speed, "main");
-        end
+        rangeTimer = timer:ScheduleTimerFixed(swingEnd, speed, "ranged");
         WeakAuras.ScanEvents(event);
       end
     elseif event == "UNIT_SPELLCAST_START" then

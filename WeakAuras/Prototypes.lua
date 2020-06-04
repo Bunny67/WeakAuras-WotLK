@@ -3574,9 +3574,10 @@ WeakAuras.event_prototypes = {
         "SPELL_UPDATE_USABLE",
         "PLAYER_TARGET_CHANGED",
         "RUNE_POWER_UPDATE",
+        "RUNE_TYPE_UPDATE",
       },
       ["unit_events"] = {
-        ["player"] = { "UNIT_POWER_FREQUENT" }
+        ["player"] = { "UNIT_POWER", "UNIT_ENERGY", "UNIT_MANA", "UNIT_RAGE" }
       }
     },
     internal_events = {
@@ -3608,6 +3609,8 @@ WeakAuras.event_prototypes = {
       local ret = [=[
         local spellName = %s
         local startTime, duration = WeakAuras.GetSpellCooldown(spellName);
+        startTime = startTime or 0
+        duration = duration or 0
         local ready = startTime == 0
         local active = IsUsableSpell(spellName) and ready
       ]=]
@@ -3629,9 +3632,8 @@ WeakAuras.event_prototypes = {
         name = "spellName",
         display = L["Spell"],
         required = true,
-        type = "spell",
+        type = "string",
         test = "true",
-        showExactOption = true,
         store = true
       },
       -- This parameter uses the IsSpellInRange API function, but it does not check spell range at all
@@ -5660,6 +5662,10 @@ WeakAuras.event_prototypes = {
 
 };
 
+WeakAuras.event_prototypes["DBM Announce"] = nil
+WeakAuras.event_prototypes["DBM Timer"] = nil
+WeakAuras.event_prototypes["BigWigs Message"] = nil
+WeakAuras.event_prototypes["BigWigs Timer"] = nil
 WeakAuras.event_prototypes["Item Set"] = nil
 WeakAuras.event_prototypes["Equipment Set"] = nil
 

@@ -458,7 +458,6 @@ WeakAuras.power_types = {
   [2] = FOCUS,
   [3] = ENERGY,
   [4] = HAPPINESS,
-  [5] = RUNES,
   [6] = RUNIC_POWER,
 }
 

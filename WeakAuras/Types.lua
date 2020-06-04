@@ -555,8 +555,8 @@ WeakAuras.spec_types_all = {}
 
 WeakAuras.talent_types = {}
 for tab = 1, 5 do
-  for num_talent = 1, 30 do
-    local talentId = (tab - 1)*30+num_talent
+  for num_talent = 1, MAX_NUM_TALENTS do
+    local talentId = (tab - 1)*MAX_NUM_TALENTS+num_talent
     WeakAuras.talent_types[talentId] = L["Tab "]..tab.." - "..num_talent
   end
 end

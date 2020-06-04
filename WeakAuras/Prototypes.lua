@@ -2205,7 +2205,7 @@ WeakAuras.event_prototypes = {
         display = L["Spell"],
         type = "spell",
         test = "true",
-        showExactOption = true,
+        forceExactOption = true,
       },
       {
         name = "extra Cooldown Progress (Spell)",
@@ -3727,8 +3727,8 @@ WeakAuras.event_prototypes = {
       if (trigger.use_talent) then
         -- Single selection
         local index = trigger.talent and trigger.talent.single;
-        local tier = index and ceil(index / 30)
-        local column = index and ((index - 1) % 30 + 1)
+        local tier = index and ceil(index / MAX_NUM_TALENTS)
+        local column = index and ((index - 1) % MAX_NUM_TALENTS + 1)
 
         local ret = [[
           local tier = %s;
@@ -3754,8 +3754,8 @@ WeakAuras.event_prototypes = {
           ]]
           for index in pairs(trigger.talent.multi) do
             local tier, column
-            local tier = index and ceil(index / 30)
-            local column = index and ((index - 1) % 30 + 1)
+            local tier = index and ceil(index / MAX_NUM_TALENTS)
+            local column = index and ((index - 1) % MAX_NUM_TALENTS + 1)
             local ret2 = [[
               if (not active) then
                 tier = %s

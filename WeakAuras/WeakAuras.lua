@@ -1388,7 +1388,7 @@ function WeakAuras.CreateTalentCache()
   for tab = 1, GetNumTalentTabs() do
     for num_talent = 1, GetNumTalents(tab) do
       local talentName, talentIcon = GetTalentInfo(tab, num_talent);
-      local talentId = (tab - 1)*30+num_talent
+      local talentId = (tab - 1)*MAX_NUM_TALENTS+num_talent
       if (talentName and talentIcon) then
         WeakAuras.talent_types_specific[player_class][talentId] = "|T"..talentIcon..":0|t "..talentName
       end

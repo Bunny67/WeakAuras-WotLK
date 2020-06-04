@@ -251,12 +251,9 @@ local function update_forms()
   wipe(WeakAuras.form_types);
   WeakAuras.form_types[0] = "0 - "..L["Humanoid"]
   for i = 1, GetNumShapeshiftForms() do
-    local _, _, _, id = GetShapeshiftFormInfo(i);
-    if(id) then
-      local name = GetSpellInfo(id);
-      if(name) then
-        WeakAuras.form_types[i] = i.." - "..name
-      end
+    local _, name = GetShapeshiftFormInfo(i);
+    if(name) then
+      WeakAuras.form_types[i] = i.." - "..name
     end
   end
 end
@@ -557,23 +554,20 @@ WeakAuras.spec_types_2 = {
 WeakAuras.spec_types_specific = {}
 WeakAuras.spec_types_all = {}
 
--- TODO
 WeakAuras.talent_types = {}
 for tab = 1, 5 do
-  for num_talent = 1, 20 do
-    local talentId = (tab - 1)*20+num_talent
+  for num_talent = 1, 30 do
+    local talentId = (tab - 1)*30+num_talent
     WeakAuras.talent_types[talentId] = L["Tab "]..tab.." - "..num_talent
   end
 end
 
-WeakAuras.pvp_talent_types = {}
-
--- GetTotemInfo() only works for the first 5 totems
-WeakAuras.totem_types = {};
-local totemString = L["Totem #%i"];
-for i = 1, 5 do
-  WeakAuras.totem_types[i] = totemString:format(i);
-end
+WeakAuras.totem_types = {
+  [1] = L["Fire"],
+  [2] = L["Earth"],
+  [3] = L["Water"],
+  [4] = L["Air"]
+}
 
 WeakAuras.texture_types = {
   ["Blizzard Alerts"] = {

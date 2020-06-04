@@ -3725,8 +3725,8 @@ WeakAuras.event_prototypes = {
       if (trigger.use_talent) then
         -- Single selection
         local index = trigger.talent and trigger.talent.single;
-        local tier = index and ceil(index / 20)
-        local column = index and ((index - 1) % 20 + 1)
+        local tier = index and ceil(index / 30)
+        local column = index and ((index - 1) % 30 + 1)
 
         local ret = [[
           local tier = %s;
@@ -3752,8 +3752,8 @@ WeakAuras.event_prototypes = {
           ]]
           for index in pairs(trigger.talent.multi) do
             local tier, column
-            local tier = index and ceil(index / 20)
-            local column = index and ((index - 1) % 20 + 1)
+            local tier = index and ceil(index / 30)
+            local column = index and ((index - 1) % 30 + 1)
             local ret2 = [[
               if (not active) then
                 tier = %s
@@ -3884,7 +3884,7 @@ WeakAuras.event_prototypes = {
           end
         elseif inverse then -- inverse without a specific slot
           local found = false;
-          for i = 1, 5 do
+          for i = 1, 4 do
             local _, totemName, startTime, duration, icon = GetTotemInfo(i);
             if ((startTime and startTime ~= 0) and
                 WeakAuras.CheckTotemName(totemName, triggerTotemName, triggerTotemPattern, triggerTotemPatternOperator)
@@ -3903,7 +3903,7 @@ WeakAuras.event_prototypes = {
             state.icon = select(3, GetSpellInfo(triggerTotemName));
           end
         else -- check all slots
-          for i = 1, 5 do
+          for i = 1, 4 do
             local _, totemName, startTime, duration, icon = GetTotemInfo(i);
             active = (startTime and startTime ~= 0);
 
@@ -4002,24 +4002,16 @@ WeakAuras.event_prototypes = {
         "PLAYER_ENTERING_WORLD"
       }
     },
-    internal_events = {
-      "ITEM_COUNT_UPDATE",
-    },
     force_events = "BAG_UPDATE",
     name = L["Item Count"],
-    loadFunc = function(trigger)
-      if(trigger.use_includeCharges) then
-        WeakAuras.RegisterItemCountWatch();
-      end
-    end,
     init = function(trigger)
       --trigger.itemName = WeakAuras.CorrectItemName(trigger.itemName) or 0;
       trigger.itemName = trigger.itemName or 0;
       local itemName = type(trigger.itemName) == "number" and trigger.itemName or "[["..trigger.itemName.."]]";
       local ret = [[
-        local count = GetItemCount(%s, %s, %s);
+        local count = GetItemCount(%s, %s);
       ]];
-      return ret:format(itemName, trigger.use_includeBank and "true" or "nil", trigger.use_includeCharges and "true" or "nil");
+      return ret:format(itemName, trigger.use_includeBank and "true" or "nil");
     end,
     args = {
       {
@@ -4036,23 +4028,17 @@ WeakAuras.event_prototypes = {
         test = "true"
       },
       {
-        name = "includeCharges",
-        display = L["Include Charges"],
-        type = "toggle",
-        test = "true"
-      },
-      {
         name = "count",
         display = L["Item Count"],
         type = "number"
       }
     },
     durationFunc = function(trigger)
-      local count = GetItemCount(trigger.itemName, trigger.use_includeBank, trigger.use_includeCharges);
+      local count = GetItemCount(trigger.itemName, trigger.use_includeBank);
       return count, 0, true;
     end,
     stacksFunc = function(trigger)
-      local count = GetItemCount(trigger.itemName, trigger.use_includeBank, trigger.use_includeCharges);
+      local count = GetItemCount(trigger.itemName, trigger.use_includeBank);
       return count, 0, true;
     end,
     nameFunc = function(trigger)
@@ -4154,12 +4140,12 @@ WeakAuras.event_prototypes = {
       end
     end,
     iconFunc = function(trigger)
-      local icon = "136116"
+      local icon = "Interface\\Icons\\Spell_Nature_WispSplode"
       local form = GetShapeshiftForm()
       if form and form > 0 then
         icon = GetShapeshiftFormInfo(form);
       end
-      return icon or "136116"
+      return icon or "Interface\\Icons\\Spell_Nature_WispSplode"
     end,
     automaticrequired = true
   },
@@ -4180,17 +4166,17 @@ WeakAuras.event_prototypes = {
         local triggerStack = %s
         local triggerRemaining = %s
         local triggerShowOn = %q
-        local _, expirationTime, duration, name, stack, enchantID
+        local _, expirationTime, duration, name, stack
 
         if triggerWeaponType == "main" then
-          expirationTime, duration, name, shortenedName, _, stack, enchantID = WeakAuras.GetMHTenchInfo()
+          expirationTime, duration, name, shortenedName, _, stack = WeakAuras.GetMHTenchInfo()
         else
-          expirationTime, duration, name, shortenedName, _, stack, enchantID = WeakAuras.GetOHTenchInfo()
+          expirationTime, duration, name, shortenedName, _, stack = WeakAuras.GetOHTenchInfo()
         end
 
         local remaining = expirationTime and expirationTime - GetTime()
 
-        local nameCheck = triggerName == "" or name and triggerName == name or shortenedName and triggerName == shortenedName or tonumber(triggerName) and enchantID and tonumber(triggerName) == enchantID
+        local nameCheck = triggerName == "" or name and triggerName == name or shortenedName and triggerName == shortenedName
         local stackCheck = not triggerStack or stack and stack %s triggerStack
         local remainingCheck = not triggerRemaining or remaining and remaining %s triggerRemaining
         local found = expirationTime and nameCheck and stackCheck and remainingCheck
@@ -4221,7 +4207,7 @@ WeakAuras.event_prototypes = {
       {
         name = "enchant",
         display = L["Weapon Enchant"],
-        desc = L["Enchant Name or ID"],
+        desc = L["Enchant Name"],
         type = "string",
         test = "true"
       },

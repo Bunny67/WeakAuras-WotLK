@@ -3024,10 +3024,10 @@ do
   local mh = GetInventorySlotInfo("MainHandSlot")
   local oh = GetInventorySlotInfo("SecondaryHandSlot")
 
-  local mh_name, mh_shortenedName, mh_exp, mh_dur, mh_charges, mh_EnchantID;
+  local mh_name, mh_shortenedName, mh_exp, mh_dur, mh_charges;
   local mh_icon = GetInventoryItemTexture("player", mh);
 
-  local oh_name, oh_shortenedName, oh_exp, oh_dur, oh_charges, oh_EnchantID;
+  local oh_name, oh_shortenedName, oh_exp, oh_dur, oh_charges;
   local oh_icon = GetInventoryItemTexture("player", oh);
 
   local tenchFrame = nil
@@ -3063,7 +3063,7 @@ do
       local function tenchUpdate()
         WeakAuras.StartProfileSystem("generictrigger");
         local _, mh_rem, oh_rem
-        _, mh_rem, mh_charges, mh_EnchantID, _, oh_rem, oh_charges, oh_EnchantID = GetWeaponEnchantInfo();
+        _, mh_rem, mh_charges, _, oh_rem, oh_charges = GetWeaponEnchantInfo();
         local time = GetTime();
         local mh_exp_new = mh_rem and (time + (mh_rem / 1000));
         local oh_exp_new = oh_rem and (time + (oh_rem / 1000));
@@ -3104,11 +3104,11 @@ do
   end
 
   function WeakAuras.GetMHTenchInfo()
-    return mh_exp, mh_dur, mh_name, mh_shortenedName, mh_icon, mh_charges, mh_EnchantID;
+    return mh_exp, mh_dur, mh_name, mh_shortenedName, mh_icon, mh_charges;
   end
 
   function WeakAuras.GetOHTenchInfo()
-    return oh_exp, oh_dur, oh_name, oh_shortenedName, oh_icon, oh_charges, oh_EnchantID;
+    return oh_exp, oh_dur, oh_name, oh_shortenedName, oh_icon, oh_charges;
   end
 end
 
@@ -3151,21 +3151,6 @@ do
     end
     playerMovingFrame.speed = GetUnitSpeed("player")
     playerMovingFrame:SetScript("OnUpdate", PlayerMoveSpeedUpdate)
-  end
-end
-
--- Item Count
-local itemCountWatchFrame;
-function WeakAuras.RegisterItemCountWatch()
-  if not(itemCountWatchFrame) then
-    itemCountWatchFrame = CreateFrame("frame");
-    itemCountWatchFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player");
-    itemCountWatchFrame:SetScript("OnEvent", function()
-      WeakAuras.StartProfileSystem("generictrigger");
-      timer:ScheduleTimer(WeakAuras.ScanEvents, 0.2, "ITEM_COUNT_UPDATE");
-      timer:ScheduleTimer(WeakAuras.ScanEvents, 0.5, "ITEM_COUNT_UPDATE");
-      WeakAuras.StopProfileSystem("generictrigger");
-    end);
   end
 end
 

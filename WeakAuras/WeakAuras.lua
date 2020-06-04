@@ -1380,7 +1380,6 @@ function WeakAuras.UnregisterForGlobalConditions(id)
 end
 
 WeakAuras.talent_types_specific = {}
-WeakAuras.pvp_talent_types_specific = {}
 function WeakAuras.CreateTalentCache()
   local _, player_class = UnitClass("player")
 
@@ -1389,7 +1388,7 @@ function WeakAuras.CreateTalentCache()
   for tab = 1, GetNumTalentTabs() do
     for num_talent = 1, GetNumTalents(tab) do
       local talentName, talentIcon = GetTalentInfo(tab, num_talent);
-      local talentId = (tab - 1)*20+num_talent
+      local talentId = (tab - 1)*30+num_talent
       if (talentName and talentIcon) then
         WeakAuras.talent_types_specific[player_class][talentId] = "|T"..talentIcon..":0|t "..talentName
       end
@@ -5460,10 +5459,6 @@ do
     if not(hiddenTooltip) then
       hiddenTooltip = CreateFrame("GameTooltip", "WeakAurasTooltip", nil, "GameTooltipTemplate");
       hiddenTooltip:SetOwner(WorldFrame, "ANCHOR_NONE");
-      hiddenTooltip:AddFontStrings(
-        hiddenTooltip:CreateFontString("$parentTextLeft1", nil, "GameTooltipText"),
-        hiddenTooltip:CreateFontString("$parentTextRight1", nil, "GameTooltipText")
-      );
     end
     return hiddenTooltip;
   end

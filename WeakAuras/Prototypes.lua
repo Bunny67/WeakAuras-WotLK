@@ -76,9 +76,6 @@ end
 
 LibRangeCheck:RegisterCallback(LibRangeCheck.CHECKERS_CHANGED, RangeCacheUpdate)
 
-WeakAuras.UnitCastingInfo = UnitCastingInfo
-WeakAuras.UnitChannelInfo = UnitChannelInfo
-
 local encounter_list = ""
 local zoneId_list = ""
 local zoneGroupId_list = ""
@@ -867,16 +864,6 @@ function WeakAuras.IsSpellKnownIncludingPet(spell)
   end
   if (WeakAuras.IsSpellKnown(spell) or WeakAuras.IsSpellKnown(spell, true)) then
     return true;
-  end
-  -- WORKAROUND brain damage around void eruption
-  -- In shadow form void eruption is overriden by void bolt, yet IsSpellKnown for void bolt
-  -- returns false, whereas it returns true for void eruption
-  local baseSpell = FindBaseSpellByID(spell);
-  if (not baseSpell) then
-    return false;
-  end
-  if (baseSpell ~= spell) then
-    return WeakAuras.IsSpellKnown(baseSpell) or WeakAuras.IsSpellKnown(baseSpell, true);
   end
 end
 
@@ -4831,11 +4818,6 @@ WeakAuras.event_prototypes = {
     internal_events = function(trigger)
       local unit = trigger.unit
       local result = {"CAST_REMAINING_CHECK"}
-      if WeakAuras.IsClassic() and unit ~= "player" then
-        tinsert(result, "UNIT_SPELLCAST_START")
-        tinsert(result, "UNIT_SPELLCAST_DELAYED")
-        tinsert(result, "UNIT_SPELLCAST_CHANNEL_START")
-      end
       AddUnitChangeInternalEvents(unit, result)
       AddUnitRoleChangeInternalEvents(unit, result)
       return result
@@ -4852,13 +4834,13 @@ WeakAuras.event_prototypes = {
         local remainingCheck = %s
         local inverseTrigger = %s
 
-        local show, expirationTime, castType, spell, icon, startTime, endTime, interruptible, spellId, remaining
+        local show, expirationTime, castType, spell, icon, startTime, endTime, interruptible, remaining
 
-        spell, _, icon, startTime, endTime, _, _, interruptible, spellId = WeakAuras.UnitCastingInfo(unit)
+        spell, _, _, icon, startTime, endTime, _, _, interruptible = UnitCastingInfo(unit)
         if spell then
           castType = "cast"
         else
-          spell, _, icon, startTime, endTime, _, interruptible, spellId = WeakAuras.UnitChannelInfo(unit)
+          spell, _, _, icon, startTime, endTime, _, interruptible = UnitChannelInfo(unit)
           if spell then
             castType = "channel"
           end
@@ -5008,20 +4990,6 @@ WeakAuras.event_prototypes = {
         enable = function(trigger)
           return not trigger.use_inverse
         end
-      },
-      {
-        name = "role",
-        display = L["Assigned Role"],
-        type = "select",
-        init = "UnitGroupRolesAssigned(unit)",
-        values = "role_types",
-        store = true,
-        conditionType = "select",
-        enable = function(trigger)
-           return not WeakAuras.IsClassic()
-                  and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")
-                  and not trigger.use_inverse
-         end
       },
       {
         name = "sourceUnit",

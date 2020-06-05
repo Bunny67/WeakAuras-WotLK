@@ -5074,6 +5074,7 @@ WeakAuras.event_prototypes = {
       if trigger.use_mounted ~= nil then
         tinsert(events, "COMPANION_UPDATE")
         tinsert(events, "PLAYER_ENTERING_WORLD")
+        tinsert(events, "MOUNTED_UPDATE")
       end
       local unit_events = {}
       local pet_unit_events = {}
@@ -5123,6 +5124,9 @@ WeakAuras.event_prototypes = {
     force_events = "CONDITIONS_CHECK",
     name = L["Conditions"],
     init = function(trigger)
+      if(trigger.use_mounted ~= nil) then
+        WeakAuras.WatchForMounts();
+      end
       return "";
     end,
     args = {

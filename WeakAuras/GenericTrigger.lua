@@ -3112,6 +3112,40 @@ do
   end
 end
 
+-- Mounted Frame
+do
+  local mountedFrame
+  WeakAuras.frames["Mount Use Handler"] = mountedFrame;
+  local elapsed = 0;
+  local delay = 0.5;
+  local isMounted = IsMounted();
+
+  local function checkForMounted(self, elaps)
+    WeakAuras.StartProfileSystem("generictrigger");
+    elapsed = elapsed + elaps
+    if(isMounted ~= IsMounted()) then
+      isMounted = IsMounted();
+      WeakAuras.ScanEvents("MOUNTED_UPDATE");
+      mountedFrame:SetScript("OnUpdate", nil);
+    end
+    if(elapsed > delay) then
+      mountedFrame:SetScript("OnUpdate", nil);
+    end
+    WeakAuras.StopProfileSystem("generictrigger");
+  end
+
+  function WeakAuras.WatchForMounts()
+    if not(mountedFrame) then
+      mountedFrame = CreateFrame("frame");
+      mountedFrame:RegisterEvent("COMPANION_UPDATE");
+      mountedFrame:SetScript("OnEvent", function()
+       elapsed = 0;
+       mountedFrame:SetScript("OnUpdate", checkForMounted);
+      end)
+    end
+  end
+end
+
 -- Player Moving
 do
   local playerMovingFrame = nil

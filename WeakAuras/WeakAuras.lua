@@ -5873,8 +5873,7 @@ local function evaluateTriggerStateTriggers(id)
     result = true;
   else
     if (triggerState[id].disjunctive == "custom" and triggerState[id].triggerLogicFunc) then
-      local ok, returnValue = triggerState[id].triggerLogicFunc(triggerState[id].triggers);
-      result = ok and returnValue;
+      result = triggerState[id].triggerLogicFunc(triggerState[id].triggers);
     end
   end
 

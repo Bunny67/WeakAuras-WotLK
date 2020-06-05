@@ -6075,7 +6075,7 @@ function WeakAuras.RunCustomTextFunc(region, customFunc)
     end
   end
 
-  local custom = {select(2, customFunc(expirationTime or math.huge, duration or 0, progress, dur, name, icon, stacks))}
+  local custom = {customFunc(expirationTime or math.huge, duration or 0, progress, dur, name, icon, stacks)}
   WeakAuras.ActivateAuraEnvironment(nil)
   return custom
 end

@@ -218,7 +218,7 @@ local function ConstructSizer(frame)
   end
 
   local topleft = CreateFrame("FRAME", nil, frame)
-  topleft:EnableMouse(true)
+  topleft:EnableMouse()
   topleft:SetWidth(16)
   topleft:SetHeight(16)
   topleft:SetPoint("TOPLEFT", frame, "TOPLEFT")
@@ -249,7 +249,7 @@ local function ConstructSizer(frame)
   -- top, right, bottom, left
 
   local top = CreateFrame("FRAME", nil, frame)
-  top:EnableMouse(true)
+  top:EnableMouse()
   top:SetHeight(8)
   top:SetPoint("TOPRIGHT", topright, "TOPLEFT")
   top:SetPoint("TOPLEFT", topleft, "TOPRIGHT")
@@ -268,7 +268,7 @@ local function ConstructSizer(frame)
   end
 
   local right = CreateFrame("FRAME", nil, frame)
-  right:EnableMouse(true)
+  right:EnableMouse()
   right:SetWidth(8)
   right:SetPoint("BOTTOMRIGHT", bottomright, "TOPRIGHT")
   right:SetPoint("TOPRIGHT", topright, "BOTTOMRIGHT")
@@ -287,7 +287,7 @@ local function ConstructSizer(frame)
   end
 
   local bottom = CreateFrame("FRAME", nil, frame)
-  bottom:EnableMouse(true)
+  bottom:EnableMouse()
   bottom:SetHeight(8)
   bottom:SetPoint("BOTTOMLEFT", bottomleft, "BOTTOMRIGHT")
   bottom:SetPoint("BOTTOMRIGHT", bottomright, "BOTTOMLEFT")
@@ -307,7 +307,7 @@ local function ConstructSizer(frame)
   end
 
   local left = CreateFrame("FRAME", nil, frame)
-  left:EnableMouse(true)
+  left:EnableMouse()
   left:SetWidth(8)
   left:SetPoint("TOPLEFT", topleft, "BOTTOMLEFT")
   left:SetPoint("BOTTOMLEFT", bottomleft, "TOPLEFT")

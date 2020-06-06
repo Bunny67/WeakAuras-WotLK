@@ -2810,7 +2810,6 @@ function WeakAuras.Modernize(data)
       ["Druid"] = "DRUID",
       ["Hunter"] = "HUNTER",
       ["Mage"] = "MAGE",
-      ["Monk"] = "MONK",
       ["Paladin"] = "PALADIN",
       ["Priest"] = "PRIEST",
       ["Rogue"] = "ROGUE",
@@ -2945,23 +2944,6 @@ function WeakAuras.Modernize(data)
     if data.regionType == "model" then
       if (data.api == nil) then
         data.api = false;
-      end
-    end
-
-    if (data.regionType == "progresstexture") then
-      if (not data.version or data.version < 2) then
-        if (data.orientation == "CLOCKWISE") then
-          if (data.inverse) then
-            data.startAngle, data.endAngle = 360 - data.endAngle, 360 - data.startAngle;
-            data.orientation = (data.orientation == "CLOCKWISE") and "ANTICLOCKWISE" or "CLOCKWISE";
-          end
-        elseif (data.orientation == "ANTICLOCKWISE") then
-          data.startAngle, data.endAngle = 360 - data.endAngle, 360 - data.startAngle;
-          if (data.inverse) then
-            data.orientation = (data.orientation == "CLOCKWISE") and "ANTICLOCKWISE" or "CLOCKWISE";
-          end
-        end
-        data.version = 2;
       end
     end
 

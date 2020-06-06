@@ -490,28 +490,6 @@ local function Show_DropIndicator(id)
   end
 end
 
--- WORKAROUND
--- Blizzard in its infinite wisdom did:
--- * Force enable the profanity filter for the chinese region
--- * Add a realm name's part to the profanity filter
-function WeakAuras.ObsfuscateName(name)
-  if (GetCurrentRegion() == 5) then
-    local result = ""
-    for i = 1, #name do
-      local b = name:byte(i)
-      if (b >= 196 and i ~= 1) then
-        -- UTF8 Start byte
-        result = result .. string.char(46, b)
-      else
-        result = result .. string.char(b)
-      end
-    end
-    return result
-  else
-    return name
-  end
-end
-
 --[[-----------------------------------------------------------------------------
 Methods
 -------------------------------------------------------------------------------]]
@@ -537,9 +515,9 @@ local methods = {
         local editbox = GetCurrentKeyBoardFocus();
         if(editbox) then
           if (not fullName) then
-            local name, realm = UnitFullName("player")
+            local name, realm = UnitName("player")
             if realm then
-              fullName = name.."-".. WeakAuras.ObsfuscateName(realm)
+              fullName = name.."-"..realm
             else
               fullName = name
             end

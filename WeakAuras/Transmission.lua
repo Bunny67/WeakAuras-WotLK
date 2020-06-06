@@ -167,15 +167,14 @@ local function filterFunc(_, event, msg, player, l, cs, t, flag, channelId, ...)
     end
   until(done)
   if newMsg ~= "" then
-    local trimmedPlayer = Ambiguate(player, "none")
-    if event == "CHAT_MSG_WHISPER" and not UnitInRaid(trimmedPlayer) and not UnitInParty(trimmedPlayer) then -- XXX: Need a guild check
+    if event == "CHAT_MSG_WHISPER" and not UnitInRaid(player) and not UnitInParty(player) then -- XXX: Need a guild check
       local _, num = BNGetNumFriends()
       for i=1, num do
         if C_BattleNet then -- introduced in 8.2.5 PTR
           local toon = C_BattleNet.GetFriendNumGameAccounts(i)
           for j=1, toon do
             local gameAccountInfo = C_BattleNet.GetFriendGameAccountInfo(i, j);
-            if gameAccountInfo.characterName == trimmedPlayer and gameAccountInfo.clientProgram == "WoW" then
+            if gameAccountInfo.characterName == player and gameAccountInfo.clientProgram == "WoW" then
               return false, newMsg, player, l, cs, t, flag, channelId, ...; -- Player is a real id friend, allow it
             end
           end
@@ -183,7 +182,7 @@ local function filterFunc(_, event, msg, player, l, cs, t, flag, channelId, ...)
           local toon = BNGetNumFriendGameAccounts(i)
           for j=1, toon do
             local _, rName, rGame = BNGetFriendGameAccountInfo(i, j)
-            if rName == trimmedPlayer and rGame == "WoW" then
+            if rName == player and rGame == "WoW" then
               return false, newMsg, player, l, cs, t, flag, channelId, ...; -- Player is a real id friend, allow it
             end
           end
@@ -629,6 +628,14 @@ hooksecurefunc("SetItemRef", function(link, text)
     end
   end
 end);
+
+local OriginalSetHyperlink = ItemRefTooltip.SetHyperlink
+function ItemRefTooltip:SetHyperlink(link, ...)
+    if(link and link:sub(0, 11) == "garrmission") then
+        return;
+    end
+    return OriginalSetHyperlink(self, link, ...);
+end
 
 local compressedTablesCache = {}
 
@@ -1799,7 +1806,8 @@ WeakAuras.ImportString = WeakAuras.Import
 
 local function crossRealmSendCommMessage(prefix, text, target, queueName, callbackFn, callbackArg)
   local chattype = "WHISPER"
-  if target and not UnitIsSameServer(target) then
+--[[
+  if target then
     if UnitInRaid(target) then
       chattype = "RAID"
       text = ("§§%s:%s"):format(target, text)
@@ -1808,13 +1816,13 @@ local function crossRealmSendCommMessage(prefix, text, target, queueName, callba
       text = ("§§%s:%s"):format(target, text)
     end
   end
+]]
   Comm:SendCommMessage(prefix, text, chattype, target, queueName, callbackFn, callbackArg)
 end
 
 local safeSenders = {}
 function RequestDisplay(characterName, displayName)
   safeSenders[characterName] = true
-  safeSenders[Ambiguate(characterName, "none")] = true
   local transmit = {
     m = "dR",
     d = displayName
@@ -1847,7 +1855,7 @@ Comm:RegisterComm("WeakAurasProg", function(prefix, message, distribution, sende
     local dest, msg = string.match(message, "^§§(.+):(.+)$")
     if dest then
       local dName, dServer = string.match(dest, "^(.*)-(.*)$")
-      local myName, myServer = UnitFullName("player")
+      local myName, myServer = UnitName("player")
       if myName == dName and myServer == dServer then
         message = msg
       else
@@ -1877,7 +1885,7 @@ Comm:RegisterComm("WeakAuras", function(prefix, message, distribution, sender)
     local dest, msg = string.match(message, "^§§([^:]+):(.+)$")
     if dest then
       local dName, dServer = string.match(dest, "^(.*)-(.*)$")
-      local myName, myServer = UnitFullName("player")
+      local myName, myServer = UnitName("player")
       if myName == dName and myServer == dServer then
         message = msg
       else

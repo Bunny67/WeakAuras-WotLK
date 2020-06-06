@@ -4824,7 +4824,7 @@ function WeakAuras.UpdateAnimations()
     end
     if(anim.scaleFunc) then
       local ok, scaleX, scaleY = pcall(anim.scaleFunc, progress, 1, 1, anim.scaleX, anim.scaleY);
-      if (ok) then
+      if not ok then
         errorHandler(scaleX)
       else
         if(anim.region.Scale) then

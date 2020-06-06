@@ -283,7 +283,10 @@ end
 local function RunCode(self, func)
   if func and not WeakAuras.IsOptionsOpen() then
     WeakAuras.ActivateAuraEnvironment(self.id, self.cloneId, self.state, self.states);
-    xpcall(func, geterrorhandler());
+    local ok, ret = pcall(func);
+    if not ok then
+      geterrorhandler()(ret)
+    end
     WeakAuras.ActivateAuraEnvironment(nil);
   end
 end
@@ -304,7 +307,10 @@ local function UpdatePosition(self)
   local yOffset = self.yOffset + (self.yOffsetAnim or 0) + (self.yOffsetRelative or 0)
   self:RealClearAllPoints();
 
-  self:SetPoint(self.anchorPoint, self.relativeTo, self.relativePoint, xOffset, yOffset);
+  local ok, ret = pcall(self.SetPoint, self, self.anchorPoint, self.relativeTo, self.relativePoint, xOffset, yOffset);
+  if not ok then
+    geterrorhandler()(ret)
+  end
 end
 
 local function ResetPosition(self)

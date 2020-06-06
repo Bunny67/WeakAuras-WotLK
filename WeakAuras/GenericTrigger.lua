@@ -339,8 +339,9 @@ local function RunOverlayFuncs(event, state)
   for i, overlayFunc in ipairs(event.overlayFuncs) do
     state.additionalProgress[i] = state.additionalProgress[i] or {};
     local additionalProgress = state.additionalProgress[i];
-    local a, b, c = overlayFunc(event.trigger, state);
-    if (not a) then
+    local ok, a, b, c = pcall(overlayFunc, event.trigger, state);
+    if (not ok) then
+      geterrorhandler()(a)
       additionalProgress.min = nil;
       additionalProgress.max = nil;
       additionalProgress.direction = nil;
@@ -386,8 +387,13 @@ local function callFunctionForActivateEvent(func, trigger, fallback, errorHandle
   if not func then
     return fallback
   end
-  local value = func(trigger)
-  return value or fallback
+  local ok, value = pcall(func, trigger)
+  if not ok then
+    errorHandler(value)
+    return fallback
+  else
+    return value
+  end
 end
 
 function WeakAuras.ActivateEvent(id, triggernum, data, state, errorHandler)
@@ -419,8 +425,13 @@ function WeakAuras.ActivateEvent(id, triggernum, data, state, errorHandler)
     state.inverse = nil;
     state.autoHide = autoHide;
   elseif (data.durationFunc) then
-    local arg1, arg2, arg3, inverse = data.durationFunc(data.trigger);
-    arg1 = type(arg1) == "number" and arg1 or 0;
+    local ok, arg1, arg2, arg3, inverse = pcall(data.durationFunc, data.trigger);
+    if not ok then
+      errorHandler(arg1);
+      arg1 = 0;
+      arg2 = 0;
+    end
+    arg1 = type(arg1) == "number" and arg2 or 0;
     arg2 = type(arg2) == "number" and arg2 or 0;
 
     if (state.inverse ~= inverse) then
@@ -525,13 +536,17 @@ local function RunTriggerFunc(allStates, data, id, triggernum, event, arg1, arg2
   if(data.triggerFunc) then
     local untriggerCheck = false;
     if (data.statesParameter == "full") then
-      local returnValue = data.triggerFunc(allStates, event, arg1, arg2, ...);
-      if (returnValue) then
+      local ok, returnValue = pcall(data.triggerFunc, allStates, event, arg1, arg2, ...);
+      if not ok then
+        errorHandler(returnValue)
+      elseif ok and returnValue then
         updateTriggerState = true;
       end
     elseif (data.statesParameter == "all") then
-      local returnValue = data.triggerFunc(allStates, event, arg1, arg2, ...);
-      if( (returnValue) or optionsEvent) then
+      local ok, returnValue = pcall(data.triggerFunc, allStates, event, arg1, arg2, ...);
+      if not ok then
+        errorHandler(returnValue)
+      elseif (ok and returnValue) or optionsEvent then
         for id, state in pairs(allStates) do
           if (state.changed) then
             if (WeakAuras.ActivateEvent(id, triggernum, data, state, errorHandler)) then
@@ -554,8 +569,10 @@ local function RunTriggerFunc(allStates, data, id, triggernum, event, arg1, arg2
         end
         allStates[cloneId] = allStates[cloneId] or {};
         local state = allStates[cloneId];
-        local returnValue = data.triggerFunc(state, event, unit, arg1, arg2, ...);
-        if returnValue or optionsEvent then
+        local ok, returnValue = pcall(data.triggerFunc, state, event, unit, arg1, arg2, ...);
+        if not ok then
+          errorHandler(returnValue)
+        elseif (ok and returnValue) or optionsEvent then
           if(WeakAuras.ActivateEvent(id, triggernum, data, state, errorHandler)) then
             updateTriggerState = true;
           end
@@ -566,8 +583,10 @@ local function RunTriggerFunc(allStates, data, id, triggernum, event, arg1, arg2
     elseif (data.statesParameter == "one") then
       allStates[""] = allStates[""] or {};
       local state = allStates[""];
-      local returnValue = data.triggerFunc(state, event, arg1, arg2, ...);
-      if returnValue or optionsEvent then
+      local ok, returnValue = pcall(data.triggerFunc, state, event, arg1, arg2, ...);
+      if not ok then
+        errorHandler(returnValue)
+      elseif (ok and returnValue) or optionsEvent then
         if(WeakAuras.ActivateEvent(id, triggernum, data, state, errorHandler)) then
           updateTriggerState = true;
         end
@@ -575,8 +594,10 @@ local function RunTriggerFunc(allStates, data, id, triggernum, event, arg1, arg2
         untriggerCheck = true;
       end
     else
-      local returnValue = data.triggerFunc(event, arg1, arg2, ...);
-      if returnValue or optionsEvent then
+      local ok, returnValue = pcall(data.triggerFunc, event, arg1, arg2, ...);
+      if not ok then
+        errorHandler(returnValue)
+      elseif (ok and returnValue) or optionsEvent then
         allStates[""] = allStates[""] or {};
         local state = allStates[""];
         if(WeakAuras.ActivateEvent(id, triggernum, data, state, errorHandler)) then
@@ -589,8 +610,10 @@ local function RunTriggerFunc(allStates, data, id, triggernum, event, arg1, arg2
     if (untriggerCheck and not optionsEvent) then
       if (data.statesParameter == "all") then
         if data.untriggerFunc then
-          local returnValue = data.untriggerFunc(allStates, event, arg1, arg2, ...);
-          if returnValue then
+          local ok, returnValue = pcall(data.untriggerFunc, allStates, event, arg1, arg2, ...);
+          if not ok then
+            errorHandler(returnValue)
+          elseif (ok and returnValue) or optionsEvent then
             for id, state in pairs(allStates) do
               if (state.changed) then
                 if (WeakAuras.EndEvent(id, triggernum, nil, state)) then
@@ -606,8 +629,10 @@ local function RunTriggerFunc(allStates, data, id, triggernum, event, arg1, arg2
             local cloneId = WeakAuras.multiUnitUnits[data.trigger.unit] and arg1 or ""
             local state = allStates[cloneId]
             if state then
-              local returnValue = data.untriggerFunc(state, event, arg1, arg2, ...);
-              if returnValue then
+              local ok, returnValue = pcall(data.untriggerFunc, state, event, arg1, arg2, ...);
+              if not ok then
+                errorHandler(returnValue)
+              elseif ok and returnValue then
                 if (WeakAuras.EndEvent(id, triggernum, nil, state)) then
                   updateTriggerState = true;
                 end
@@ -619,8 +644,10 @@ local function RunTriggerFunc(allStates, data, id, triggernum, event, arg1, arg2
         allStates[""] = allStates[""] or {};
         local state = allStates[""];
         if data.untriggerFunc then
-          local returnValue = data.untriggerFunc(state, event, arg1, arg2, ...);
-          if returnValue then
+          local ok, returnValue = pcall(data.untriggerFunc, state, event, arg1, arg2, ...);
+          if not ok then
+            errorHandler(returnValue)
+          elseif (ok and returnValue) then
             if (WeakAuras.EndEvent(id, triggernum, nil, state)) then
               updateTriggerState = true;
             end
@@ -628,8 +655,10 @@ local function RunTriggerFunc(allStates, data, id, triggernum, event, arg1, arg2
         end
       else
         if data.untriggerFunc then
-          local returnValue = data.untriggerFunc(event, arg1, arg2, ...);
-          if returnValue then
+          local ok, returnValue = pcall(data.untriggerFunc, event, arg1, arg2, ...);
+          if not ok then
+            errorHandler(returnValue)
+          elseif (ok and returnValue) then
             allStates[""] = allStates[""] or {};
             local state = allStates[""];
             if(WeakAuras.EndEvent(id, triggernum, nil, state)) then
@@ -1026,7 +1055,7 @@ function GenericTrigger.LoadDisplays(toLoad, loadEvent, ...)
   end
 
   for event in pairs(eventsToRegister) do
-    frame:RegisterEvent(event)
+    pcall(frame.RegisterEvent, frame, event)
     genericTriggerRegisteredEvents[event] = true;
   end
 
@@ -1037,7 +1066,7 @@ function GenericTrigger.LoadDisplays(toLoad, loadEvent, ...)
         frame.unitFrames[unit].unit = unit
         frame.unitFrames[unit]:SetScript("OnEvent", HandleUnitEvent);
       end
-      frame.unitFrames[unit]:RegisterEvent(event)
+      pcall(frame.unitFrames[unit].RegisterEvent, frame.unitFrames[unit], event, unit)
       genericTriggerRegisteredUnitEvents[unit] = genericTriggerRegisteredUnitEvents[unit] or {};
       genericTriggerRegisteredUnitEvents[unit][event] = true;
     end
@@ -3646,26 +3675,56 @@ function GenericTrigger.CreateFallbackState(data, triggernum, state)
   WeakAuras.ActivateAuraEnvironment(data.id, "", state);
   local firstTrigger = data.triggers[1].trigger
   if (event.nameFunc) then
-    local name = event.nameFunc(firstTrigger);
-    state.name = name or nil;
+    local success, res = pcall(event.nameFunc, firstTrigger);
+    if not success then
+      geterrorhandler()(res)
+      state.name = nil
+    else
+      state.name = res or nil
+    end
   end
   if (event.iconFunc) then
-    local icon = event.iconFunc(firstTrigger);
-    state.icon = icon or nil;
+    local success, res = pcall(event.iconFunc, firstTrigger);
+    if not success then
+      geterrorhandler()(res)
+      state.icon = nil
+    else
+      state.icon = res or nil
+    end
   end
 
   if (event.textureFunc ) then
-    local texture = event.textureFunc(firstTrigger);
-    state.texture = texture or nil;
+    local success, res = pcall(event.textureFunc, firstTrigger);
+    if not success then
+      geterrorhandler()(res)
+      state.texture = nil
+    else
+      state.texture = res or nil
+    end
   end
 
   if (event.stacksFunc) then
-    local stacks = event.stacksFunc(firstTrigger);
-    state.stacks = stacks or nil;
+    local success, res = pcall(event.stacksFunc, firstTrigger);
+    if not success then
+      geterrorhandler()(res)
+      state.stacks = nil
+    else
+      state.stacks = res or nil
+    end
   end
 
   if (event.durationFunc) then
     local arg1, arg2, arg3, inverse = event.durationFunc(firstTrigger);
+    local success, arg1, arg2, arg3, inverse = pcall(event.durationFunc, firstTrigger);
+    if not success then
+      geterrorhandler()(arg1)
+      state.progressType = "timed";
+      state.duration = 0;
+      state.expirationTime = math.huge;
+      state.value = nil;
+      state.total = nil;
+      return;
+    end
     arg1 = type(arg1) == "number" and arg1 or 0;
     arg2 = type(arg2) == "number" and arg2 or 0;
 

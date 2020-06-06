@@ -831,8 +831,12 @@ end
 local customConditionTestFunctions = {};
 
 function WeakAuras.CallCustomConditionTest(testFunctionNumber, ...)
-  local result = customConditionTestFunctions[testFunctionNumber](...)
-  return result
+  local ok, result = pcall(customConditionTestFunctions[testFunctionNumber], ...)
+  if not ok then
+    geterrorhandler()(result)
+  elseif (ok) then
+    return result
+  end
 end
 
 local function CreateTestForCondition(input, allConditionsTemplate, usedStates)
@@ -4276,8 +4280,12 @@ function WeakAuras.Add(data, takeSnapshot, simpleChange)
   if takeSnapshot then
     WeakAuras.SetMigrationSnapshot(data.uid, snapshot)
   end
-  WeakAuras.PreAdd(data)
-  pAdd(data, simpleChange)
+  local ok, ret = pcall(WeakAuras.PreAdd, data)
+  if not ok then
+    geterrorhandler()(ret)
+  elseif ok then
+    pAdd(data, simpleChange)
+  end
 end
 
 function WeakAuras.SetRegion(data, cloneId)
@@ -4697,7 +4705,10 @@ function WeakAuras.PerformActions(data, when, region)
     local func = WeakAuras.customActionsFunctions[data.id][when]
     if func then
       WeakAuras.ActivateAuraEnvironment(region.id, region.cloneId, region.state, region.states);
-      xpcall(func, geterrorhandler());
+      local ok, ret = pcall(func);
+      if not ok then
+        geterrorhandler()(ret)
+      end
       WeakAuras.ActivateAuraEnvironment(nil);
     end
   end
@@ -4783,40 +4794,64 @@ function WeakAuras.UpdateAnimations()
     WeakAuras.ActivateAuraEnvironment(anim.name, anim.cloneId, anim.region.state, anim.region.states);
     if(anim.translateFunc) then
       if (anim.region.SetOffsetAnim) then
-        local x, y = anim.translateFunc(progress, 0, 0, anim.dX, anim.dY);
-        anim.region:SetOffsetAnim(x, y);
+        local ok, x, y = pcall(anim.translateFunc, progress, 0, 0, anim.dX, anim.dY);
+        if not ok then
+          errorHandler(x)
+        else
+          anim.region:SetOffsetAnim(x, y);
+        end
       else
         anim.region:ClearAllPoints();
-        local x, y = anim.translateFunc(progress, anim.startX, anim.startY, anim.dX, anim.dY);
-        anim.region:SetPoint(anim.selfPoint, anim.anchor, anim.anchorPoint, x, y);
+        local ok, x, y = xpcall(anim.translateFunc, progress, anim.startX, anim.startY, anim.dX, anim.dY);
+        if not ok then
+          errorHandler(x)
+        else
+          anim.region:SetPoint(anim.selfPoint, anim.anchor, anim.anchorPoint, x, y);
+        end
       end
     end
     if(anim.alphaFunc) then
-      local alpha = anim.alphaFunc(progress, anim.startAlpha, anim.dAlpha);
-      if (anim.region.SetAnimAlpha) then
-        anim.region:SetAnimAlpha(alpha);
+      local ok, alpha = pcall(anim.alphaFunc, progress, anim.startAlpha, anim.dAlpha);
+      if not ok then
+        errorHandler(alpha)
       else
-        anim.region:SetAlpha(alpha);
+        if (anim.region.SetAnimAlpha) then
+          anim.region:SetAnimAlpha(alpha);
+        else
+          anim.region:SetAlpha(alpha);
+        end
       end
     end
     if(anim.scaleFunc) then
-      local scaleX, scaleY = anim.scaleFunc(progress, 1, 1, anim.scaleX, anim.scaleY);
-      if(anim.region.Scale) then
-        anim.region:Scale(scaleX, scaleY);
+      local ok, scaleX, scaleY = pcall(anim.scaleFunc, progress, 1, 1, anim.scaleX, anim.scaleY);
+      if (ok) then
+        errorHandler(scaleX)
       else
-        anim.region:SetWidth(anim.startWidth * scaleX);
-        anim.region:SetHeight(anim.startHeight * scaleY);
+        if(anim.region.Scale) then
+          anim.region:Scale(scaleX, scaleY);
+        else
+          anim.region:SetWidth(anim.startWidth * scaleX);
+          anim.region:SetHeight(anim.startHeight * scaleY);
+        end
       end
     end
     if(anim.rotateFunc and anim.region.Rotate) then
-      local rotate = anim.rotateFunc(progress, anim.startRotation, anim.rotate);
-      anim.region:Rotate(rotate);
+      local ok, rotate = pcall(anim.rotateFunc, progress, anim.startRotation, anim.rotate);
+      if not ok then
+        errorHandler(rotate)
+      else
+        anim.region:Rotate(rotate);
+      end
     end
     if(anim.colorFunc and anim.region.ColorAnim) then
       local startR, startG, startB, startA = anim.region:GetColor();
       startR, startG, startB, startA = startR or 1, startG or 1, startB or 1, startA or 1;
-      local r, g, b, a = anim.colorFunc(progress, startR, startG, startB, startA, anim.colorR, anim.colorG, anim.colorB, anim.colorA);
-      anim.region:ColorAnim(r, g, b, a);
+      local ok, r, g, b, a = pcall(anim.colorFunc, progress, startR, startG, startB, startA, anim.colorR, anim.colorG, anim.colorB, anim.colorA);
+      if not ok then
+        errorHandler(r)
+      else
+        anim.region:ColorAnim(r, g, b, a);
+      end
     end
     WeakAuras.ActivateAuraEnvironment(nil);
     if(finished) then
@@ -5855,7 +5890,12 @@ local function evaluateTriggerStateTriggers(id)
     result = true;
   else
     if (triggerState[id].disjunctive == "custom" and triggerState[id].triggerLogicFunc) then
-      result = triggerState[id].triggerLogicFunc(triggerState[id].triggers);
+      local ok
+      ok, result = pcall(triggerState[id].triggerLogicFunc, triggerState[id].triggers);
+      if not ok then
+        geterrorhandler()(result)
+        result = false
+      end
     end
   end
 
@@ -6035,7 +6075,13 @@ function WeakAuras.RunCustomTextFunc(region, customFunc)
     end
   end
 
-  local custom = {customFunc(expirationTime or math.huge, duration or 0, progress, dur, name, icon, stacks)}
+  local custom = {pcall(customFunc, expirationTime or math.huge, duration or 0, progress, dur, name, icon, stacks)}
+  if not custom[1] then
+    geterrorhandler()(custom[2])
+  else
+    table.remove(custom, 1)
+  end
+
   WeakAuras.ActivateAuraEnvironment(nil)
   return custom
 end
@@ -6560,11 +6606,13 @@ local function GetAnchorFrame(data, region, parent)
     WeakAuras.StartProfileSystem("custom region anchor")
     WeakAuras.StartProfileAura(region.id)
     WeakAuras.ActivateAuraEnvironment(region.id, region.cloneId, region.state)
-    local ok, frame = xpcall(region.customAnchorFunc, geterrorhandler())
+    local ok, frame = pcall(region.customAnchorFunc)
     WeakAuras.ActivateAuraEnvironment()
     WeakAuras.StopProfileSystem("custom region anchor")
     WeakAuras.StopProfileAura(region.id)
-    if ok and frame then
+    if not ok then
+      geterrorhandler()(frame)
+    elseif ok and frame then
       return frame
     elseif WeakAuras.IsOptionsOpen() then
       return parent
@@ -6591,7 +6639,13 @@ function WeakAuras.AnchorFrame(data, region, parent)
     if not anchorParent then return end
     if (data.anchorFrameParent or data.anchorFrameParent == nil
         or data.anchorFrameType == "SCREEN" or data.anchorFrameType == "MOUSE") then
-      region:SetParent(anchorParent);
+      local errorhandler = function(text)
+        geterrorhandler()(L["'ERROR: Anchoring %s': \n"]:format(data.id) .. text)
+      end
+      local ok, ret = pcall(region.SetParent, region, anchorParent);
+      if not ok then
+        errorhandler(ret)
+      end
     else
       region:SetParent(frame);
     end

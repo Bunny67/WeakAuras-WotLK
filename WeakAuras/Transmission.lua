@@ -170,21 +170,11 @@ local function filterFunc(_, event, msg, player, l, cs, t, flag, channelId, ...)
     if event == "CHAT_MSG_WHISPER" and not UnitInRaid(player) and not UnitInParty(player) then -- XXX: Need a guild check
       local _, num = BNGetNumFriends()
       for i=1, num do
-        if C_BattleNet then -- introduced in 8.2.5 PTR
-          local toon = C_BattleNet.GetFriendNumGameAccounts(i)
-          for j=1, toon do
-            local gameAccountInfo = C_BattleNet.GetFriendGameAccountInfo(i, j);
-            if gameAccountInfo.characterName == player and gameAccountInfo.clientProgram == "WoW" then
-              return false, newMsg, player, l, cs, t, flag, channelId, ...; -- Player is a real id friend, allow it
-            end
-          end
-        else -- keep old method for 8.2 and Classic
-          local toon = BNGetNumFriendGameAccounts(i)
-          for j=1, toon do
-            local _, rName, rGame = BNGetFriendGameAccountInfo(i, j)
-            if rName == player and rGame == "WoW" then
-              return false, newMsg, player, l, cs, t, flag, channelId, ...; -- Player is a real id friend, allow it
-            end
+        local toon = BNGetNumFriendToons(i)
+        for j=1, toon do
+          local _, rName, rGame = BNGetFriendToonInfo(i, j)
+          if rName == trimmedPlayer and rGame == "WoW" then
+            return false, newMsg, player, l, cs, t, flag, channelId, ...; -- Player is a real id friend, allow it
           end
         end
       end

@@ -214,7 +214,7 @@ function WeakAuras.ActivateAuraEnvironment(id, cloneId, state, states, onlyConfi
       if(actions and actions.do_custom and actions.custom) then
         local func = WeakAuras.customActionsFunctions[id]["init"]
         if func then
-          local ok, ret = xpcall(func)
+          local ok, ret = pcall(func)
           if not ok then
             geterrorhandler()(ret)
           end

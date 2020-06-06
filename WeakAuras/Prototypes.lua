@@ -505,8 +505,8 @@ WeakAuras.anim_presets = {
 };
 
 function WeakAuras.CheckTalentByIndex(index)
-  local tab = ceil(index / 20)
-  local num_talent = (index - 1) % 20 + 1
+  local tab = ceil(index / MAX_NUM_TALENTS)
+  local num_talent = (index - 1) % MAX_NUM_TALENTS + 1
   local _, _, _, _, rank  = GetTalentInfo(tab, num_talent)
   return rank and rank > 0;
 end

@@ -1509,11 +1509,6 @@ WeakAuras.event_prototypes = {
           return (trigger.subeventPrefix == "SPELL" and trigger.subeventSuffix == "_CAST_START");
         end,
       },
-      { -- destRaidFlags ignore for SPELL_CAST_START
-        enable = function(trigger)
-          return (trigger.subeventPrefix == "SPELL" and trigger.subeventSuffix == "_CAST_START");
-        end
-      },
       {
         name = "spellId",
         display = L["Spell Id"],

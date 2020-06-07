@@ -3708,7 +3708,6 @@ function GenericTrigger.CreateFallbackState(data, triggernum, state)
   end
 
   if (event.durationFunc) then
-    local arg1, arg2, arg3, inverse = event.durationFunc(firstTrigger);
     local success, arg1, arg2, arg3, inverse = pcall(event.durationFunc, firstTrigger);
     if not success then
       geterrorhandler()(arg1)

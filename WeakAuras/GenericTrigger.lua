@@ -430,9 +430,10 @@ function WeakAuras.ActivateEvent(id, triggernum, data, state, errorHandler)
       errorHandler(arg1);
       arg1 = 0;
       arg2 = 0;
+    else
+      arg1 = type(arg1) == "number" and arg1 or 0;
+      arg2 = type(arg2) == "number" and arg2 or 0;
     end
-    arg1 = type(arg1) == "number" and arg2 or 0;
-    arg2 = type(arg2) == "number" and arg2 or 0;
 
     if (state.inverse ~= inverse) then
       state.inverse = inverse;

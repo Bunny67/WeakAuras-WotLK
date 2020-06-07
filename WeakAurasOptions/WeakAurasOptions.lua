@@ -724,7 +724,7 @@ function WeakAuras.ConstructOptions(prototype, data, startorder, triggernum, tri
                       end
                     end
                   end
-                  return useExactSpellId and L["Invalid Spell ID"] or L["Invalid Spell Name/ID/Link"];
+                  return useExactSpellId and L["Invalid Spell ID"] or (arg.conditionType == "string" and L["Invalid Spell Name/Link"] or L["Invalid Spell Name/ID/Link"]);
                 else
                   return nil;
                 end

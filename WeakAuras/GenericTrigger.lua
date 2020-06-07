@@ -2001,10 +2001,7 @@ do
     end
   end
 
-  function WeakAuras.GetSpellCooldown(id, ignoreRuneCD, showgcd, ignoreSpellKnown, track)
-    if (not spellKnown[id] and not ignoreSpellKnown) then
-      return;
-    end
+  function WeakAuras.GetSpellCooldown(id, ignoreRuneCD, showgcd, track)
     local startTime, duration, gcdCooldown;
     if track == "charges" then
       startTime, duration = spellCdsCharges:FetchSpellCooldown(id)
@@ -2031,10 +2028,7 @@ do
     return startTime, duration, gcdCooldown;
   end
 
-  function WeakAuras.GetSpellCharges(id, ignoreSpellKnown)
-    if (not spellKnown[id] and not ignoreSpellKnown) then
-      return;
-    end
+  function WeakAuras.GetSpellCharges(id)
     return spellCounts[id];
   end
 

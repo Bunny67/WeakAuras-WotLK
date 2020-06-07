@@ -1835,10 +1835,9 @@ WeakAuras.event_prototypes = {
         local spellname = %s
         local ignoreRuneCD = %s
         local showgcd = %s;
-        local ignoreSpellKnown = %s;
         local track = %q
-        local startTime, duration, gcdCooldown = WeakAuras.GetSpellCooldown(spellname, ignoreRuneCD, showgcd, ignoreSpellKnown, track);
-        local spellCount = WeakAuras.GetSpellCharges(spellname, ignoreSpellKnown);
+        local startTime, duration, gcdCooldown = WeakAuras.GetSpellCooldown(spellname, ignoreRuneCD, showgcd, track);
+        local spellCount = WeakAuras.GetSpellCharges(spellname);
         local stacks = (spellCount and spellCount > 0 and spellCount) or nil;
         local genericShowOn = %s
         local expirationTime = startTime and duration and startTime + duration
@@ -1860,7 +1859,6 @@ WeakAuras.event_prototypes = {
       ret = ret:format(spellName,
         (trigger.use_matchedRune and "true" or "false"),
         (trigger.use_showgcd and "true" or "false"),
-        (trigger.use_ignoreSpellKnown and "true" or "false"),
         (trigger.track or "auto"),
         showOnCheck
       );
@@ -1972,11 +1970,6 @@ WeakAuras.event_prototypes = {
               text = text ..L["Ignore Rune CDs"]
             end
 
-            if trigger.use_ignoreSpellKnown then
-              if text ~= "" then text = text .. "; " end
-              text = text .. L["Ignore Unknown Spell"]
-            end
-
             if trigger.genericShowOn ~= "showOnReady" and trigger.track ~= "cooldown" then
               if trigger.use_trackcharge and trigger.trackcharge then
                 if text ~= "" then text = text .. "; " end
@@ -2011,13 +2004,6 @@ WeakAuras.event_prototypes = {
       {
         name = "matchedRune",
         display = L["Ignore Rune CD"],
-        type = "toggle",
-        test = "true",
-        collapse = "extra Cooldown Progress (Spell)"
-      },
-      {
-        name = "ignoreSpellKnown",
-        display = L["Disable Spell Known Check"],
         type = "toggle",
         test = "true",
         collapse = "extra Cooldown Progress (Spell)"
@@ -3377,9 +3363,10 @@ WeakAuras.event_prototypes = {
         name = "spellName",
         display = L["Spell"],
         required = true,
-        type = "string",
+        type = "spell",
         test = "true",
-        store = true
+        store = true,
+        conditionType = "string"
       },
       -- This parameter uses the IsSpellInRange API function, but it does not check spell range at all
       -- IsSpellInRange returns nil for invalid targets, 0 for out of range, 1 for in range (0 and 1 are both "positive" values)

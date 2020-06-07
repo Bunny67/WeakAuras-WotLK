@@ -1152,7 +1152,7 @@ local globalConditions =
     type = "bool",
     events = {"PLAYER_REGEN_ENABLED", "PLAYER_REGEN_DISABLED"},
     globalStateUpdate = function(state)
-      state.incombat = UnitAffectingCombat("player");
+      state.incombat = UnitAffectingCombat("player") == 1 and true or false;
     end
   },
   ["hastarget"] = {
@@ -1160,7 +1160,7 @@ local globalConditions =
     type = "bool",
     events = {"PLAYER_TARGET_CHANGED", "PLAYER_ENTERING_WORLD"},
     globalStateUpdate = function(state)
-      state.hastarget = UnitExists("target");
+      state.hastarget = UnitExists("target") == 1 and true or false;
     end
   },
   ["attackabletarget"] = {
@@ -1168,7 +1168,7 @@ local globalConditions =
     type = "bool",
     events = {"PLAYER_TARGET_CHANGED", "UNIT_FACTION"},
     globalStateUpdate = function(state)
-      state.attackabletarget = UnitCanAttack("player", "target");
+      state.attackabletarget = UnitCanAttack("player", "target") == 1 and true or false;
     end
   },
 }

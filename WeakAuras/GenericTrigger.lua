@@ -95,7 +95,7 @@ function WeakAuras.UnitExistsFixed(unit, smart)
       return false
     end
   end
-  return UnitExists(unit)
+  return UnitExists(unit) == 1 and true or false
 end
 
 function WeakAuras.split(input)

@@ -1208,6 +1208,7 @@ do
       -- Note: Using UNIT_AURA in addition to COMBAT_LOG_EVENT_UNFILTERED,
       -- because the combat log event does not contain duration information
       local uid = ...;
+      if not uid then return end
       local guid = UnitGUID(uid);
 
       for spellName, auras in pairs(loaded_auras) do
@@ -1376,6 +1377,7 @@ frame:SetScript("OnEvent", function (frame, event, arg1, arg2, ...)
       WeakAuras.ScanAuras(unit);
     end
   elseif(event == "UNIT_AURA") then
+    if not arg1 then return end
     if(
       loaded_auras[arg1]
       or (

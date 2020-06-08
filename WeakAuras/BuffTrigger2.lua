@@ -1300,7 +1300,7 @@ local function UpdateStates(matchDataChanged, time)
 end
 
 local function ScanGroupUnit(time, matchDataChanged, unitType, unit)
-  local unitExists = UnitExists(unit)
+  local unitExists = UnitExists(unit) == 1 and true or false
   if existingUnits[unit] ~= unitExists then
     existingUnits[unit] = unitExists
 
@@ -1522,6 +1522,7 @@ local function EventHandler(frame, event, arg1, arg2, ...)
       ScanGroupUnit(time, matchDataChanged, nil, "vehicle")
     end
   elseif event == "UNIT_AURA" then
+    if not arg1 then return end
     ScanUnit(time, arg1)
   elseif event == "PLAYER_ENTERING_WORLD" then
     for unit in pairs(matchData) do
@@ -1700,7 +1701,7 @@ local function LoadAura(id, triggernum, triggerInfo)
     tinsert(unitExistScanFunc[triggerInfo.unit][id], triggerInfo)
 
     if existingUnits[triggerInfo.unit] == nil then
-      existingUnits[triggerInfo.unit] = UnitExists(triggerInfo.unit)
+      existingUnits[triggerInfo.unit] = UnitExists(triggerInfo.unit) == 1 and true or false
     end
   end
 
@@ -3023,6 +3024,7 @@ function BuffTrigger.HandleMultiEvent(frame, event, ...)
     ReleaseUID(unit)
   elseif event == "UNIT_AURA" then
     local unit = ...
+    if not unit then return end
     local guid = UnitGUID(unit)
     if matchDataMulti[guid] then
       CheckAurasMulti(matchDataMulti[guid], unit, "HELPFUL")

@@ -267,7 +267,7 @@ local function SoundPlay(self, options)
   SoundPlayHelper(self);
 
   local loop = options.do_loop or options.sound_type == "Loop";
-  if (loop and options.sound_repeat and options.sound_repeat < WeakAuras.maxTimerDuration) then
+  if (loop and options.sound_repeat) then
     self.soundRepeatTimer = WeakAuras.timer:ScheduleRepeatingTimer(SoundPlayHelper, options.sound_repeat, self);
   end
   WeakAuras.StopProfileSystem("sound");

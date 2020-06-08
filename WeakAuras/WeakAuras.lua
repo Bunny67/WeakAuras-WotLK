@@ -40,13 +40,7 @@ function WeakAuras:Mixin(object, ...)
 end
 
 function WeakAurasTimers:ScheduleTimerFixed(func, delay, ...)
-  if (delay < WeakAuras.maxTimerDuration) then
-    if delay + GetTime() > WeakAuras.maxUpTime then
-      WeakAuras.prettyPrint(WeakAuras.L["Can't schedule timer with %i, due to a World of Warcraft Bug with high computer uptime. (Uptime: %i). Please restart your Computer."]:format(delay, GetTime()))
-      return
-    end
-    return self:ScheduleTimer(func, delay, ...);
-  end
+  return self:ScheduleTimer(func, delay, ...);
 end
 
 local LDB = LibStub:GetLibrary("LibDataBroker-1.1")

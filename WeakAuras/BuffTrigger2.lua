@@ -229,21 +229,19 @@ local function UpdateMatchData(time, matchDataChanged, unit, index, filter, name
   if not matchData[unit][filter] then
     matchData[unit][filter] = {}
   end
-  local debuffClassIcon = WeakAuras.EJIcons[debuffClass]
   if not matchData[unit][filter][index] then
     matchData[unit][filter][index] = {
       name = name,
       icon = icon,
       stacks = stacks,
       debuffClass = debuffClass,
-      debuffClassIcon = debuffClassIcon,
       duration = duration,
       expirationTime = expirationTime,
       unitCaster = unitCaster,
-      casterName = unitCaster and GetUnitName(unitCaster, false) or "",
+      casterName = unitCaster and UnitName(unitCaster) or "",
       spellId = spellId,
       unit = unit,
-      unitName = GetUnitName(unit, false) or "",
+      unitName = UnitName(unit) or "",
       isStealable = isStealable,
       time = time,
       lastChanged = time,
@@ -278,11 +276,6 @@ local function UpdateMatchData(time, matchDataChanged, unit, index, filter, name
     changed = true
   end
 
-  if data.debuffClassIcon ~= debuffClassIcon then
-    data.debuffClassIcon = debuffClassIcon
-    changed = true
-  end
-
   if data.duration ~= duration then
     data.duration = duration
     changed = true
@@ -298,7 +291,7 @@ local function UpdateMatchData(time, matchDataChanged, unit, index, filter, name
     changed = true
   end
 
-  local casterName = unitCaster and GetUnitName(unitCaster, false) or ""
+  local casterName = unitCaster and UnitName(unitCaster) or ""
   if data.casterName ~= casterName then
     data.casterName = casterName
     changed = true
@@ -314,7 +307,7 @@ local function UpdateMatchData(time, matchDataChanged, unit, index, filter, name
     changed = true
   end
 
-  local unitName = GetUnitName(unit, false) or ""
+  local unitName = UnitName(unit) or ""
   if data.unitName ~= unitName then
     data.unitName = unitName
     changed = true
@@ -430,7 +423,6 @@ local function FindBestMatchDataForUnit(time, id, triggernum, triggerInfo, unit)
 end
 
 local function UpdateStateWithMatch(time, bestMatch, triggerStates, cloneId, matchCount, unitCount, maxUnitCount, matchCountPerUnit, totalStacks, affected, unaffected)
-  local debuffClassIcon = WeakAuras.EJIcons[bestMatch.debuffClass]
   if not triggerStates[cloneId] then
     triggerStates[cloneId] = {
       show = true,
@@ -439,7 +431,6 @@ local function UpdateStateWithMatch(time, bestMatch, triggerStates, cloneId, mat
       icon = bestMatch.icon,
       stacks = bestMatch.stacks,
       debuffClass = bestMatch.debuffClass,
-      debuffClassIcon = debuffClassIcon,
       progressType = "timed",
       duration = bestMatch.duration,
       expirationTime = bestMatch.expirationTime,
@@ -508,11 +499,6 @@ local function UpdateStateWithMatch(time, bestMatch, triggerStates, cloneId, mat
 
     if state.debuffClass ~= bestMatch.debuffClass then
       state.debuffClass = bestMatch.debuffClass
-      changed = true
-    end
-
-    if state.debuffClassIcon ~= debuffClassIcon then
-      state.debuffClassIcon = debuffClassIcon
       changed = true
     end
 
@@ -632,7 +618,7 @@ local function UpdateStateWithNoMatch(time, triggerStates, triggerInfo, cloneId,
       affected = affected,
       unaffected = unaffected,
       unit = unit,
-      unitName = unit and GetUnitName(unit, false) or "",
+      unitName = unit and UnitName(unit) or "",
       destName = "",
       name = fallbackName,
       icon = fallbackIcon,
@@ -684,7 +670,7 @@ local function UpdateStateWithNoMatch(time, triggerStates, triggerInfo, cloneId,
       changed = true
     end
 
-    local unitName = unit and GetUnitName(unit, false) or ""
+    local unitName = unit and UnitName(unit) or ""
     if state.unitName ~= unitName then
       state.unitName = unitName
       changed = true
@@ -915,9 +901,9 @@ local function FormatAffectedUnaffected(triggerInfo, matchedUnits)
   for unit in GetAllUnits(triggerInfo.unit) do
     if activeGroupScanFuncs[unit] and activeGroupScanFuncs[unit][triggerInfo] then
       if matchedUnits[unit] then
-        affected = affected .. (GetUnitName(unit, false) or unit) .. ", "
+        affected = affected .. (UnitName(unit) or unit) .. ", "
       else
-        unaffected = unaffected .. (GetUnitName(unit, false) or unit) .. ", "
+        unaffected = unaffected .. (UnitName(unit) or unit) .. ", "
       end
     end
   end
@@ -1522,7 +1508,6 @@ local function EventHandler(frame, event, arg1, arg2, ...)
       ScanGroupUnit(time, matchDataChanged, nil, "vehicle")
     end
   elseif event == "UNIT_AURA" then
-    if not arg1 then return end
     ScanUnit(time, arg1)
   elseif event == "PLAYER_ENTERING_WORLD" then
     for unit in pairs(matchData) do
@@ -2309,7 +2294,6 @@ function BuffTrigger.GetAdditionalProperties(data, triggernum)
 
   local ret =  "|cFFFF0000%".. triggernum .. ".spellId|r - " .. L["Spell ID"] .. "\n"
   ret = ret .. "|cFFFF0000%".. triggernum .. ".debuffClass|r - " .. L["Debuff Class"] .. "\n"
-  ret = ret .. "|cFFFF0000%".. triggernum .. ".debuffClassIcon|r - " .. L["Debuff Class Icon"] .. "\n"
   ret = ret .. "|cFFFF0000%".. triggernum .. ".unitCaster|r - " .. L["Caster Unit"] .. "\n"
   ret = ret .. "|cFFFF0000%".. triggernum .. ".casterName|r - " .. L["Caster Name"] .. "\n"
   ret = ret .. "|cFFFF0000%".. triggernum .. ".unitName|r - " .. L["Unit Name"] .. "\n"
@@ -2802,12 +2786,6 @@ local function AugmentMatchDataMultiWith(matchData, unit, name, icon, stacks, de
     changed = true
   end
 
-  local debuffClassIcon = WeakAuras.EJIcons[debuffClass]
-  if matchData.debuffClassIcon ~= debuffClassIcon then
-    matchData.debuffClassIcon = debuffClassIcon
-    changed = true
-  end
-
   if matchData.duration ~= duration then
     matchData.duration = duration
     changed = true
@@ -2823,7 +2801,7 @@ local function AugmentMatchDataMultiWith(matchData, unit, name, icon, stacks, de
     changed = true
   end
 
-  local casterName = GetUnitName(unitCaster, false) or ""
+  local casterName = UnitName(unitCaster) or ""
   if matchData.casterName ~= casterName then
     matchData.casterName = casterName
     changed = true
@@ -2834,7 +2812,7 @@ local function AugmentMatchDataMultiWith(matchData, unit, name, icon, stacks, de
     changed = true
   end
 
-  local unitName = GetUnitName(unit, false) or ""
+  local unitName = UnitName(unit) or ""
   if matchData.unitName ~= unitName then
     matchData.unitName = unitName
     changed = true
@@ -2997,8 +2975,6 @@ function BuffTrigger.InitMultiAura()
     multiAuraFrame:RegisterEvent("UNIT_AURA")
     multiAuraFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
 	multiAuraFrame:RegisterEvent("PLAYER_FOCUS_CHANGED")
-    multiAuraFrame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
-    multiAuraFrame:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
     multiAuraFrame:RegisterEvent("PLAYER_LEAVING_WORLD")
     multiAuraFrame:SetScript("OnEvent", BuffTrigger.HandleMultiEvent)
     WeakAuras.frames["Multi-target 2 Aura Trigger Handler"] = multiAuraFrame
@@ -3015,13 +2991,6 @@ function BuffTrigger.HandleMultiEvent(frame, event, ...)
     TrackUid("target")
   elseif event == "PLAYER_FOCUS_CHANGED" then
     TrackUid("focus")
-  elseif event == "NAME_PLATE_UNIT_ADDED" then
-    TrackUid(...)
-  elseif event == "NAME_PLATE_UNIT_REMOVED" then
-    local unit = ...
-    ReleaseUID(unit)
-    unit = unit.."target"
-    ReleaseUID(unit)
   elseif event == "UNIT_AURA" then
     local unit = ...
     if not unit then return end

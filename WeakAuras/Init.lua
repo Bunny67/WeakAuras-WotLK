@@ -7,8 +7,8 @@ WeakAuras.halfWidth = WeakAuras.normalWidth / 2
 WeakAuras.doubleWidth = WeakAuras.normalWidth * 2
 
 local versionStringFromToc = GetAddOnMetadata("WeakAuras", "Version")
-local versionString = "2.17.4"
-local buildTime = "20200422171414"
+local versionString = "2.17.5"
+local buildTime = "20200511190745"
 
 WeakAuras.versionString = versionStringFromToc
 WeakAuras.buildTime = buildTime
@@ -39,7 +39,7 @@ end
 WeakAuras.PowerAurasPath = "Interface\\Addons\\WeakAuras\\PowerAurasMedia\\Auras\\"
 WeakAuras.PowerAurasSoundPath = "Interface\\Addons\\WeakAuras\\PowerAurasMedia\\Sounds\\"
 
--- force enable WeakAurasCompanion and Archive because some addon managers interfere with it
+-- Force enable WeakAurasCompanion and Archive because some addon managers interfere with it
 EnableAddOn("WeakAurasCompanion")
 EnableAddOn("WeakAurasArchive")
 
@@ -62,7 +62,7 @@ end
 function WeakAuras.StopProfileAura()
 end
 
--- if weakauras shuts down due to being installed on the wrong target, keep the bindings from erroring
+-- If WeakAuras shuts down due to being installed on the wrong target, keep the bindings from erroring
 function WeakAuras.StartProfile()
 end
 

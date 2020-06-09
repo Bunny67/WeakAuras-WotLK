@@ -133,9 +133,9 @@ local function AcquireModel(region, data)
   -- Enable model animation
   if(data.advance) then
     local elapsed = 0;
-    model:SetScript("OnUpdate", function(self, e)
+    model:SetScript("OnUpdate", function(self, elaps)
       WeakAuras.StartProfileSystem("model");
-      elapsed = elapsed + (e * 1000);
+      elapsed = elapsed + (elaps * 1000);
       model:SetSequenceTime(data.sequence, elapsed);
       WeakAuras.StopProfileSystem("model");
     end)

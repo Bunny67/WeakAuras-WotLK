@@ -20,7 +20,7 @@
 --      - variable: Variable inside the trigger state to check
 --      - op: Operator to use for check
 --      - value: Value to check
---      - checks: Sub Checks for Combinations, each containg trigger, variable, op, value or checks
+--      - checks: Sub Checks for Combinations, each containing trigger, variable, op, value or checks
 --      - (for merged) references
 --          - id => conditionIndex
 --               => op
@@ -677,22 +677,6 @@ local function addControlsForChange(args, order, data, conditionVariable, condit
     }
     order = order + 1;
 
-    args["condition" .. i .. "value" .. j .. "message channel"] = {
-      type = "input",
-      width = WeakAuras.normalWidth,
-      name = blueIfNoValue2(data, conditions[i].changes[j], "value", "message_channel", L["Channel Number"], L["Channel Number"]),
-      desc = descIfNoValue2(data, conditions[i].changes[j], "value", "message_channel", propertyType),
-      order = order,
-      get = function()
-        return type(conditions[i].changes[j].value) == "table" and conditions[i].changes[j].value.message_channel;
-      end,
-      set = setValueComplex("message_channel"),
-      hidden = function()
-        return not anyMessageType("CHANNEL");
-      end
-    }
-    order = order + 1;
-
     local descMessage = descIfNoValue2(data, conditions[i].changes[j], "value", "message", propertyType);
     if (not descMessage and data ~= WeakAuras.tempGroup) then
       descMessage = L["Dynamic text tooltip"] .. WeakAuras.GetAdditionalProperties(data)
@@ -743,9 +727,9 @@ local function addControlsForChange(args, order, data, conditionVariable, condit
                   local changeIndex = reference.changeIndex;
                   multipath[id] = {"conditions", conditionIndex, "changes", changeIndex, "value", "custom"};
                 end
-                WeakAuras.OpenTextEditor(data, multipath, nil, true);
+                WeakAuras.OpenTextEditor(data, multipath, nil, true, nil, nil, "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#chat-message---custom-code-1");
               else
-                WeakAuras.OpenTextEditor(data, {"conditions", i, "changes", j, "value", "custom"});
+                WeakAuras.OpenTextEditor(data, {"conditions", i, "changes", j, "value", "custom"}, nil, nil, nil, nil, "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#chat-message---custom-code-1");
               end
             end
           }
@@ -822,10 +806,10 @@ local function addControlsForChange(args, order, data, conditionVariable, condit
                   childData.conditions[conditionIndex].changes[changeIndex].value = childData.conditions[conditionIndex].changes[changeIndex].value or {};
                   multipath[id] = {"conditions", conditionIndex, "changes", changeIndex, "value", "custom"};
                 end
-                WeakAuras.OpenTextEditor(data, multipath, true, true);
+                WeakAuras.OpenTextEditor(data, multipath, true, true, nil, nil, "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#run-custom-code");
               else
                 data.conditions[i].changes[j].value = data.conditions[i].changes[j].value or {};
-                WeakAuras.OpenTextEditor(data, {"conditions", i, "changes", j, "value", "custom"}, true);
+                WeakAuras.OpenTextEditor(data, {"conditions", i, "changes", j, "value", "custom"}, true, nil, nil, nil, "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#run-custom-code");
               end
             end
           }
@@ -1957,7 +1941,7 @@ local function createConditionTemplates(data)
   return conditionTemplates, conditionTemplateWithoutCombinations;
 end
 
-local function buildAllPotentialProperies(data, category)
+local function buildAllPotentialProperties(data, category)
   local allProperties = {};
   allProperties.propertyMap = {};
   if (data.controlledChildren) then
@@ -2276,7 +2260,7 @@ function WeakAuras.GetConditionOptions(data, args, conditionVariable, startorder
   local conditionTemplates, conditionTemplateWithoutCombinations = createConditionTemplates(data);
 
   -- Build potential properties structure
-  local allProperties = buildAllPotentialProperies(data, category);
+  local allProperties = buildAllPotentialProperties(data, category);
 
   -- Build currently selected conditions
   local conditions;

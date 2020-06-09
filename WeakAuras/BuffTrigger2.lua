@@ -696,11 +696,6 @@ local function UpdateStateWithNoMatch(time, triggerStates, triggerInfo, cloneId,
       changed = true
     end
 
-    if state.tooltip or state.tooltip1 or state.tooltip2 or state.tooltip3 then
-      state.tooltip, state.tooltip1, state.tooltip2, state.tooltip3 = nil, nil, nil, nil
-      changed = true
-    end
-
     if state.matchCount ~= matchCount then
       state.matchCount = matchCount
       changed = true
@@ -867,10 +862,18 @@ local function TriggerInfoApplies(triggerInfo, unit)
     return false
   end
 
+  if triggerInfo.ignoreDead and UnitIsDeadOrGhost(unit) then
+    return false
+  end
+
+  if triggerInfo.ignoreDisconnected and not UnitIsConnected(unit) then
+    return false
+  end
+
   if triggerInfo.unit == "group" and triggerInfo.groupSubType == "party" then
     if IsInRaid() then
       -- Filter our player/party# while in raid and keep only raid units that are correct
-      if not WeakAuras.multiUnitUnits.raid[unit] or not UnitIsUnit("player", unit) then
+      if unit:sub(1,4) ~= "raid" or not UnitIsUnit("player", unit) then
         return false
       end
     else
@@ -881,11 +884,11 @@ local function TriggerInfoApplies(triggerInfo, unit)
   end
 
   -- Filter our player/party# while in raid
-  if (triggerInfo.unit == "group" and triggerInfo.groupSubType == "group" and IsInRaid() and not WeakAuras.multiUnitUnits.raid[unit]) then
+  if (triggerInfo.unit == "group" and triggerInfo.groupSubType == "group" and IsInRaid() and unit:sub(1,4) ~= "raid") then
     return false
   end
 
-  if triggerInfo.unit == "group" and triggerInfo.groupSubType == "raid" and not WeakAuras.multiUnitUnits.raid[unit] then
+  if triggerInfo.unit == "group" and triggerInfo.groupSubType == "raid" and unit:sub(1,4) ~= "raid" then
     return false
   end
 
@@ -1353,13 +1356,13 @@ end
 
 local function ScanUnit(time, arg1)
   if not arg1 then return end
-  if (WeakAuras.multiUnitUnits.raid[arg1] and IsInRaid()) then
+  if (arg1:sub(1,4) == "raid" and IsInRaid()) then
     ScanGroupUnit(time, matchDataChanged, "group", arg1)
-  elseif (WeakAuras.multiUnitUnits.party[arg1] and not IsInRaid()) then
+  elseif ((arg1:sub(1,5) == "party" or arg1 == "player") and not IsInRaid()) then
     ScanGroupUnit(time, matchDataChanged, "group", arg1)
-   elseif WeakAuras.multiUnitUnits.boss[arg1] then
+  elseif arg1:sub(1,4) == "boss" then
     ScanGroupUnit(time, matchDataChanged, "boss", arg1)
-  elseif WeakAuras.multiUnitUnits.arena[arg1] then
+  elseif arg1:sub(1,5) == "arena" then
     ScanGroupUnit(time, matchDataChanged, "arena", arg1)
   else
     ScanGroupUnit(time, matchDataChanged, nil, arg1)
@@ -1503,6 +1506,14 @@ local function EventHandler(frame, event, arg1, arg2, ...)
         tinsert(unitsToRemove, unit)
       end
     end
+  elseif event == "UNIT_FLAGS" then
+    if arg1:sub(1,4) == "raid" or arg1:sub(1, 5) == "party" or arg1 == "player" then
+      RecheckActiveForUnitType("group", arg1, deactivatedTriggerInfos)
+    end
+  elseif event == "PLAYER_FLAGS_CHANGED" then
+    if arg1:sub(1,4) == "raid" or arg1:sub(1, 5) == "party" or arg1 == "player" then
+      RecheckActiveForUnitType("group", arg1, deactivatedTriggerInfos)
+    end
   elseif event == "UNIT_ENTERED_VEHICLE" or event == "UNIT_EXITED_VEHICLE" then
     if arg1 == "player" then
       ScanGroupUnit(time, matchDataChanged, nil, "vehicle")
@@ -1530,6 +1541,8 @@ local function EventHandler(frame, event, arg1, arg2, ...)
 end
 
 frame:RegisterEvent("UNIT_AURA")
+frame:RegisterEvent("UNIT_FLAGS")
+frame:RegisterEvent("PLAYER_FLAGS_CHANGED")
 frame:RegisterEvent("UNIT_PET")
 frame:RegisterEvent("PLAYER_FOCUS_CHANGED")
 frame:RegisterEvent("ARENA_OPPONENT_UPDATE")
@@ -2104,6 +2117,8 @@ function BuffTrigger.Add(data)
       local groupTrigger = trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party"
       local effectiveIgnoreSelf = groupTrigger  and trigger.ignoreSelf
       local effectiveClass = groupTrigger and trigger.useClass and trigger.class
+      local effectiveIgnoreDead = groupTrigger and trigger.ignoreDead
+      local effectiveIgnoreDisconnected = groupTrigger and trigger.ignoreDisconnected
 
       if trigger.unit == "multi" then
         BuffTrigger.InitMultiAura()
@@ -2154,6 +2169,8 @@ function BuffTrigger.Add(data)
         fetchTooltip = not IsSingleMissing(trigger) and trigger.unit ~= "multi" and trigger.fetchTooltip,
         groupTrigger = IsGroupTrigger(trigger),
         ignoreSelf = effectiveIgnoreSelf,
+        ignoreDead = effectiveIgnoreDead,
+        ignoreDisconnected = effectiveIgnoreDisconnected,
         groupSubType = groupSubType,
         groupCountFunc = groupCountFunc,
         class = effectiveClass,

@@ -102,7 +102,7 @@ function WeakAuras.AddActionOption(id, data)
         name = "",
         order = 3,
         image = function() return "", 0, 0 end,
-        hidden = function() return not(data.actions.start.message_type == "WHISPER" or data.actions.start.message_type == "CHANNEL" or data.actions.start.message_type == "COMBAT" or data.actions.start.message_type == "PRINT") end
+        hidden = function() return not(data.actions.start.message_type == "WHISPER" or data.actions.start.message_type == "COMBAT" or data.actions.start.message_type == "PRINT") end
       },
       start_message_color = {
         type = "color",
@@ -126,14 +126,6 @@ function WeakAuras.AddActionOption(id, data)
         order = 4,
         disabled = function() return not data.actions.start.do_message end,
         hidden = function() return data.actions.start.message_type ~= "WHISPER" end
-      },
-      start_message_channel = {
-        type = "input",
-        width = WeakAuras.normalWidth,
-        name = L["Channel Number"],
-        order = 4,
-        disabled = function() return not data.actions.start.do_message end,
-        hidden = function() return data.actions.start.message_type ~= "CHANNEL" end
       },
       start_message = {
         type = "input",
@@ -489,7 +481,7 @@ function WeakAuras.AddActionOption(id, data)
         name = "",
         order = 23,
         image = function() return "", 0, 0 end,
-        hidden = function() return not(data.actions.finish.message_type == "WHISPER" or data.actions.finish.message_type == "CHANNEL") end
+        hidden = function() return data.actions.finish.message_type ~= "WHISPER" end
       },
       finish_message_color = {
         type = "color",
@@ -513,14 +505,6 @@ function WeakAuras.AddActionOption(id, data)
         order = 24,
         disabled = function() return not data.actions.finish.do_message end,
         hidden = function() return data.actions.finish.message_type ~= "WHISPER" end
-      },
-      finish_message_channel = {
-        type = "input",
-        width = WeakAuras.normalWidth,
-        name = L["Channel Number"],
-        order = 24,
-        disabled = function() return not data.actions.finish.do_message end,
-        hidden = function() return data.actions.finish.message_type ~= "CHANNEL" end
       },
       finish_message = {
         type = "input",
@@ -836,19 +820,19 @@ function WeakAuras.AddActionOption(id, data)
     },
   }
 
-  WeakAuras.AddCodeOption(action.args, data, L["Custom Code"], "init", "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Actions",
+  WeakAuras.AddCodeOption(action.args, data, L["Custom Code"], "init", "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#on-init",
                           0.011, function() return not data.actions.init.do_custom end, {"actions", "init", "custom"}, true);
 
-  WeakAuras.AddCodeOption(action.args, data, L["Custom Code"], "start_message", "https://github.com/WeakAuras/WeakAuras2/wiki/Text-Replacements",
+  WeakAuras.AddCodeOption(action.args, data, L["Custom Code"], "start_message", "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#chat-message---custom-code",
                           5.1, function() return not (data.actions.start.do_message and WeakAuras.ContainsCustomPlaceHolder(data.actions.start.message)) end, {"actions", "start", "message_custom"}, false);
 
-  WeakAuras.AddCodeOption(action.args, data, L["Custom Code"], "start", "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Actions",
+  WeakAuras.AddCodeOption(action.args, data, L["Custom Code"], "start", "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#on-show",
                           13, function() return not data.actions.start.do_custom end, {"actions", "start", "custom"}, true);
 
-  WeakAuras.AddCodeOption(action.args, data, L["Custom Code"], "finish_message", "https://github.com/WeakAuras/WeakAuras2/wiki/Text-Replacements",
+  WeakAuras.AddCodeOption(action.args, data, L["Custom Code"], "finish_message", "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#chat-message---custom-code",
                           26, function() return not (data.actions.finish.do_message and WeakAuras.ContainsCustomPlaceHolder(data.actions.finish.message)) end, {"actions", "finish", "message_custom"}, false);
 
-  WeakAuras.AddCodeOption(action.args, data, L["Custom Code"], "finish", "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Actions",
+  WeakAuras.AddCodeOption(action.args, data, L["Custom Code"], "finish", "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#on-hide",
                           32, function() return not data.actions.finish.do_custom end, {"actions", "finish", "custom"}, true);
 
   return action;

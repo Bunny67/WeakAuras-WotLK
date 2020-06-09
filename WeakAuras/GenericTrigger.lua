@@ -388,11 +388,13 @@ local function callFunctionForActivateEvent(func, trigger, fallback, errorHandle
     return fallback
   end
   local ok, value = pcall(func, trigger)
-  if not ok then
-    errorHandler(value)
-    return fallback
-  else
+  if ok and value then
     return value
+  else
+    if not ok then
+      errorHandler(value)
+    end
+    return fallback
   end
 end
 
@@ -804,6 +806,11 @@ function GenericTrigger.ScanWithFakeEvent(id, fake)
           end
           updateTriggerState = RunTriggerFunc(allStates, events[id][triggernum], id, triggernum, eventName) or updateTriggerState;
         end
+        for unit, unitData in pairs(event.unit_events) do
+          for _, event in ipairs(unitData) do
+            updateTriggerState = RunTriggerFunc(allStates, events[id][triggernum], id, triggernum, event, unit) or updateTriggerState
+          end
+        end
       end
     end
   end
@@ -855,7 +862,7 @@ function HandleUnitEvent(frame, event, unit, ...)
   WeakAuras.StartProfileSystem("generictrigger " .. event .. " " .. unit);
   if not(WeakAuras.IsPaused()) then
     if (UnitIsUnit(unit, frame.unit)) then
-      WeakAuras.ScanUnitEvents(event, unit, ...);
+      WeakAuras.ScanUnitEvents(event, frame.unit, ...);
     end
   end
   WeakAuras.StopProfileSystem("generictrigger " .. event .. " " .. unit);
@@ -1227,9 +1234,6 @@ function GenericTrigger.Add(data, region)
           triggerFunc = WeakAuras.LoadFunction("return "..(trigger.custom or ""), id);
           if (trigger.custom_type == "stateupdate") then
             tsuConditionVariables = WeakAuras.LoadFunction("return function() return \n" .. (trigger.customVariables or "") .. "\n end");
-            if not tsuConditionVariables then
-              tsuConditionVariables = function() return end
-            end
           end
 
           if(trigger.custom_type == "status" or trigger.custom_type == "event" and trigger.custom_hide == "custom") then
@@ -1753,11 +1757,9 @@ do
       swingTimerFrame:RegisterEvent("PLAYER_ENTER_COMBAT");
       swingTimerFrame:RegisterEvent("UNIT_ATTACK_SPEED");
       swingTimerFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED");
-      if WeakAuras.IsClassic() then
-        swingTimerFrame:RegisterEvent("UNIT_SPELLCAST_START")
-        swingTimerFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
-        swingTimerFrame:RegisterEvent("UNIT_SPELLCAST_FAILED")
-      end
+      swingTimerFrame:RegisterEvent("UNIT_SPELLCAST_START")
+      swingTimerFrame:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+      swingTimerFrame:RegisterEvent("UNIT_SPELLCAST_FAILED")
       swingTimerFrame:SetScript("OnEvent",
         function(_, event, ...)
           if event == "COMBAT_LOG_EVENT_UNFILTERED" then
@@ -3670,47 +3672,47 @@ function GenericTrigger.CreateFallbackState(data, triggernum, state)
   WeakAuras.ActivateAuraEnvironment(data.id, "", state);
   local firstTrigger = data.triggers[1].trigger
   if (event.nameFunc) then
-    local success, res = pcall(event.nameFunc, firstTrigger);
-    if not success then
-      geterrorhandler()(res)
+    local ok, name = pcall(event.nameFunc, firstTrigger);
+    if not ok then
+      geterrorhandler()(name)
       state.name = nil
     else
-      state.name = res or nil
+      state.name = name or nil
     end
   end
   if (event.iconFunc) then
-    local success, res = pcall(event.iconFunc, firstTrigger);
-    if not success then
-      geterrorhandler()(res)
+    local ok, icon = pcall(event.iconFunc, firstTrigger);
+    if not ok then
+      geterrorhandler()(icon)
       state.icon = nil
     else
-      state.icon = res or nil
+      state.icon = icon or nil
     end
   end
 
   if (event.textureFunc ) then
-    local success, res = pcall(event.textureFunc, firstTrigger);
-    if not success then
-      geterrorhandler()(res)
+    local ok, texture = pcall(event.textureFunc, firstTrigger);
+    if not ok then
+      geterrorhandler()(texture)
       state.texture = nil
     else
-      state.texture = res or nil
+      state.texture = texture or nil
     end
   end
 
   if (event.stacksFunc) then
-    local success, res = pcall(event.stacksFunc, firstTrigger);
-    if not success then
-      geterrorhandler()(res)
+    local ok, stacks = pcall(event.stacksFunc, firstTrigger);
+    if not ok then
+      geterrorhandler()(stacks)
       state.stacks = nil
     else
-      state.stacks = res or nil
+      state.stacks = stacks or nil
     end
   end
 
   if (event.durationFunc) then
-    local success, arg1, arg2, arg3, inverse = pcall(event.durationFunc, firstTrigger);
-    if not success then
+    local ok, arg1, arg2, arg3, inverse = pcall(event.durationFunc, firstTrigger);
+    if not ok then
       geterrorhandler()(arg1)
       state.progressType = "timed";
       state.duration = 0;

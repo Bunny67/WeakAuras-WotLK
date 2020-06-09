@@ -680,6 +680,22 @@ local function GetBuffTriggerOptions(data, optionTriggerChoices)
       hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party") and not trigger.useClass) end
     },
 
+    ignoreDead = {
+      type = "toggle",
+      name = WeakAuras.newFeatureString .. L["Ignore Dead"],
+      order = 68.7,
+      width = WeakAuras.doubleWidth,
+      hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")) end
+    },
+
+    ignoreDisconnected = {
+      type = "toggle",
+      name = WeakAuras.newFeatureString .. L["Ignore Disconnected"],
+      order = 68.8,
+      width = WeakAuras.doubleWidth,
+      hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")) end
+    },
+
     useGroup_count = {
       type = "toggle",
       width = WeakAuras.normalWidth,

@@ -623,6 +623,7 @@ function WeakAuras.IsSpellKnown(spell, pet)
     end
     return IsSpellKnown(spell);
   end
+  return false
 end
 
 function WeakAuras.IsSpellKnownIncludingPet(spell)

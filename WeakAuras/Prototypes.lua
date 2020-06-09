@@ -797,13 +797,6 @@ WeakAuras.load_prototype = {
       showExactOption = true
     },
     {
-      name = "race",
-      display = L["Player Race"],
-      type = "multiselect",
-      values = "race_types",
-      init = "arg"
-    },
-    {
       name = "faction",
       display = L["Player Faction"],
       type = "multiselect",

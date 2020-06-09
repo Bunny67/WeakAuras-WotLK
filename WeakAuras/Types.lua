@@ -211,35 +211,6 @@ do
   end
 end
 
-WeakAuras.race_types = {}
---[[
-do
-  local unplayableRace = {
-    [12] = true,
-    [13] = true,
-    [14] = true,
-    [15] = true,
-    [16] = true,
-    [17] = true,
-    [18] = true,
-    [19] = true,
-    [20] = true,
-    [21] = true,
-    [23] = true,
-    [33] = true
-  }
-  local raceID = 1
-  local raceInfo = C_CreatureInfo.GetRaceInfo(raceID)
-  while raceInfo do
-    if not unplayableRace[raceID] then
-      WeakAuras.race_types[raceInfo.clientFileString] = raceInfo.raceName
-    end
-    raceID = raceID + 1
-    raceInfo = C_CreatureInfo.GetRaceInfo(raceID)
-  end
-end
-]]
-
 WeakAuras.faction_group = {
   Alliance = L["Alliance"],
   Horde = L["Horde"],

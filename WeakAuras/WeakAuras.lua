@@ -1946,16 +1946,32 @@ end
 local function GetInstanceTypeAndSize()
   local size, difficulty
   local inInstance, Type = IsInInstance()
-  local _, instanceType, difficultyIndex = GetInstanceInfo()
+  local _, instanceType, difficultyIndex, _, maxPlayers, playerDifficulty, isDynamicInstance = GetInstanceInfo()
   if (inInstance) then
     local ZoneMapID = GetCurrentMapAreaID()
     size = Type
-	if Type ~= "pvp" and Type ~= "arena" then
-	  local difficultyInfo = WeakAuras.difficulty_info[difficultyIndex]
-      if difficultyInfo then
-        size, difficulty = difficultyInfo.size, difficultyInfo.difficulty
+    if Type == "raid" then
+      if maxPlayers == 10 then
+        size = "ten"
+      elseif maxPlayers == 25 then
+        size = "twentyfive"
+      elseif maxPlayers == 40 then
+        size = "fortyman"
       end
-	end
+    end
+    if isDynamic then
+      if playerDifficulty == 0 then
+        difficulty = "normal"
+      elseif playerDifficulty == 1 then
+        difficulty = "heroic"
+      end
+    else
+      if difficultyIndex == 1 or difficultyIndex == 2 then
+        difficulty = "normal"
+      elseif difficultyIndex == 3 or difficultyIndex == 4 then
+        difficulty = "heroic"
+      end
+    end
     return size, difficulty, instanceType, ZoneMapID
   end
   return "none", "none", nil, nil

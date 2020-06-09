@@ -1273,7 +1273,6 @@ WeakAuras.instance_types = {
   none = L["No Instance"],
   party = L["5 Man Dungeon"],
   ten = L["10 Man Raid"],
-  twenty = L["20 Man Raid"],
   twentyfive = L["25 Man Raid"],
   fortyman = L["40 Man Raid"],
   pvp = L["Battleground"],
@@ -1948,86 +1947,6 @@ WeakAuras.group_limit_types = {
 WeakAuras.group_option_types = {
   simple = L["Simple"],
   array = L["Array"],
-}
-
-WeakAuras.difficulty_info = {
-  [1] = {
-    size = "party",
-    difficulty = "normal",
-  },
-  [2] = {
-    size = "party",
-    difficulty = "heroic",
-  },
-  [3] = {
-    size = "ten",
-    difficulty = "normal",
-  },
-  [4] = {
-    size = "twentyfive",
-    difficulty = "normal",
-  },
-  [5] = {
-    size = "ten",
-    difficulty = "heroic",
-  },
-  [6] = {
-    size = "twentyfive",
-    difficulty = "heroic",
-  },
-  [7] = {
-    size = "twentyfive",
-    difficulty = "lfr",
-  },
-  [8] = {
-    size = "party",
-    difficulty = "challenge",
-  },
-  [9] = {
-    size = "fortyman",
-    difficulty = "normal",
-  },
-  [11] = {
-    size = "scenario",
-    difficulty = "heroic",
-  },
-  [12] = {
-    size = "scenario",
-    difficulty = "normal",
-  },
-  -- 13 is unused
-  [14] = {
-    size = "flexible",
-    difficulty = "normal",
-  },
-  [15] = {
-    size = "flexible",
-    difficulty = "heroic",
-  },
-  [16] = {
-    size = "twenty",
-    difficulty = "mythic",
-  },
-  [17] = {
-    size = "flexible",
-    difficulty = "lfr",
-  },
-  [23] = {
-    size = "party",
-    difficulty = "mythic",
-  },
-  [24] = {
-    size = "party",
-    difficulty = "timewalking",
-  },
-  [33] = {
-    size = "flexible",
-    difficulty = "timewalking",
-  },
-  [148] = {
-    size = "twenty",
-    difficulty = "normal",
-  },
 }
 
 WeakAuras.glow_types = {

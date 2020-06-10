@@ -1657,6 +1657,7 @@ loadedFrame:RegisterEvent("ADDON_LOADED");
 loadedFrame:RegisterEvent("PLAYER_LOGIN");
 loadedFrame:RegisterEvent("PLAYER_ENTERING_WORLD");
 loadedFrame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED");
+loadedFrame:RegisterEvent("SPELL_UPDATE_USABLE");
 loadedFrame:SetScript("OnEvent", function(self, event, addon)
   if(event == "ADDON_LOADED") then
     if(addon == ADDON_NAME) then
@@ -1725,6 +1726,9 @@ loadedFrame:SetScript("OnEvent", function(self, event, addon)
         WeakAuras.CreateTalentCache() -- It seems that GetTalentInfo might give info about whatever class was previously being played, until PLAYER_ENTERING_WORLD
         WeakAuras.UpdateCurrentInstanceType();
       end
+    elseif(event == "SPELL_UPDATE_USABLE") then
+      callback = WeakAuras.CreateTalentCache;
+      WeakAuras.frames["Addon Initialization Handler"]:UnregisterEvent("SPELL_UPDATE_USABLE")
     elseif(event == "ACTIVE_TALENT_GROUP_CHANGED") then
       callback = WeakAuras.CreateTalentCache;
     elseif(event == "PLAYER_REGEN_ENABLED") then

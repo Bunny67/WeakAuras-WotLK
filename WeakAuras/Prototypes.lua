@@ -765,7 +765,7 @@ WeakAuras.load_prototype = {
       type = "multiselect",
       values = valuesForTalentFunction,
       test = "WeakAuras.CheckTalentByIndex(%d)",
-      events = {"PLAYER_TALENT_UPDATE"}
+      events = {"PLAYER_TALENT_UPDATE", "SPELL_UPDATE_USABLE"}
     },
     {
       name = "talent2",
@@ -776,7 +776,7 @@ WeakAuras.load_prototype = {
       enable = function(trigger)
         return trigger.use_talent ~= nil or trigger.use_talent2 ~= nil;
       end,
-      events = {"PLAYER_TALENT_UPDATE"}
+      events = {"PLAYER_TALENT_UPDATE", "SPELL_UPDATE_USABLE"}
     },
     {
       name = "talent3",
@@ -787,7 +787,7 @@ WeakAuras.load_prototype = {
       enable = function(trigger)
         return (trigger.use_talent ~= nil and trigger.use_talent2 ~= nil) or trigger.use_talent3 ~= nil;
       end,
-      events = {"PLAYER_TALENT_UPDATE"}
+      events = {"PLAYER_TALENT_UPDATE", "SPELL_UPDATE_USABLE"}
     },
     {
       name = "spellknown",
@@ -3410,7 +3410,7 @@ WeakAuras.event_prototypes = {
     type = "status",
     events = function()
       return {
-        ["events"] = {"PLAYER_TALENT_UPDATE"}
+        ["events"] = {"PLAYER_TALENT_UPDATE", "SPELL_UPDATE_USABLE"}
       }
     end,
     force_events = "PLAYER_TALENT_UPDATE",

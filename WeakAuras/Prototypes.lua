@@ -917,6 +917,33 @@ local unitHelperFunctions = {
 }
 
 WeakAuras.event_prototypes = {
+  ["Combo Points"] = {
+    type = "status",
+    events = {
+      ["events"] = {
+        "UNIT_COMBO_POINTS",
+        "PLAYER_TARGET_CHANGED",
+        "PLAYER_FOCUS_CHANGED"
+       }
+    },
+    force_events = "UNIT_COMBO_POINTS",
+    name = L["Combo Points"],
+    args = {
+      {
+        name = "combopoints",
+        display = L["Combo Points"],
+        type = "number",
+        init = "GetComboPoints(UnitInVehicle('player') and 'vehicle' or 'player', 'target')"
+      }
+    },
+    durationFunc = function(trigger)
+      return GetComboPoints(UnitInVehicle("player") and "vehicle" or "player", "target"), 5, true;
+    end,
+    stacksFunc = function(trigger)
+      return GetComboPoints(UnitInVehicle("player") and "vehicle" or "player", "target"), true;
+    end,
+    automaticrequired = true
+  },
   ["Unit Characteristics"] = {
     type = "status",
     events = function(trigger)

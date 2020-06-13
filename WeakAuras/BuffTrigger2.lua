@@ -823,7 +823,7 @@ local function GetAllUnits(unit, allUnits)
     end
     return function()
       local ret = unit .. i
-      while not allUnits and not UnitExistsFixed(ret) do
+      while not allUnits and not UnitExists(ret) do
         i = i + 1
         if i > max then
           i = 1

@@ -4706,7 +4706,7 @@ WeakAuras.event_prototypes = {
         values = "actual_unit_types_with_specific",
         conditionType = "unit",
         conditionTest = function(state, unit, op)
-          return state and state.show and state.unit and (UnitIsUnit(state.sourceUnit, unit) == (op == "=="))
+          return state and state.show and state.unit and ((UnitIsUnit(state.sourceUnit, unit) == 1 and true or false) == (op == "=="))
         end,
         store = true,
         hidden = true,
@@ -4730,7 +4730,7 @@ WeakAuras.event_prototypes = {
         init = "unit .. '-target'",
         conditionType = "unit",
         conditionTest = function(state, unit, op)
-          return state and state.show and state.destUnit and (UnitIsUnit(state.destUnit, unit) == (op == "=="))
+          return state and state.show and state.destUnit and ((UnitIsUnit(state.destUnit, unit) == 1 and true or false) == (op == "=="))
         end,
         store = true,
         enable = function(trigger) return not trigger.use_inverse end,

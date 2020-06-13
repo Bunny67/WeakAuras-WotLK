@@ -238,7 +238,11 @@ if not C_Timer or C_Timer._version ~= 2 then
 	end
 
 	function C_Timer.After(duration, callback)
-		return CreateTicker(duration, callback, 1)
+		AddDelayedCall({
+			_remainingIterations = 1,
+			_delay = duration,
+			_callback = callback
+		})
 	end
 
 	function C_Timer.NewTimer(duration, callback)

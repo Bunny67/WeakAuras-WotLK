@@ -1601,10 +1601,6 @@ function WeakAuras.Login(initialTime, takeNewSnapshots)
       end
     end
 
-    -- check in case of a disconnect during an encounter.
-    if (db.CurrentEncounter) then
-      WeakAuras.CheckForPreviousEncounter()
-    end
     coroutine.yield();
     WeakAuras.RegisterLoadEvents();
     WeakAuras.Resume();
@@ -1828,95 +1824,6 @@ function WeakAuras.ScanAll()
 
   WeakAuras.ResumeAllDynamicGroups();
   WeakAuras.ReloadAll();
-end
-
--- encounter stuff
-function WeakAuras.StoreBossGUIDs()
-  WeakAuras.StartProfileSystem("boss_guids")
-  if (WeakAuras.CurrentEncounter and WeakAuras.CurrentEncounter.boss_guids) then
-    for i = 1, 5 do
-      if (UnitExists ("boss" .. i)) then
-        local guid = UnitGUID ("boss" .. i)
-        if (guid) then
-          WeakAuras.CurrentEncounter.boss_guids [guid] = true
-        end
-      end
-    end
-    db.CurrentEncounter = WeakAuras.CurrentEncounter
-  end
-  WeakAuras.StopProfileSystem("boss_guids")
-end
-
-function WeakAuras.CheckForPreviousEncounter()
-  if (UnitAffectingCombat ("player") or InCombatLockdown()) then
-    for i = 1, 5 do
-      if (UnitExists ("boss" .. i)) then
-        local guid = UnitGUID ("boss" .. i)
-        if (guid and db.CurrentEncounter.boss_guids [guid]) then
-          -- we are in the same encounter
-          WeakAuras.CurrentEncounter = db.CurrentEncounter
-          return true
-        end
-      end
-    end
-    db.CurrentEncounter = nil
-  else
-    db.CurrentEncounter = nil
-  end
-end
-
-function WeakAuras.DestroyEncounterTable()
-  if (WeakAuras.CurrentEncounter) then
-    wipe(WeakAuras.CurrentEncounter)
-  end
-  WeakAuras.CurrentEncounter = nil
-  db.CurrentEncounter = nil
-end
-
-function WeakAuras.CreateEncounterTable(encounter_id)
-  local _, _, _, _, _, _, _, ZoneMapID = GetInstanceInfo()
-  WeakAuras.CurrentEncounter = {
-    id = encounter_id,
-    zone_id = ZoneMapID,
-    boss_guids = {},
-  }
-  timer:ScheduleTimer(WeakAuras.StoreBossGUIDs, 2)
-
-  return WeakAuras.CurrentEncounter
-end
-
-local encounterScriptsDeferred = {}
-local function LoadEncounterInitScriptsImpl(id)
-  if (WeakAuras.currentInstanceType ~= "raid") then
-    return
-  end
-  if (id) then
-    local data = db.displays[id]
-    if (data and data.load.use_encounterid and not WeakAuras.IsEnvironmentInitialized(id) and data.actions.init and data.actions.init.do_custom) then
-      WeakAuras.ActivateAuraEnvironment(id)
-      WeakAuras.ActivateAuraEnvironment(nil)
-    end
-    encounterScriptsDeferred[id] = nil
-  else
-    for id, data in pairs(db.displays) do
-      if (data.load.use_encounterid and not WeakAuras.IsEnvironmentInitialized(id) and data.actions.init and data.actions.init.do_custom) then
-        WeakAuras.ActivateAuraEnvironment(id)
-        WeakAuras.ActivateAuraEnvironment(nil)
-      end
-    end
-  end
-end
-
-function WeakAuras.LoadEncounterInitScripts(id)
-  if not WeakAuras.IsLoginFinished() then
-    if encounterScriptsDeferred[id] then
-      return
-    end
-    loginQueue[#loginQueue + 1] = {LoadEncounterInitScriptsImpl, {id}}
-    encounterScriptsDeferred[id] = true
-    return
-  end
-  LoadEncounterInitScriptsImpl(id)
 end
 
 function WeakAuras.UpdateCurrentInstanceType(instanceType)
@@ -4271,8 +4178,6 @@ local function pAdd(data, simpleChange)
         triggerCount = 0,
         activatedConditions = {},
       };
-
-      WeakAuras.LoadEncounterInitScripts(id);
 
       if (WeakAuras.IsOptionsOpen()) then
         WeakAuras.FakeStatesFor(id, visible)

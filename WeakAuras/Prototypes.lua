@@ -996,7 +996,7 @@ WeakAuras.event_prototypes = {
         name = "unitisunit",
         display = L["Unit is Unit"],
         type = "unit",
-        init = "UnitIsUnit(unit, extraUnit)",
+        init = "UnitIsUnit(unit, extraUnit) == 1 and true or false",
         values = "actual_unit_types_with_specific",
         test = "unitisunit",
         store = true,
@@ -1068,7 +1068,7 @@ WeakAuras.event_prototypes = {
         name = "attackable",
         display = L["Attackable"],
         type = "tristate",
-        init = "UnitCanAttack('player', unit)",
+        init = "UnitCanAttack('player', unit) == 1 and true or false",
         store = true,
         conditionType = "bool"
       },

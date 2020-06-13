@@ -617,11 +617,15 @@ function WeakAuras.IsSpellKnownForLoad(spell, exact)
 end
 
 function WeakAuras.IsSpellKnown(spell, pet)
-  if (spell and tonumber(spell)) then
-    if (pet) then
-      return IsSpellKnown(spell, pet);
+  if (spell) then
+    if tonumber(spell) then
+      if (pet) then
+        return IsSpellKnown(spell, pet);
+      end
+      return IsSpellKnown(spell);
+    else
+      return (GetSpellInfo(spell)) and true or false
     end
-    return IsSpellKnown(spell);
   end
   return false
 end

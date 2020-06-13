@@ -1956,6 +1956,7 @@ do
     cdReadyFrame = CreateFrame("FRAME");
     WeakAuras.frames["Cooldown Trigger Handler"] = cdReadyFrame
     cdReadyFrame:RegisterEvent("RUNE_POWER_UPDATE");
+    cdReadyFrame:RegisterEvent("RUNE_TYPE_UPDATE");
     cdReadyFrame:RegisterEvent("PLAYER_TALENT_UPDATE");
     cdReadyFrame:RegisterEvent("CHARACTER_POINTS_CHANGED");
     cdReadyFrame:RegisterEvent("SPELL_UPDATE_COOLDOWN");
@@ -1970,7 +1971,7 @@ do
       WeakAuras.StartProfileSystem("generictrigger cd tracking");
       if not WeakAuras.IsPaused() then
         if(event == "SPELL_UPDATE_COOLDOWN"
-          or event == "RUNE_POWER_UPDATE" or event == "ACTIONBAR_UPDATE_COOLDOWN"
+          or event == "RUNE_POWER_UPDATE" or event == "RUNE_TYPE_UPDATE" or event == "ACTIONBAR_UPDATE_COOLDOWN"
           or event == "PLAYER_TALENT_UPDATE"
           or event == "CHARACTER_POINTS_CHANGED") then
           WeakAuras.CheckCooldownReady();
@@ -2109,12 +2110,10 @@ do
   end
 
   function WeakAuras.CheckRuneCooldown()
-    local runeDuration = -100;
     for id, _ in pairs(runes) do
       local startTime, duration = GetRuneCooldown(id);
       startTime = startTime or 0;
       duration = duration or 0;
-      runeDuration = duration > 0 and duration or runeDuration
       local time = GetTime();
 
       if(not startTime or startTime == 0) then
@@ -2142,7 +2141,7 @@ do
           runeCdHandles[id] = timer:ScheduleTimerFixed(RuneCooldownFinished, endTime - time, id);
           WeakAuras.ScanEvents("RUNE_COOLDOWN_CHANGED", id);
         end
-      elseif(duration > 0) then
+      elseif(startTime > 0 and duration > 0) then
       -- GCD, do nothing
       else
         if(runeCdExps[id]) then
@@ -2359,8 +2358,8 @@ do
 
   function WeakAuras.CheckCooldownReady()
     CheckGCD();
-    local runeDuration = WeakAuras.CheckRuneCooldown();
-    WeakAuras.CheckSpellCooldows(runeDuration);
+    WeakAuras.CheckRuneCooldown();
+    WeakAuras.CheckSpellCooldows();
     WeakAuras.CheckItemCooldowns();
     WeakAuras.CheckItemSlotCooldowns();
   end

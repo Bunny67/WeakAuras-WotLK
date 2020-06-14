@@ -8,11 +8,10 @@ local ceil, min = ceil, min
 
 -- WoW APIs
 local GetTalentInfo = GetTalentInfo
-local UnitClass, UnitHealth, UnitHealthMax, UnitName, UnitStagger, UnitPower, UnitPowerMax = UnitClass, UnitHealth, UnitHealthMax, UnitName, UnitStagger, UnitPower, UnitPowerMax
+local UnitClass, UnitHealth, UnitHealthMax, UnitName, UnitPower, UnitPowerMax = UnitClass, UnitHealth, UnitHealthMax, UnitName, UnitPower, UnitPowerMax
 local GetSpellInfo, GetItemInfo, GetItemCount, GetItemIcon = GetSpellInfo, GetItemInfo, GetItemCount, GetItemIcon
 local GetShapeshiftFormInfo, GetShapeshiftForm = GetShapeshiftFormInfo, GetShapeshiftForm
 local GetRuneCooldown, UnitCastingInfo, UnitChannelInfo = GetRuneCooldown, UnitCastingInfo, UnitChannelInfo
-local CastingInfo, ChannelInfo = CastingInfo, ChannelInfo
 
 local WeakAuras = WeakAuras
 local L = WeakAuras.L
@@ -4163,7 +4162,7 @@ WeakAuras.event_prototypes = {
         local startTime, duration = WeakAuras.GetRuneCooldown(rune);
         local inverse = %s;
         local death = %s;
-	    
+
         local numBloodRunes = 0;
         local numUnholyRunes = 0;
         local numFrostRunes = 0;
@@ -4182,7 +4181,7 @@ WeakAuras.event_prototypes = {
             end
           end
         end
-	    
+
         if %s then
           numBloodRunes  = numBloodRunes  + numDeathRunes;
           numUnholyRunes = numUnholyRunes + numDeathRunes;

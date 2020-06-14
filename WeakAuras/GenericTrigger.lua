@@ -2157,7 +2157,6 @@ do
         end
       end
     end
-    return runeDuration;
   end
 
   function WeakAuras.GetSpellCooldownUnified(id, runeDuration)

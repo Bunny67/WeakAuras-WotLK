@@ -21,27 +21,7 @@ lib.stopList = {}
 
 local GlowParent = UIParent
 
-local GlowMaskPool = CreateFromMixins(ObjectPoolMixin)
-lib.GlowMaskPool = GlowMaskPool
-
-local function MaskPoolFactory(maskPool)
-   -- return maskPool.parent:CreateMaskTexture()
-	return maskPool.parent:CreateTexture()
-end
-
-local MaskPoolResetter = function(maskPool,mask)
-	mask:Hide()
-	mask:ClearAllPoints()
-end
-
-ObjectPoolMixin.OnLoad(GlowMaskPool, MaskPoolFactory, MaskPoolResetter)
-GlowMaskPool.parent =  GlowParent
-
 local TexPoolResetter = function(pool, tex)
-   -- local maskNum = tex:GetNumMaskTextures()
-   -- for i = maskNum,1 do
-	--    tex:RemoveMaskTexture(tex:GetMaskTexture(i))
-   -- end
 	tex:Hide()
 	tex:ClearAllPoints()
 end
@@ -60,19 +40,6 @@ local FramePoolResetter = function(framePool, frame)
 		for _, texture in pairs(frame.textures) do
 			GlowTexPool:Release(texture)
 		end
-	end
-
-	if frame.bg then
-		GlowTexPool:Release(frame.bg)
-		frame.bg = nil
-	end
-
-	if frame.masks then
-		for _,mask in pairs(frame.masks) do
-			GlowMaskPool:Release(mask)
-		end
-
-		frame.masks = nil
 	end
 
 	frame.textures = {}
@@ -120,7 +87,7 @@ local function addFrameAndTex(r, color, name, key, N, xOffset, yOffset, texture,
 		f.textures[i]:Show()
 	end
 
-	while #f.textures>N do
+	while #f.textures > N do
 		GlowTexPool:Release(f.textures[#f.textures])
 		table.remove(f.textures)
 	end
@@ -128,38 +95,40 @@ end
 
 
 --Pixel Glow Functions--
-local pCalc1 = function(progress,s,th,p)
+local pBorders = {"TOPLEFT", "TOPRIGHT", "BOTTOMLEFT", "BOTTOMRIGHT", "TOP", "BOTTOM", "LEFT", "RIGHT"}
+
+local pCalc1 = function(progress, s, th, p)
 	local c
-	if progress>p[3] or progress<p[0] then
+	if progress > p[3] or progress < p[0] then
 		c = 0
-	elseif progress>p[2] then
-		c =s-th-(progress-p[2])/(p[3]-p[2])*(s-th)
-	elseif progress>p[1] then
-		c =s-th
+	elseif progress > p[2] then
+		c = s - th - (progress - p[2]) / (p[3] - p[2]) * (s - th)
+	elseif progress > p[1] then
+		c = s - th
 	else
-		c = (progress-p[0])/(p[1]-p[0])*(s-th)
+		c = (progress - p[0]) / (p[1] - p[0]) * (s - th)
 	end
-	return math.floor(c+0.5)
+	return math.floor(c + 0.5)
 end
 
-local pCalc2 = function(progress,s,th,p)
+local pCalc2 = function(progress, s, th, p)
 	local c
-	if progress>p[3] then
-		c = s-th-(progress-p[3])/(p[0]+1-p[3])*(s-th)
-	elseif progress>p[2] then
-		c = s-th
-	elseif progress>p[1] then
-		c = (progress-p[1])/(p[2]-p[1])*(s-th)
-	elseif progress>p[0] then
+	if progress > p[3] then
+		c = s - th - (progress - p[3]) / (p[0] + 1 - p[3]) * (s - th)
+	elseif progress > p[2] then
+		c = s - th
+	elseif progress > p[1] then
+		c = (progress - p[1]) / (p[2] - p[1]) * (s - th)
+	elseif progress > p[0] then
 		c = 0
 	else
-		c = s-th-(progress+1-p[3])/(p[0]+1-p[3])*(s-th)
+		c = s - th - (progress + 1 - p[3]) / (p[0] + 1 - p[3]) * (s - th)
 	end
-	return math.floor(c+0.5)
+	return math.floor(c + 0.5)
 end
 
 local pUpdate = function(self, elapsed)
-	self.timer = self.timer+elapsed/self.info.period
+	self.timer = self.timer + elapsed / self.info.period
 
 	if self.timer > 1 or self.timer < -1 then
 		self.timer = self.timer % 1
@@ -177,48 +146,41 @@ local pUpdate = function(self, elapsed)
 		self.info.height = height
 
 		self.info.pTLx = {
-			[0] = (height+self.info.length/2)/perimeter,
-			[1] = (height+width+self.info.length/2)/perimeter,
-			[2] = (2*height+width-self.info.length/2)/perimeter,
-			[3] = 1-self.info.length/2/perimeter
+			[0] = (height + self.info.length / 2) / perimeter,
+			[1] = (height + width + self.info.length / 2) / perimeter,
+			[2] = (2 * height + width - self.info.length / 2) / perimeter,
+			[3] = 1 - self.info.length /2 / perimeter
 		}
-		self.info.pTLy ={
-			[0] = (height-self.info.length/2)/perimeter,
-			[1] = (height+width+self.info.length/2)/perimeter,
-			[2] = (height*2+width+self.info.length/2)/perimeter,
-			[3] = 1-self.info.length/2/perimeter
+		self.info.pTLy = {
+			[0] = (height - self.info.length / 2) / perimeter,
+			[1] = (height + width + self.info.length / 2) / perimeter,
+			[2] = (height * 2 + width + self.info.length / 2) / perimeter,
+			[3] = 1 - self.info.length / 2 / perimeter
 		}
-		self.info.pBRx ={
-			[0] = self.info.length/2/perimeter,
-			[1] = (height-self.info.length/2)/perimeter,
-			[2] = (height+width-self.info.length/2)/perimeter,
-			[3] = (height*2+width+self.info.length/2)/perimeter
+		self.info.pBRx = {
+			[0] = self.info.length / 2 / perimeter,
+			[1] = (height - self.info.length / 2) / perimeter,
+			[2] = (height + width - self.info.length / 2) / perimeter,
+			[3] = (height * 2 + width + self.info.length / 2) / perimeter
 		}
-		self.info.pBRy ={
-			[0] = self.info.length/2/perimeter,
-			[1] = (height+self.info.length/2)/perimeter,
-			[2] = (height+width-self.info.length/2)/perimeter,
-			[3] = (height*2+width-self.info.length/2)/perimeter
+		self.info.pBRy = {
+			[0] = self.info.length / 2 / perimeter,
+			[1] = (height + self.info.length / 2) / perimeter,
+			[2] = (height + width - self.info.length / 2) / perimeter,
+			[3] = (height * 2 + width - self.info.length / 2) / perimeter
 		}
 	end
 
 	if self:IsShown() then
-		if not (self.masks[1]:IsShown()) then
-			self.masks[1]:Show()
-			self.masks[1]:SetPoint("TOPLEFT",self,"TOPLEFT",self.info.th,-self.info.th)
-			self.masks[1]:SetPoint("BOTTOMRIGHT",self,"BOTTOMRIGHT",-self.info.th,self.info.th)
-		end
-		if self.masks[2] and not(self.masks[2]:IsShown()) then
-			self.masks[2]:Show()
-			self.masks[2]:SetPoint("TOPLEFT",self,"TOPLEFT",self.info.th+1,-self.info.th-1)
-			self.masks[2]:SetPoint("BOTTOMRIGHT",self,"BOTTOMRIGHT",-self.info.th-1,self.info.th+1)
-		end
-		if self.bg and not(self.bg:IsShown()) then
-			self.bg:Show()
-		end
-		for k,line  in pairs(self.textures) do
-			line:SetPoint("TOPLEFT",self,"TOPLEFT",pCalc1((progress+self.info.step*(k-1))%1,width,self.info.th,self.info.pTLx),-pCalc2((progress+self.info.step*(k-1))%1,height,self.info.th,self.info.pTLy))
-			line:SetPoint("BOTTOMRIGHT",self,"TOPLEFT",self.info.th+pCalc2((progress+self.info.step*(k-1))%1,width,self.info.th,self.info.pBRx),-height+pCalc1((progress+self.info.step*(k-1))%1,height,self.info.th,self.info.pBRy))
+		for k, line in pairs(self.textures) do
+			line:SetPoint("TOPLEFT", self, "TOPLEFT",
+				pCalc1((progress + self.info.step * (k - 1)) % 1, width, self.info.th, self.info.pTLx),
+				-pCalc2((progress + self.info.step * (k - 1)) % 1, height, self.info.th, self.info.pTLy)
+			)
+			line:SetPoint("BOTTOMRIGHT", self, "TOPLEFT",
+				self.info.th + pCalc2((progress + self.info.step * (k - 1)) % 1, width, self.info.th, self.info.pBRx),
+				-height + pCalc1((progress + self.info.step * (k - 1)) % 1, height, self.info.th, self.info.pBRy)
+			)
 		end
 	end
 end
@@ -249,50 +211,7 @@ function lib.PixelGlow_Start(r, color, N, frequency, length, th, xOffset, yOffse
 
 	addFrameAndTex(r, color, "_PixelGlow", key, N, xOffset, yOffset, textureList.white, {0,1,0,1}, nil, frameLevel)
 	local f = r["_PixelGlow"..key]
-	if not f.masks then
-		f.masks = {}
-	end
 
-	if not f.masks[1] then
-		f.masks[1] = GlowMaskPool:Acquire()
-		f.masks[1]:SetTexture(textureList.empty, "CLAMPTOWHITE","CLAMPTOWHITE")
-		f.masks[1]:Show()
-	end
-
-	f.masks[1]:SetPoint("TOPLEFT",f,"TOPLEFT",th,-th)
-	f.masks[1]:SetPoint("BOTTOMRIGHT",f,"BOTTOMRIGHT",-th,th)
-
-	if not(border==false) then
-		if not f.masks[2] then
-			f.masks[2] = GlowMaskPool:Acquire()
-			f.masks[2]:SetTexture(textureList.white, "CLAMPTOWHITE","CLAMPTOWHITE")
-		end
-		f.masks[2]:SetPoint("TOPLEFT",f,"TOPLEFT",th+1,-th-1)
-		f.masks[2]:SetPoint("BOTTOMRIGHT",f,"BOTTOMRIGHT",-th-1,th+1)
-
-		if not f.bg then
-			f.bg = GlowTexPool:Acquire()
-			f.bg:SetTexture(0.1,0.1,0.1,0.8)
-			f.bg:SetParent(f)
-			f.bg:SetAllPoints(f)
-			f.bg:SetDrawLayer("ARTWORK",6)
-		   -- f.bg:AddMaskTexture(f.masks[2])
-		end
-	else
-		if f.bg then
-			GlowTexPool:Release(f.bg)
-			f.bg = nil
-		end
-		if f.masks[2] then
-			GlowMaskPool:Release(f.masks[2])
-			f.masks[2] = nil
-		end
-	end
-	for _,tex in pairs(f.textures) do
-		--if tex:GetNumMaskTextures() < 1 then
-		--    tex:AddMaskTexture(f.masks[1])
-		--end
-	end
 	f.timer = f.timer or 0
 	f.info = f.info or {}
 	f.info.step = 1/N

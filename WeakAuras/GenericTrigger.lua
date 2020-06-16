@@ -1982,11 +1982,10 @@ do
           WeakAuras.CheckSpellKnown();
           WeakAuras.CheckCooldownReady();
         elseif(event == "UNIT_SPELLCAST_SENT") then
-          local unit, name = ...;
+          local unit, name, _ = ...;
           if(unit == "player") then
-            name = GetSpellInfo(name);
-            if(gcdSpellName ~= name) then
-              local icon = GetSpellTexture(name);
+            name, _, icon = GetSpellInfo(name);
+            if(name and gcdSpellName ~= name) then
               gcdSpellName = name;
               gcdSpellIcon = icon;
               WeakAuras.ScanEvents("GCD_UPDATE");

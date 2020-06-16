@@ -916,7 +916,6 @@ local function modify(parent, region, data)
     region.bar.iconHeight = iconsize
     local texWidth = 0.25 * data.zoom;
     icon:SetTexCoord(GetTexCoordZoom(texWidth))
-    icon:SetDesaturated(data.desaturate);
     icon:SetVertexColor(data.icon_color[1], data.icon_color[2], data.icon_color[3], data.icon_color[4]);
 
     -- Update icon visibility
@@ -1052,7 +1051,8 @@ local function modify(parent, region, data)
       or data.displayIcon
       or "Interface\\Icons\\INV_Misc_QuestionMark"
       );
-    self.icon:SetTexture(iconPath);
+    icon:SetTexture(iconPath);
+    icon:SetDesaturated(data.desaturate);
 
     local duration = state.duration or 0
     local min = region.adjustMin or 0

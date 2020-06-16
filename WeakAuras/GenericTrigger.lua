@@ -1982,7 +1982,7 @@ do
           WeakAuras.CheckSpellKnown();
           WeakAuras.CheckCooldownReady();
         elseif(event == "UNIT_SPELLCAST_SENT") then
-          local unit, guid, castGUID, name = ...;
+          local unit, name = ...;
           if(unit == "player") then
             name = GetSpellInfo(name);
             if(gcdSpellName ~= name) then

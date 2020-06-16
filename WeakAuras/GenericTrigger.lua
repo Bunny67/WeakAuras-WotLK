@@ -1984,8 +1984,8 @@ do
         elseif(event == "UNIT_SPELLCAST_SENT") then
           local unit, name, _ = ...;
           if(unit == "player") then
-            name, _, icon = GetSpellInfo(name);
-            if(name and gcdSpellName ~= name) then
+            if(gcdSpellName ~= name) then
+              local icon = GetSpellTexture(name);
               gcdSpellName = name;
               gcdSpellIcon = icon;
               WeakAuras.ScanEvents("GCD_UPDATE");

@@ -816,4 +816,4 @@ local function GetAnchors(data)
   return WeakAuras.default_types_for_anchor
 end
 
-WeakAuras.RegisterRegionOptions("progresstexture", createOptions, createIcon, L["Progress Texture"], createThumbnail, modifyThumbnail, L["Shows a texture that changes based on duration"], templates, GetAnchors);
+--WeakAuras.RegisterRegionOptions("progresstexture", createOptions, createIcon, L["Progress Texture"], createThumbnail, modifyThumbnail, L["Shows a texture that changes based on duration"], templates, GetAnchors);

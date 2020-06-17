@@ -1393,4 +1393,4 @@ local function modify(parent, region, data)
   WeakAuras.regionPrototype.modifyFinish(parent, region, data);
 end
 
-WeakAuras.RegisterRegionType("progresstexture", create, modify, default, GetProperties);
+--WeakAuras.RegisterRegionType("progresstexture", create, modify, default, GetProperties);

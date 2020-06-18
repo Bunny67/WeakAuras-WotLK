@@ -638,33 +638,6 @@ function WeakAuras.IsSpellKnownIncludingPet(spell)
   end
 end
 
-function WeakAuras.GetNumSetItemsEquipped(setID)
-  if not setID or not type(setID) == "number" then return end
-  if not WeakAuras.IsClassic() then
-    local itemList = C_LootJournal.GetItemSetItems(setID)
-    if not itemList then return end
-    local setName = GetItemSetInfo(setID)
-    local max = #itemList
-    local equipped = 0
-    for _,v in ipairs(itemList) do
-      if IsEquippedItem(v.itemID) then
-        equipped = equipped + 1
-      end
-    end
-   return equipped, max, setName
-  else
-    local equipped = 0
-    local setName = GetItemSetInfo(setID)
-    for i = 1, 18 do
-      local item = GetInventoryItemID("player", i)
-      if item and select(16, GetItemInfo(item)) == setID then
-        equipped = equipped + 1
-      end
-    end
-    return equipped, 18, setName
-  end
-end
-
 local function valuesForTalentFunction(trigger)
   return function()
     local single_class;
@@ -4358,48 +4331,6 @@ WeakAuras.event_prototypes = {
     hasItemID = true,
     automaticrequired = true
   },
-  ["Item Set"] = {
-    type = "status",
-    events = {
-      ["events"] = {"PLAYER_EQUIPMENT_CHANGED"}
-    },
-    force_events = "PLAYER_EQUIPMENT_CHANGED",
-    name = L["Item Set Equipped"],
-    automaticrequired = true,
-    init = function(trigger)
-      return string.format("local setid = %s;\n", trigger.itemSetId and tonumber(trigger.itemSetId) or "0");
-    end,
-    statesParameter = "one",
-    args = {
-      {
-        name = "itemSetId",
-        display = L["Item Set Id"],
-        type = "string",
-        test = "true",
-        store = "true",
-        required = true,
-        validate = WeakAuras.ValidateNumeric,
-        desc = function()
-          return L["Set IDs can be found on websites such as classic.wowhead.com/item-sets"]
-        end
-      },
-      {
-        name = "equipped",
-        display = L["Equipped"],
-        type = "number",
-        init = "WeakAuras.GetNumSetItemsEquipped(setid)",
-        store = true,
-        required = true,
-        conditionType = "number"
-      }
-    },
-    durationFunc = function(trigger)
-      return WeakAuras.GetNumSetItemsEquipped(trigger.itemSetId and tonumber(trigger.itemSetId) or 0)
-    end,
-    nameFunc = function(trigger)
-      return select(3, WeakAuras.GetNumSetItemsEquipped(trigger.itemSetId and tonumber(trigger.itemSetId) or 0));
-    end
-  },
   ["Equipment Set"] = {
     type = "status",
     events = {
@@ -5421,7 +5352,6 @@ WeakAuras.event_prototypes["DBM Announce"] = nil
 WeakAuras.event_prototypes["DBM Timer"] = nil
 WeakAuras.event_prototypes["BigWigs Message"] = nil
 WeakAuras.event_prototypes["BigWigs Timer"] = nil
-WeakAuras.event_prototypes["Item Set"] = nil
 WeakAuras.event_prototypes["Equipment Set"] = nil
 
 WeakAuras.dynamic_texts = {

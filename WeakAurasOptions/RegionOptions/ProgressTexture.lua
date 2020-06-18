@@ -642,35 +642,23 @@ local function modifyThumbnail(parent, borderframe, data, fullModify, size)
     local startAngle = data.startAngle % 360;
     local endAngle = data.endAngle % 360;
 
+    if (data.inverse) then
+      startAngle, endAngle = endAngle, startAngle
+      startAngle = 360 - startAngle;
+      endAngle = 360 - endAngle;
+      clockwise = not clockwise;
+    end
     if (endAngle <= startAngle) then
       endAngle = endAngle + 360;
     end
 
-    backgroundSpinner:SetProgress(region, startAngle, endAngle);
-    foregroundSpinner:SetProgress(region, startAngle, endAngle);
+    backgroundSpinner:SetProgress(region, startAngle, endAngle, 0, clockwise);
 
     function region:SetValue(progress)
+      progress = progress or 0;
       region.progress = progress;
 
-      if (progress < 0) then
-        progress = 0;
-      end
-
-      if (progress > 1) then
-        progress = 1;
-      end
-
-      if (not clockwise) then
-        progress = 1 - progress;
-      end
-
-      local pAngle = (endAngle - startAngle) * progress + startAngle;
-
-      if (clockwise) then
-        foregroundSpinner:SetProgress(region, startAngle, pAngle);
-      else
-        foregroundSpinner:SetProgress(region, pAngle, endAngle);
-      end
+      foregroundSpinner:SetProgress(region, startAngle, endAngle, progress, clockwise);
     end
   end
 
@@ -816,4 +804,4 @@ local function GetAnchors(data)
   return WeakAuras.default_types_for_anchor
 end
 
---WeakAuras.RegisterRegionOptions("progresstexture", createOptions, createIcon, L["Progress Texture"], createThumbnail, modifyThumbnail, L["Shows a texture that changes based on duration"], templates, GetAnchors);
+WeakAuras.RegisterRegionOptions("progresstexture", createOptions, createIcon, L["Progress Texture"], createThumbnail, modifyThumbnail, L["Shows a texture that changes based on duration"], templates, GetAnchors);

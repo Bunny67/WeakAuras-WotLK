@@ -1490,6 +1490,14 @@ local function EventHandler(frame, event, arg1, arg2, ...)
     if not UnitExists("pet") then
       tinsert(unitsToRemove, "pet")
     end
+  elseif event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
+    local unitsToCheck = {}
+    for unit in GetAllUnits("boss", true) do
+      RecheckActiveForUnitType("boss", unit, deactivatedTriggerInfos)
+      if not UnitExists(unit) then
+        tinsert(unitsToRemove, unit)
+      end
+    end
   elseif event =="ARENA_OPPONENT_UPDATE" then
     local unitsToCheck = {}
     for unit in GetAllUnits("arena", true) do
@@ -1551,6 +1559,7 @@ frame:RegisterEvent("UNIT_EXITED_VEHICLE")
 frame:RegisterEvent("PLAYER_TARGET_CHANGED")
 frame:RegisterEvent("PARTY_MEMBERS_CHANGED")
 frame:RegisterEvent("RAID_ROSTER_UPDATE")
+frame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:SetScript("OnEvent", EventHandler)
 

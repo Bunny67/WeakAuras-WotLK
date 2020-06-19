@@ -249,7 +249,7 @@ local function animRotate(object, degrees, anchor, regionRotate, aspect)
   rotate:SetOrigin(anchor, 0, 0);
   rotate:SetDegrees(degrees);
   rotate:SetDuration( 0 );
-  rotate:SetEndDelay(2147483647);
+  rotate:SetEndDelay(900); -- 2147483647
   object.animationGroup:Play();
 end
 

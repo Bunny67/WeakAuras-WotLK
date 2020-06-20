@@ -163,14 +163,6 @@ WeakAuras.regionPrototype.AddProperties(properties, default);
 
 local spinnerFunctions = {};
 
-function spinnerFunctions.SetWidth(self, width)
-  self.wedge:SetWidth(width);
-end
-
-function spinnerFunctions.SetHeight(self, height)
-  self.wedge:SetHeight(height);
-end
-
 function spinnerFunctions.SetTexture(self, texture)
   for i = 1, 4 do
     self.circularTextures[i]:SetTexture(texture);
@@ -201,6 +193,14 @@ function spinnerFunctions.Hide(self)
     self.circularTextures[i]:Hide();
   end
   self.wedge:Hide();
+end
+
+function spinnerFunctions.SetWidth(self, width)
+  self.wedge:SetWidth(width);
+end
+
+function spinnerFunctions.SetHeight(self, height)
+  self.wedge:SetHeight(height);
 end
 
 function spinnerFunctions.Color(self, r, g, b, a)
@@ -238,9 +238,7 @@ local function animRotate(object, degrees, anchor, regionRotate, aspect)
   -- Create AnimationGroup and rotation animation
   if (not object.animationGroup) then
     object.animationGroup = object:CreateAnimationGroup();
-    object.animationGroup:SetScript("OnUpdate", function()
-      Transform(object, -0.5, -0.5, -object.degrees + object.regionRotate, object.aspect)
-    end);
+    object.animationGroup:SetLooping("REPEAT")
   end
 
   object.animationGroup.rotate = object.animationGroup.rotate or object.animationGroup:CreateAnimation("rotation");
@@ -249,12 +247,13 @@ local function animRotate(object, degrees, anchor, regionRotate, aspect)
   rotate:SetOrigin(anchor, 0, 0);
   rotate:SetDegrees(degrees);
   rotate:SetDuration( 0 );
-  rotate:SetEndDelay(900); -- 2147483647
+  rotate:SetEndDelay(15); -- 2147483647
+  Transform(object, -0.5, -0.5, -degrees + regionRotate, aspect)
   object.animationGroup:Play();
 end
 
 function spinnerFunctions.SetProgress(self, region, startAngle, endAngle, progress, clockwise)
-  local pAngle = progress * (endAngle - startAngle) + startAngle;
+  local pAngle = (endAngle - startAngle) * progress + startAngle;
 
   -- Show/hide necessary textures if we need to
   for i = 1, 4 do
@@ -638,7 +637,13 @@ local function modify(parent, region, data)
     function region:SetValue(progress)
       progress = progress or 0;
       region.progress = progress;
-
+      if (progress < 0) then
+        progress = 0;
+      end
+      
+      if (progress > 1) then
+        progress = 1;
+      end
       foregroundSpinner:SetProgress(region, startAngle, endAngle, progress, clockwise);
     end
   end

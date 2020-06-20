@@ -411,21 +411,8 @@ local function createThumbnail()
   local foreground = region:CreateTexture(nil, "ART");
   borderframe.foreground = foreground;
 
-  local OrgSetTexture = foreground.SetTexture;
-  -- WORKAROUND, setting the same texture with a different wrap mode does not change the wrap mode
-  foreground.SetTexture = function(self, texture, horWrapMode, verWrapMode)
-    local needToClear = (self.horWrapMode and self.horWrapMode ~= horWrapMode) or (self.verWrapMode and self.verWrapMode ~= verWrapMode);
-    self.horWrapMode = horWrapMode;
-    self.verWrapMode = verWrapMode;
-    if (needToClear) then
-      OrgSetTexture(self, nil);
-    end
-    OrgSetTexture(self, texture, horWrapMode, verWrapMode);
-  end
-  background.SetTexture = foreground.SetTexture;
-
-  borderframe.backgroundSpinner = WeakAuras.createSpinner(region, "BACKGROUND", 1);
-  borderframe.foregroundSpinner = WeakAuras.createSpinner(region, "ARTWORK", 1);
+  borderframe.foregroundSpinner = WeakAuras.createSpinner(region, "ARTWORK", region:GetFrameLevel() + 2);
+  borderframe.backgroundSpinner = WeakAuras.createSpinner(region, "BACKGROUND", region:GetFrameLevel() + 1);
 
   return borderframe;
 end

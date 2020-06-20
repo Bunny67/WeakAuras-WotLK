@@ -183,6 +183,89 @@ local pUpdateTemp = function(self, elapsed)
 	end
 end
 
+local function pWidth(info, diff)
+	local start = info.width - diff
+	if start <= info.length then
+		return start, info.th, true
+	end
+	return info.length, info.th
+end
+
+local function pHeight(info, diff)
+	local start = info.height - diff
+	if start <= info.length then
+		return info.th, start, true
+	end
+	return info.th, info.length
+end
+
+local function pPoint(self, i, position, point)
+	local info = self.info
+	local line = self.textures[i]
+	local line2 = self.textures[info.N + i]
+	if position > info.bottomlim or point == "BOTTOMRIGHT" then -- BOTTOM
+		local width, height, isLine2 = pWidth(info, abs(-position + info.bottomlim))
+		if isLine2 then
+			line2:ClearAllPoints()
+			line2:SetPoint("BOTTOMLEFT", 0, 0)
+			line2:Show()
+
+			line2:SetSize(info.th, info.length - width)
+		else
+			line2:Hide()
+		end
+
+		line:SetSize(width, height)
+
+		return "BOTTOMRIGHT", -position + info.bottomlim, 0
+	elseif position > info.rightlim or point == "TOPRIGHT" then -- RIGHT
+		local width, height, isLine2 = pHeight(info, abs(-position + info.rightlim))
+		if isLine2 then
+			line2:ClearAllPoints()
+			line2:SetPoint("BOTTOMRIGHT", 0, 0)
+			line2:Show()
+			
+			line2:SetSize(info.length - height, info.th)
+		else
+			line2:Hide()
+		end
+
+		line:SetSize(width, height)
+
+		return "TOPRIGHT", 0, -position + info.rightlim
+	elseif position > info.height or point == "TOPLEFT" then -- TOP
+		local width, height, isLine2 = pWidth(info, position - info.height)
+		if isLine2 then
+			line2:ClearAllPoints()
+			line2:Show()
+			line2:SetPoint("TOPRIGHT", 0, 0)
+
+			line2:SetSize(info.th, info.length - width)
+		else
+			line2:Hide()
+		end
+
+		line:SetSize(width, height)
+
+		return "TOPLEFT", position - info.height, 0
+	else -- LEFT
+		local width, height, isLine2 = pHeight(info, position)
+		if isLine2 then
+			line2:ClearAllPoints()
+			line2:SetPoint("TOPLEFT", 0, 0)
+			line2:Show()
+
+			line2:SetSize(info.length - height, info.th)
+		else
+			line2:Hide()
+		end
+
+		line:SetSize(width, height)
+
+		return "BOTTOMLEFT", 0, position
+	end
+end
+
 local function pUpdate(self, elapsed)
 	self.timer = self.timer + elapsed / self.info.period
 	if self.timer > 1 or self.timer < -1 then
@@ -201,50 +284,8 @@ local function pUpdate(self, elapsed)
 
 	local info = self.info
 	for i = 1, self.info.N do
-		local line = self.textures[i]
-		local position = (info.space * i + info.perimeter * self.timer) % info.perimeter
---		line:ClearAllPoints()
-		if position > info.bottomlim then -- BOTTOM
-			local start = info.width - abs(-position + info.bottomlim)
-			if start <= info.length then
-				line:SetSize(start, info.th)
-			elseif abs(-position + info.bottomlim) < info.length then
-				line:SetSize(abs(-position + info.bottomlim), info.th)
-			else
-				line:SetSize(info.length, info.th)
-			end
-			line:SetPoint("CENTER", self, "BOTTOMRIGHT", -position + info.bottomlim, info.th * 0.5)
-		elseif position > info.rightlim then -- RIGHT
-			local start = info.height - abs(-position + info.rightlim)
-			if start <= info.length then
-				line:SetSize(info.th, start)
-			elseif abs(-position + info.rightlim) < info.length then
-				line:SetSize(info.th, abs(-position + info.rightlim))
-			else
-				line:SetSize(info.th, info.length)
-			end
-			line:SetPoint("CENTER", self, "TOPRIGHT", -info.th * 0.5, -position + info.rightlim)
-		elseif position > info.height then -- TOP
-			local start = info.width - (position - info.height)
-			if start <= info.length then
-				line:SetSize(start, info.th)
-			elseif (position - info.height) < info.length then
-				line:SetSize(position - info.height, info.th)
-			else
-				line:SetSize(info.length, info.th)
-			end
-			line:SetPoint("CENTER", self, "TOPLEFT", position - info.height, -info.th * 0.5)
-		else -- LEFT
-			local start = info.height - position
-			if start <= info.length then
-				line:SetSize(info.th, start)
-			elseif position < info.length then
-				line:SetSize(info.th, position)
-			else
-				line:SetSize(info.th, info.length)
-			end
-			line:SetPoint("CENTER", self, "BOTTOMLEFT", info.th * .5, position)
-		end
+		self.textures[i]:ClearAllPoints()
+		self.textures[i]:SetPoint(pPoint(self, i, (info.space * i + info.perimeter * self.timer) % info.perimeter))
 	end
 end
 
@@ -272,7 +313,7 @@ function lib.PixelGlow_Start(r, color, N, frequency, length, th, xOffset, yOffse
 	yOffset = yOffset or 0
 	key = key or ""
 
-	addFrameAndTex(r, color, "_PixelGlow", key, N, xOffset, yOffset, textureList.white, {0,1,0,1}, nil, frameLevel)
+	addFrameAndTex(r, color, "_PixelGlow", key, N * 2, xOffset, yOffset, textureList.white, {0,1,0,1}, nil, frameLevel)
 	local f = r["_PixelGlow"..key]
 
 	f.timer = f.timer or 0

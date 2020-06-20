@@ -95,8 +95,6 @@ end
 
 
 --Pixel Glow Functions--
-local pBorders = {"TOPLEFT", "TOPRIGHT", "BOTTOMLEFT", "BOTTOMRIGHT", "TOP", "BOTTOM", "LEFT", "RIGHT"}
-
 local pCalc1 = function(progress, s, th, p)
 	local c
 	if progress > p[3] or progress < p[0] then
@@ -127,7 +125,7 @@ local pCalc2 = function(progress, s, th, p)
 	return math.floor(c + 0.5)
 end
 
-local pUpdate = function(self, elapsed)
+local pUpdateTemp = function(self, elapsed)
 	self.timer = self.timer + elapsed / self.info.period
 
 	if self.timer > 1 or self.timer < -1 then
@@ -185,6 +183,71 @@ local pUpdate = function(self, elapsed)
 	end
 end
 
+local function pUpdate(self, elapsed)
+	self.timer = self.timer + elapsed / self.info.period
+	if self.timer > 1 or self.timer < -1 then
+		self.timer = self.timer % 1
+	end
+
+	local width, height = self:GetSize()
+	if width ~= self.info.width or height ~= self.info.height then
+		self.info.width = width
+		self.info.height = height
+		self.info.perimeter = 2 * (width + height)
+		self.info.bottomlim = height * 2 + width
+		self.info.rightlim = height + width
+		self.info.space = self.info.perimeter / self.info.N
+	end
+
+	local info = self.info
+	for i = 1, self.info.N do
+		local line = self.textures[i]
+		local position = (info.space * i + info.perimeter * self.timer) % info.perimeter
+--		line:ClearAllPoints()
+		if position > info.bottomlim then -- BOTTOM
+			local start = info.width - abs(-position + info.bottomlim)
+			if start <= info.length then
+				line:SetSize(start, info.th)
+			elseif abs(-position + info.bottomlim) < info.length then
+				line:SetSize(abs(-position + info.bottomlim), info.th)
+			else
+				line:SetSize(info.length, info.th)
+			end
+			line:SetPoint("CENTER", self, "BOTTOMRIGHT", -position + info.bottomlim, info.th * 0.5)
+		elseif position > info.rightlim then -- RIGHT
+			local start = info.height - abs(-position + info.rightlim)
+			if start <= info.length then
+				line:SetSize(info.th, start)
+			elseif abs(-position + info.rightlim) < info.length then
+				line:SetSize(info.th, abs(-position + info.rightlim))
+			else
+				line:SetSize(info.th, info.length)
+			end
+			line:SetPoint("CENTER", self, "TOPRIGHT", -info.th * 0.5, -position + info.rightlim)
+		elseif position > info.height then -- TOP
+			local start = info.width - (position - info.height)
+			if start <= info.length then
+				line:SetSize(start, info.th)
+			elseif (position - info.height) < info.length then
+				line:SetSize(position - info.height, info.th)
+			else
+				line:SetSize(info.length, info.th)
+			end
+			line:SetPoint("CENTER", self, "TOPLEFT", position - info.height, -info.th * 0.5)
+		else -- LEFT
+			local start = info.height - position
+			if start <= info.length then
+				line:SetSize(info.th, start)
+			elseif position < info.length then
+				line:SetSize(info.th, position)
+			else
+				line:SetSize(info.th, info.length)
+			end
+			line:SetPoint("CENTER", self, "BOTTOMLEFT", info.th * .5, position)
+		end
+	end
+end
+
 function lib.PixelGlow_Start(r, color, N, frequency, length, th, xOffset, yOffset, border, key, frameLevel)
 	if not r then return end
 	if not color then color = {0.95, 0.95, 0.32, 1} end
@@ -215,13 +278,14 @@ function lib.PixelGlow_Start(r, color, N, frequency, length, th, xOffset, yOffse
 	f.timer = f.timer or 0
 	f.info = f.info or {}
 	f.info.step = 1/N
+	f.info.N = N
 	f.info.period = period
 	f.info.th = th
 	if f.info.length ~= length then
 		f.info.width = nil
 		f.info.length = length
 	end
-	f:SetScript("OnUpdate",pUpdate)
+	f:SetScript("OnUpdate", pUpdate)
 end
 
 function lib.PixelGlow_Stop(r,key)

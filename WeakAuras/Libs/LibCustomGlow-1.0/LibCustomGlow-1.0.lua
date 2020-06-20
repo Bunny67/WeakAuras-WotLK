@@ -95,6 +95,7 @@ end
 
 
 --Pixel Glow Functions--
+--[[
 local pCalc1 = function(progress, s, th, p)
 	local c
 	if progress > p[3] or progress < p[0] then
@@ -182,88 +183,22 @@ local pUpdateTemp = function(self, elapsed)
 		end
 	end
 end
+]]
 
-local function pWidth(info, diff)
-	local start = info.width - diff
-	if start <= info.length then
-		return start, info.th, true
+local function pWidth(width, position, length, thickness)
+	position = width - position
+	if position <= length then
+		return position, thickness, true
 	end
-	return info.length, info.th
+	return length, thickness
 end
 
-local function pHeight(info, diff)
-	local start = info.height - diff
-	if start <= info.length then
-		return info.th, start, true
+local function pHeight(height, position, length, thickness)
+	position = height - position
+	if position <= length then
+		return thickness, position, true
 	end
-	return info.th, info.length
-end
-
-local function pPoint(self, i, position, point)
-	local info = self.info
-	local line = self.textures[i]
-	local line2 = self.textures[info.N + i]
-	if position > info.bottomlim or point == "BOTTOMRIGHT" then -- BOTTOM
-		local width, height, isLine2 = pWidth(info, abs(-position + info.bottomlim))
-		if isLine2 then
-			line2:ClearAllPoints()
-			line2:SetPoint("BOTTOMLEFT", 0, 0)
-			line2:Show()
-
-			line2:SetSize(info.th, info.length - width)
-		else
-			line2:Hide()
-		end
-
-		line:SetSize(width, height)
-
-		return "BOTTOMRIGHT", -position + info.bottomlim, 0
-	elseif position > info.rightlim or point == "TOPRIGHT" then -- RIGHT
-		local width, height, isLine2 = pHeight(info, abs(-position + info.rightlim))
-		if isLine2 then
-			line2:ClearAllPoints()
-			line2:SetPoint("BOTTOMRIGHT", 0, 0)
-			line2:Show()
-			
-			line2:SetSize(info.length - height, info.th)
-		else
-			line2:Hide()
-		end
-
-		line:SetSize(width, height)
-
-		return "TOPRIGHT", 0, -position + info.rightlim
-	elseif position > info.height or point == "TOPLEFT" then -- TOP
-		local width, height, isLine2 = pWidth(info, position - info.height)
-		if isLine2 then
-			line2:ClearAllPoints()
-			line2:Show()
-			line2:SetPoint("TOPRIGHT", 0, 0)
-
-			line2:SetSize(info.th, info.length - width)
-		else
-			line2:Hide()
-		end
-
-		line:SetSize(width, height)
-
-		return "TOPLEFT", position - info.height, 0
-	else -- LEFT
-		local width, height, isLine2 = pHeight(info, position)
-		if isLine2 then
-			line2:ClearAllPoints()
-			line2:SetPoint("TOPLEFT", 0, 0)
-			line2:Show()
-
-			line2:SetSize(info.length - height, info.th)
-		else
-			line2:Hide()
-		end
-
-		line:SetSize(width, height)
-
-		return "BOTTOMLEFT", 0, position
-	end
+	return thickness, length
 end
 
 local function pUpdate(self, elapsed)
@@ -283,9 +218,68 @@ local function pUpdate(self, elapsed)
 	end
 
 	local info = self.info
-	for i = 1, self.info.N do
-		self.textures[i]:ClearAllPoints()
-		self.textures[i]:SetPoint(pPoint(self, i, (info.space * i + info.perimeter * self.timer) % info.perimeter))
+	for i = 1, info.N do
+		local position = (info.space * i + info.perimeter * self.timer) % info.perimeter
+		local line = self.textures[i]
+		local line2 = self.textures[info.N + i]
+		line:ClearAllPoints()
+		if position > info.bottomlim then -- BOTTOM
+			local width, height, isLine2 = pWidth(info.width, position - info.bottomlim, info.length, info.th)
+			if isLine2 then
+				line2:ClearAllPoints()
+				line2:SetPoint("BOTTOMLEFT", 0, 0)
+				line2:Show()
+
+				line2:SetSize(info.th, info.length - width)
+			else
+				line2:Hide()
+			end
+
+			line:SetSize(width, height)
+			line:SetPoint("BOTTOMRIGHT", -(position - info.bottomlim), 0)
+		elseif position > info.rightlim then -- RIGHT
+			local width, height, isLine2 = pHeight(info.height, position - info.rightlim, info.length, info.th)
+			if isLine2 then
+				line2:ClearAllPoints()
+				line2:SetPoint("BOTTOMRIGHT", 0, 0)
+				line2:Show()
+				
+				line2:SetSize(info.length - height, info.th)
+			else
+				line2:Hide()
+			end
+
+			line:SetSize(width, height)
+			line:SetPoint("TOPRIGHT", 0, -(position - info.rightlim))
+		elseif position > info.height then -- TOP
+			local width, height, isLine2 = pWidth(info.width, position - info.height, info.length, info.th)
+			if isLine2 then
+				line2:ClearAllPoints()
+				line2:SetPoint("TOPRIGHT", 0, 0)
+				line2:Show()
+
+				line2:SetSize(info.th, info.length - width)
+			else
+				line2:Hide()
+			end
+
+			line:SetSize(width, height)
+			line:SetPoint("TOPLEFT", position - info.height, 0)
+		else -- LEFT
+			local width, height, isLine2 = pHeight(info.height, position, info.length, info.th)
+			if isLine2 then
+				line2:ClearAllPoints()
+				line2:SetPoint("TOPLEFT", 0, 0)
+				line2:Show()
+
+				line2:SetSize(info.length - height, info.th)
+			else
+				line2:Hide()
+			end
+
+			line:SetSize(width, height)
+			line:SetPoint("BOTTOMLEFT", 0, position)
+		end
 	end
 end
 

@@ -5352,7 +5352,6 @@ WeakAuras.event_prototypes["DBM Announce"] = nil
 WeakAuras.event_prototypes["DBM Timer"] = nil
 WeakAuras.event_prototypes["BigWigs Message"] = nil
 WeakAuras.event_prototypes["BigWigs Timer"] = nil
-WeakAuras.event_prototypes["Equipment Set"] = nil
 
 WeakAuras.dynamic_texts = {
   ["p"] = {

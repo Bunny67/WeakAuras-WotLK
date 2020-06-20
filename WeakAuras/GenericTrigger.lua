@@ -2531,17 +2531,31 @@ function WeakAuras.WatchUnitChange(unit)
   watchUnitChange.unitChangeGUIDS[unit] = UnitGUID(unit) or ""
 end
 
+local equipmentItemIDs, equipmentSetItemIDs = {}, {}
 function WeakAuras.GetEquipmentSetInfo(itemSetName, partial)
   local bestMatchNumItems = 0;
   local bestMatchNumEquipped = 0;
   local bestMatchName = nil;
   local bestMatchIcon = nil;
 
-  local equipmentSetIds = C_EquipmentSet.GetEquipmentSetIDs();
-  for index, id in pairs(equipmentSetIds) do
-    local name, icon, _, _, numItems, numEquipped = C_EquipmentSet.GetEquipmentSetInfo(id);
+  for slot = 1, 19 do
+    equipmentItemIDs[slot] = GetInventoryItemID("player", slot) or 0
+  end
+
+  for id = 1, GetNumEquipmentSets() do
+    local numItems, numEquipped = 0, 0
+    local name, icon = GetEquipmentSetInfo(id);
     if (itemSetName == nil or (name and itemSetName == name)) then
       if (name ~= nil) then
+        equipmentSetItemIDs = GetEquipmentSetItemIDs(name, equipmentSetItemIDs)
+        for slot, item in ipairs(equipmentSetItemIDs) do
+          if item > 0 then
+            numItems = numItems + 1
+			if equipmentItemIDs[slot] == item then
+			  numEquipped = numEquipped + 1
+			end
+          end
+        end
         local match = (not partial and numItems == numEquipped)
           or (partial and (numEquipped or 0) > bestMatchNumEquipped);
         if (match) then

@@ -95,111 +95,65 @@ end
 
 
 --Pixel Glow Functions--
+local pPoint = {
+	["BOTTOMLEFT"] = "BOTTOMRIGHT",
+	["BOTTOMRIGHT"] = "TOPRIGHT",
+	["TOPRIGHT"] = "TOPLEFT",
+	["TOPLEFT"] = "BOTTOMLEFT",
+}
+
+local function pWidth(position, width, length, thickness, line1, line2, point)
+	line1:ClearAllPoints()
+	line1:SetPoint(pPoint[point], point == "BOTTOMLEFT" and -position or position, 0)
+	position = width - position
+	if position > length then
+		line1:SetSize(length, thickness)
+		line2:Hide()
+	else
+		line2:ClearAllPoints()
+		line2:SetPoint(point)
+		line2:Show()
+
+		line1:SetSize(position, thickness)
+		line2:SetSize(thickness, length - position)
+	end
+end
+
+local function pHeight(position, height, length, thickness, line1, line2, point)
+	line1:ClearAllPoints()
+	line1:SetPoint(pPoint[point], 0, point == "BOTTOMRIGHT" and -position or position)
+	position = height - position
+	if position > length then
+		line1:SetSize(thickness, length)
+		line2:Hide()
+	else
+		line2:ClearAllPoints()
+		line2:SetPoint(point)
+		line2:Show()
+
+		line1:SetSize(thickness, position)
+		line2:SetSize(length - position, thickness)
+	end
+end
+
 --[[
-local pCalc1 = function(progress, s, th, p)
-	local c
-	if progress > p[3] or progress < p[0] then
-		c = 0
-	elseif progress > p[2] then
-		c = s - th - (progress - p[2]) / (p[3] - p[2]) * (s - th)
-	elseif progress > p[1] then
-		c = s - th
+local function pSize(position, size, length, thickness, line1, line2, point, left)
+	line1:ClearAllPoints()
+	line1:SetPoint(pPoint[point], not left and (point == "BOTTOMLEFT" and -position or position) or 0, left and (point == "BOTTOMRIGHT" and -position or position) or 0)
+	position = size - position
+	if position > length then
+		line1:SetSize(left and thickness or length, left and length or thickness)
+		line2:Hide()
 	else
-		c = (progress - p[0]) / (p[1] - p[0]) * (s - th)
-	end
-	return math.floor(c + 0.5)
-end
+		line2:ClearAllPoints()
+		line2:SetPoint(point)
+		line2:Show()
 
-local pCalc2 = function(progress, s, th, p)
-	local c
-	if progress > p[3] then
-		c = s - th - (progress - p[3]) / (p[0] + 1 - p[3]) * (s - th)
-	elseif progress > p[2] then
-		c = s - th
-	elseif progress > p[1] then
-		c = (progress - p[1]) / (p[2] - p[1]) * (s - th)
-	elseif progress > p[0] then
-		c = 0
-	else
-		c = s - th - (progress + 1 - p[3]) / (p[0] + 1 - p[3]) * (s - th)
-	end
-	return math.floor(c + 0.5)
-end
-
-local pUpdateTemp = function(self, elapsed)
-	self.timer = self.timer + elapsed / self.info.period
-
-	if self.timer > 1 or self.timer < -1 then
-		self.timer = self.timer % 1
-	end
-
-	local progress = self.timer
-	local width, height = self:GetSize()
-	if width ~= self.info.width or height ~= self.info.height then
-		local perimeter = 2 * (width + height)
-		if not (perimeter > 0) then
-			return
-		end
-
-		self.info.width = width
-		self.info.height = height
-
-		self.info.pTLx = {
-			[0] = (height + self.info.length / 2) / perimeter,
-			[1] = (height + width + self.info.length / 2) / perimeter,
-			[2] = (2 * height + width - self.info.length / 2) / perimeter,
-			[3] = 1 - self.info.length /2 / perimeter
-		}
-		self.info.pTLy = {
-			[0] = (height - self.info.length / 2) / perimeter,
-			[1] = (height + width + self.info.length / 2) / perimeter,
-			[2] = (height * 2 + width + self.info.length / 2) / perimeter,
-			[3] = 1 - self.info.length / 2 / perimeter
-		}
-		self.info.pBRx = {
-			[0] = self.info.length / 2 / perimeter,
-			[1] = (height - self.info.length / 2) / perimeter,
-			[2] = (height + width - self.info.length / 2) / perimeter,
-			[3] = (height * 2 + width + self.info.length / 2) / perimeter
-		}
-		self.info.pBRy = {
-			[0] = self.info.length / 2 / perimeter,
-			[1] = (height + self.info.length / 2) / perimeter,
-			[2] = (height + width - self.info.length / 2) / perimeter,
-			[3] = (height * 2 + width - self.info.length / 2) / perimeter
-		}
-	end
-
-	if self:IsShown() then
-		for k, line in pairs(self.textures) do
-			line:SetPoint("TOPLEFT", self, "TOPLEFT",
-				pCalc1((progress + self.info.step * (k - 1)) % 1, width, self.info.th, self.info.pTLx),
-				-pCalc2((progress + self.info.step * (k - 1)) % 1, height, self.info.th, self.info.pTLy)
-			)
-			line:SetPoint("BOTTOMRIGHT", self, "TOPLEFT",
-				self.info.th + pCalc2((progress + self.info.step * (k - 1)) % 1, width, self.info.th, self.info.pBRx),
-				-height + pCalc1((progress + self.info.step * (k - 1)) % 1, height, self.info.th, self.info.pBRy)
-			)
-		end
+		line1:SetSize(left and thickness or position, left and position or thickness)
+		line2:SetSize(left and (length - position) or thickness, not left and (length - position) or thickness)
 	end
 end
 ]]
-
-local function pWidth(width, position, length, thickness)
-	position = width - position
-	if position <= length then
-		return position, thickness, true
-	end
-	return length, thickness
-end
-
-local function pHeight(height, position, length, thickness)
-	position = height - position
-	if position <= length then
-		return thickness, position, true
-	end
-	return thickness, length
-end
 
 local function pUpdate(self, elapsed)
 	self.timer = self.timer + elapsed / self.info.period
@@ -220,113 +174,47 @@ local function pUpdate(self, elapsed)
 	local info = self.info
 	for i = 1, info.N do
 		local position = (info.space * i + info.perimeter * self.timer) % info.perimeter
-		local line = self.textures[i]
-		local line2 = self.textures[info.N + i]
-		line:ClearAllPoints()
 		if position > info.bottomlim then -- BOTTOM
-			local width, height, isLine2 = pWidth(info.width, position - info.bottomlim, info.length, info.th)
-			if isLine2 then
-				line2:ClearAllPoints()
-				line2:SetPoint("BOTTOMLEFT", 0, 0)
-				line2:Show()
-
-				line2:SetSize(info.th, info.length - width)
-			else
-				line2:Hide()
-			end
-
-			line:SetSize(width, height)
-			line:SetPoint("BOTTOMRIGHT", -(position - info.bottomlim), 0)
+			pWidth(position - info.bottomlim, width, info.length, info.th, self.textures[i], self.textures[info.N + i], "BOTTOMLEFT")
 		elseif position > info.rightlim then -- RIGHT
-			local width, height, isLine2 = pHeight(info.height, position - info.rightlim, info.length, info.th)
-			if isLine2 then
-				line2:ClearAllPoints()
-				line2:SetPoint("BOTTOMRIGHT", 0, 0)
-				line2:Show()
-				
-				line2:SetSize(info.length - height, info.th)
-			else
-				line2:Hide()
-			end
-
-			line:SetSize(width, height)
-			line:SetPoint("TOPRIGHT", 0, -(position - info.rightlim))
-		elseif position > info.height then -- TOP
-			local width, height, isLine2 = pWidth(info.width, position - info.height, info.length, info.th)
-			if isLine2 then
-				line2:ClearAllPoints()
-				line2:SetPoint("TOPRIGHT", 0, 0)
-				line2:Show()
-
-				line2:SetSize(info.th, info.length - width)
-			else
-				line2:Hide()
-			end
-
-			line:SetSize(width, height)
-			line:SetPoint("TOPLEFT", position - info.height, 0)
+			pHeight(position - info.rightlim, height, info.length, info.th, self.textures[i], self.textures[info.N + i], "BOTTOMRIGHT")
+		elseif position > height then -- TOP
+			pWidth(position - height, width, info.length, info.th, self.textures[i], self.textures[info.N + i], "TOPRIGHT")
 		else -- LEFT
-			local width, height, isLine2 = pHeight(info.height, position, info.length, info.th)
-			if isLine2 then
-				line2:ClearAllPoints()
-				line2:SetPoint("TOPLEFT", 0, 0)
-				line2:Show()
-
-				line2:SetSize(info.length - height, info.th)
-			else
-				line2:Hide()
-			end
-
-			line:SetSize(width, height)
-			line:SetPoint("BOTTOMLEFT", 0, position)
+			pHeight(position, height, info.length, info.th, self.textures[i], self.textures[info.N + i], "TOPLEFT")
 		end
 	end
 end
 
 function lib.PixelGlow_Start(r, color, N, frequency, length, th, xOffset, yOffset, border, key, frameLevel)
 	if not r then return end
-	if not color then color = {0.95, 0.95, 0.32, 1} end
-	if not (N and N > 0) then N = 8 end
+	if not N or N <= 0 then N = 8 end
 
-	local period
-	if frequency then
-		if not (frequency > 0 or frequency < 0) then
-			period = 4
-		else
-			period = 1 / frequency
-		end
-	else
-		period = 4
-	end
-
-	local width,height = r:GetSize()
+	local width, height = r:GetSize()
 	length = length or math.floor((width + height) * (2 / N - 0.1))
 	length = min(length, min(width, height))
-	th = th or 1
-	xOffset = xOffset or 0
-	yOffset = yOffset or 0
 	key = key or ""
 
-	addFrameAndTex(r, color, "_PixelGlow", key, N * 2, xOffset, yOffset, textureList.white, {0,1,0,1}, nil, frameLevel)
+	addFrameAndTex(r, color or {0.95, 0.95, 0.32, 1}, "_PixelGlow", key, N * 2, xOffset or 0, yOffset or 0, textureList.white, {0, 1, 0, 1}, nil, frameLevel)
+
 	local f = r["_PixelGlow"..key]
 
 	f.timer = f.timer or 0
 	f.info = f.info or {}
-	f.info.step = 1/N
 	f.info.N = N
-	f.info.period = period
-	f.info.th = th
+	f.info.period = (not frequency or frequency == 0) and 4 or (1 / frequency)
+	f.info.th = th or 1
+
 	if f.info.length ~= length then
 		f.info.width = nil
 		f.info.length = length
 	end
+
 	f:SetScript("OnUpdate", pUpdate)
 end
 
-function lib.PixelGlow_Stop(r,key)
-	if not r then
-		return
-	end
+function lib.PixelGlow_Stop(r, key)
+	if not r then return end
 	key = key or ""
 	if not r["_PixelGlow"..key] then
 		return false
@@ -389,10 +277,10 @@ function lib.AutoCastGlow_Start(r,color,N,frequency,scale,xOffset,yOffset,key,fr
 
 	local period
 	if frequency then
-		if not(frequency>0 or frequency<0) then
+		if not (frequency > 0 or frequency < 0) then
 			period = 8
 		else
-			period = 1/frequency
+			period = 1 / frequency
 		end
 	else
 		period = 8

@@ -3176,6 +3176,78 @@ do
   end
 end
 
+-- Nameplates
+do
+  local watchNameplates
+
+  local select = select
+  local gsub = string.gsub
+
+  local WorldFrame = WorldFrame
+  local WorldGetChildren = WorldFrame.GetChildren
+  local WorldGetNumChildren = WorldFrame.GetNumChildren
+
+  local numChildren = 0
+  local nameplateList = {}
+  local visibleNameplates = {}
+
+  local OVERLAY = [=[Interface\TargetingFrame\UI-TargetingFrame-Flash]=]
+  local FSPAT = "%s*"..(gsub(gsub(FOREIGN_SERVER_LABEL, "^%s", ""), "[%*()]", "%%%1")).."$"
+
+  local function nameplateShow(self)
+    WeakAuras.StartProfileSystem("nameplatetrigger")
+    local name = gsub(self.nameText:GetText(), FSPAT, "")
+    visibleNameplates[self] = name
+    WeakAuras.ScanEvents("NP_SHOW", self, name)
+	WeakAuras.StopProfileSystem("nameplatetrigger")
+  end
+
+  local function nameplateHide(self)
+    WeakAuras.StartProfileSystem("nameplatetrigger")
+    visibleNameplates[self] = nil
+    WeakAuras.ScanEvents("NP_HIDE", self, gsub(self.nameText:GetText(), FSPAT, ""))
+    WeakAuras.StopProfileSystem("nameplatetrigger")
+  end
+
+  local function findNewPlate(num)
+    if num == numChildren then return end
+      for i = numChildren + 1, num do
+      local frame = select(i, WorldGetChildren(WorldFrame))
+      local region, _, _, _, _, _, nameText = frame:GetRegions()
+      if (frame.UnitFrame or (region and region:GetObjectType() == "Texture" and region:GetTexture() == OVERLAY)) and not nameplateList[frame] then
+        frame.nameText = nameText
+        frame:HookScript("OnShow", nameplateShow)
+        frame:HookScript("OnHide", nameplateHide)
+        nameplateShow(frame)
+      end
+    end
+    numChildren = num
+  end
+
+  local function nameplatesUpdate()
+    WeakAuras.StartProfileSystem("nameplatetrigger")
+    findNewPlate(WorldGetNumChildren(WorldFrame))
+    WeakAuras.StopProfileSystem("nameplatetrigger")
+  end
+
+  function WeakAuras.GetUnitNameplate(name)
+    if not name or name == "" then return end
+    for frame, nameplateName in pairs(visibleNameplates) do
+      if name == nameplateName then
+        return frame
+      end
+    end
+  end
+
+  function WeakAuras.WatchNamePlates()
+    if not(watchNameplates) then
+      watchNameplates = CreateFrame("Frame")
+      WeakAuras.frames["Watch NamePlates Frames"] = watchNameplates
+    end
+    watchNameplates:SetScript("OnUpdate", nameplatesUpdate)
+  end
+end
+
 do
   local scheduled_scans = {};
 

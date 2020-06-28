@@ -1034,7 +1034,7 @@ WeakAuras.event_prototypes = {
         type = "string",
         store = true,
         conditionType = "string",
-        test = "tostring(tonumber(string.sub(UnitGUID(unit) or '', 8, 12), 16)) == %q",
+        test = "tostring(tonumber(string.sub(UnitGUID(unit) or '', 8, 12), 16) or '') == %q",
       },
       {
         name = "attackable",
@@ -1142,7 +1142,7 @@ WeakAuras.event_prototypes = {
         type = "string",
         store = true,
         conditionType = "string",
-        test = "tostring(tonumber(string.sub(UnitGUID(unit) or '', 8, 12), 16)) == %q",
+        test = "tostring(tonumber(string.sub(UnitGUID(unit) or '', 8, 12), 16) or '') == %q",
       },
       {
         name = "class",
@@ -1300,7 +1300,7 @@ WeakAuras.event_prototypes = {
         type = "string",
         store = true,
         conditionType = "string",
-        test = "tostring(tonumber(string.sub(UnitGUID(unit) or '', 8, 12), 16)) == %q",
+        test = "tostring(tonumber(string.sub(UnitGUID(unit) or '', 8, 12), 16) or '') == %q",
       },
       {
         name = "class",
@@ -1370,7 +1370,7 @@ WeakAuras.event_prototypes = {
         name = "sourceNpcId",
         display = L["Source NPC Id"],
         type = "string",
-        test = "tostring(tonumber(string.sub(sourceGUID or '', 8, 12), 16)) == %q",
+        test = "tostring(tonumber(string.sub(sourceGUID or '', 8, 12), 16) or '') == %q",
         enable = function(trigger)
           return not (trigger.subeventPrefix == "ENVIRONMENTAL")
         end,
@@ -1447,7 +1447,7 @@ WeakAuras.event_prototypes = {
         name = "destNpcId",
         display = L["Destination NPC Id"],
         type = "string",
-        test = "tostring(tonumber(string.sub(destGUID or '', 8, 12), 16)) == %q",
+        test = "tostring(tonumber(string.sub(destGUID or '', 8, 12), 16) or '') == %q",
         enable = function(trigger)
           return not (trigger.subeventPrefix == "SPELL" and trigger.subeventSuffix == "_CAST_START");
         end,
@@ -4644,7 +4644,7 @@ WeakAuras.event_prototypes = {
         type = "string",
         store = true,
         conditionType = "string",
-        test = "tostring(tonumber(string.sub(UnitGUID(unit) or '', 8, 12), 16)) == %q",
+        test = "tostring(tonumber(string.sub(UnitGUID(unit) or '', 8, 12), 16) or '') == %q",
         enable = function(trigger)
           return not trigger.use_inverse
         end

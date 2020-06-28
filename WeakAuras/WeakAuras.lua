@@ -6589,7 +6589,7 @@ function WeakAuras.SetModel(frame, model_path, isUnit, isDisplayInfo)
   if isDisplayInfo then
     frame:SetDisplayInfo(tonumber(model_path))
   elseif isUnit then
-    frame.SetUnit(model_path)
+    frame:SetUnit(model_path)
   else
     frame:SetModel(model_path)
   end

@@ -552,68 +552,143 @@ local barPrototype = {
   ["orientation"] = "HORIZONTAL",
 }
 
-local function AnchorSubRegion(self, subRegion, anchorType, selfPoint, anchorPoint, anchorXOffset, anchorYOffset)
-  if anchorType == "area" then
-    local anchor = self
-    if selfPoint == "bar" then
-      anchor = self
-    elseif selfPoint == "icon" then
-      anchor = self.icon
-    elseif selfPoint == "fg" then
-      anchor = self.bar.fgFrame
-    elseif selfPoint == "bg" then
-      anchor = self.bar.bg
-    end
-
-    anchorXOffset = anchorXOffset or 0
-    anchorYOffset = anchorYOffset or 0
-    subRegion:ClearAllPoints()
-    subRegion:SetPoint("bottomleft", anchor, "bottomleft", -anchorXOffset, -anchorYOffset)
-    subRegion:SetPoint("topright", anchor, "topright", anchorXOffset,  anchorYOffset)
-  else
-    subRegion:ClearAllPoints()
-    anchorPoint = anchorPoint or "CENTER"
-
-    local anchorRegion = self.bar
-
-    anchorXOffset = anchorXOffset or 0
-    anchorYOffset = anchorYOffset or 0
-
-    if anchorPoint:sub(1, 5) == "ICON_" then
-      anchorRegion = self.icon
-      anchorPoint = anchorPoint:sub(6)
-    elseif anchorPoint:sub(1, 6) == "INNER_" then
-      anchorPoint = anchorPoint:sub(7)
-
-      if anchorPoint:find("LEFT", 1, true) then
-        anchorXOffset = anchorXOffset + 2
-      elseif anchorPoint:find("RIGHT", 1, true) then
-        anchorXOffset = anchorXOffset - 2
+local funcs = {
+  AnchorSubRegion = function(self, subRegion, anchorType, selfPoint, anchorPoint, anchorXOffset, anchorYOffset)
+    if anchorType == "area" then
+      local anchor = self
+      if selfPoint == "bar" then
+        anchor = self
+      elseif selfPoint == "icon" then
+        anchor = self.icon
+      elseif selfPoint == "fg" then
+        anchor = self.bar.fgFrame
+      elseif selfPoint == "bg" then
+        anchor = self.bar.bg
       end
 
-      if anchorPoint:find("TOP", 1, true) then
-        anchorYOffset = anchorYOffset - 2
-      elseif anchorPoint:find("BOTTOM", 1, true) then
-        anchorYOffset = anchorYOffset + 2
+      anchorXOffset = anchorXOffset or 0
+      anchorYOffset = anchorYOffset or 0
+      subRegion:ClearAllPoints()
+      subRegion:SetPoint("bottomleft", anchor, "bottomleft", -anchorXOffset, -anchorYOffset)
+      subRegion:SetPoint("topright", anchor, "topright", anchorXOffset,  anchorYOffset)
+    else
+      subRegion:ClearAllPoints()
+      anchorPoint = anchorPoint or "CENTER"
+
+      local anchorRegion = self.bar
+
+      anchorXOffset = anchorXOffset or 0
+      anchorYOffset = anchorYOffset or 0
+
+      if anchorPoint:sub(1, 5) == "ICON_" then
+        anchorRegion = self.icon
+        anchorPoint = anchorPoint:sub(6)
+      elseif anchorPoint:sub(1, 6) == "INNER_" then
+        anchorPoint = anchorPoint:sub(7)
+
+        if anchorPoint:find("LEFT", 1, true) then
+          anchorXOffset = anchorXOffset + 2
+        elseif anchorPoint:find("RIGHT", 1, true) then
+          anchorXOffset = anchorXOffset - 2
+        end
+
+        if anchorPoint:find("TOP", 1, true) then
+          anchorYOffset = anchorYOffset - 2
+        elseif anchorPoint:find("BOTTOM", 1, true) then
+          anchorYOffset = anchorYOffset + 2
+        end
+      elseif anchorPoint == "SPARK" then
+        anchorRegion = self.bar.spark
+        anchorPoint = "CENTER"
       end
-    elseif anchorPoint == "SPARK" then
-      anchorRegion = self.bar.spark
-      anchorPoint = "CENTER"
+
+      selfPoint = selfPoint or "CENTER"
+
+      if not WeakAuras.point_types[selfPoint] then
+        selfPoint = "CENTER"
+      end
+
+      if not WeakAuras.point_types[anchorPoint] then
+        anchorPoint = "CENTER"
+      end
+
+      subRegion:SetPoint(selfPoint, anchorRegion, anchorPoint, anchorXOffset, anchorYOffset)
+    end
+  end,
+  SetIconColor = function(self, r, g, b, a)
+    self.icon:SetVertexColor(r, g, b, a);
+  end,
+  SetIconDesaturated = function(self, b)
+    self.icon:SetDesaturated(b);
+  end,
+  SetBackgroundColor = function (self, r, g, b, a)
+    self.bar:SetBackgroundColor(r, g, b, a);
+  end,
+  SetSparkColor = function(self, r, g, b, a)
+    self.bar.spark:SetVertexColor(r, g, b, a);
+  end,
+  SetSparkHeight = function(self, height)
+    self.bar.spark:SetHeight(height);
+  end,
+  SetSparkWidth = function(self, width)
+    self.bar.spark:SetWidth(width);
+  end,
+  SetRegionWidth = function(self, width)
+    self.width = width;
+    self:Scale(self.scalex, self.scaley);
+  end,
+  SetRegionHeight = function(self, height)
+    self.height = height;
+    self:Scale(self.scalex, self.scaley);
+  end,
+  SetValue = function(self, value, total)
+    local progress = 0;
+    if (total ~= 0) then
+      progress = value / total;
     end
 
-    selfPoint = selfPoint or "CENTER"
-
-    if not WeakAuras.point_types[selfPoint] then
-      selfPoint = "CENTER"
+    if self.inverseDirection then
+      progress = 1 - progress;
     end
 
-    if not WeakAuras.point_types[anchorPoint] then
-      anchorPoint = "CENTER"
+    self.bar:SetValue(progress);
+  end,
+  SetTime = function(self, duration, expirationTime, inverse)
+    local remaining = expirationTime - GetTime();
+    local progress = duration ~= 0 and remaining / duration or 0;
+    -- Need to invert?
+    if (
+      (self.inverseDirection and not inverse)
+      or (inverse and not self.inverseDirection)
+      )
+    then
+      progress = 1 - progress;
     end
-
-    subRegion:SetPoint(selfPoint, anchorRegion, anchorPoint, anchorXOffset, anchorYOffset)
+    self.bar:SetValue(progress);
+  end,
+  SetInverse = function(self, inverse)
+    if (self.inverseDirection == inverse) then
+      return;
+    end
+    self.inverseDirection = inverse;
+    self.bar:SetValue(1 - self.bar:GetValue());
+    self.subRegionEvents:Notify("InverseChanged")
+  end,
+  SetOrientation = function(self, orientation)
+    self.orientation = orientation
+    self:UpdateEffectiveOrientation()
+    self.bar:SetValue(self.bar:GetValue());
+  end,
+  SetOverlayColor = function(self, id, r, g, b, a)
+    self.bar:SetAdditionalBarColor(id, { r, g, b, a});
+  end,
+  GetEffectiveOrientation = function(self)
+    return self.effectiveOrientation
+  end,
+  GetInverse = function(self)
+    return self.inverseDirection
   end
-end
+}
 
 -- Called when first creating a new region/display
 local function create(parent)
@@ -625,7 +700,6 @@ local function create(parent)
 
   -- Create statusbar (inherit prototype)
   local bar = CreateFrame("FRAME", nil, region);
-  WeakAuras:Mixin(bar, SmoothStatusBarMixin);
   local fg = bar:CreateTexture(nil, "BORDER");
   local bg = bar:CreateTexture(nil, "BACKGROUND");
   bg:SetAllPoints();
@@ -664,7 +738,9 @@ local function create(parent)
 
   WeakAuras.regionPrototype.create(region);
 
-  region.AnchorSubRegion = AnchorSubRegion
+  for k, f in pairs(funcs) do
+    region[k] = f
+  end
 
   -- Return new display/region
   return region;
@@ -810,12 +886,6 @@ local function orientVertical(region, data)
   bar:SetOrientation("VERTICAL");
 end
 
-local function orient(region, data, orientation)
-  -- Apply correct orientation
-  region.orientation = orientation;
-  region:UpdateEffectiveOrientation()
-end
-
 local function GetTexCoordZoom(texWidth)
   local texCoord = {texWidth, texWidth, texWidth, 1 - texWidth, 1 - texWidth, texWidth, 1 - texWidth, 1 - texWidth}
   return unpack(texCoord)
@@ -959,6 +1029,8 @@ local function modify(parent, region, data)
         orientVertical(region, data);
       end
     end
+
+    region.subRegionEvents:Notify("OrientationChanged")
   end
 
   -- Apply orientation alignment
@@ -1090,123 +1162,16 @@ local function modify(parent, region, data)
       region.flipY = false
     end
 
-    region:UpdateEffectiveOrientation()
-
     -- Update height
     self.bar.totalHeight = region.height * scaley
     self.bar.iconHeight = iconsize * scaley
     self:SetHeight(self.bar.totalHeight);
     icon:SetHeight(self.bar.iconHeight);
+
+    region:UpdateEffectiveOrientation()
   end
   --  region:Scale(1.0, 1.0);
-  if data.smoothProgress then
-    region.PreShow = function()
-      region.bar:ResetSmoothedValue();
-    end
-  else
-    region.PreShow = nil
-  end
 
-  function region:SetValue(value, total)
-    local progress = 0;
-    if (total ~= 0) then
-      progress = value / total;
-    end
-
-    if region.inverseDirection then
-      progress = 1 - progress;
-    end
-
-    if (data.smoothProgress) then
-      region.bar.targetValue = progress
-      region.bar:SetSmoothedValue(progress);
-    else
-      region.bar:SetValue(progress);
-    end
-  end
-
-  function region:SetTime(duration, expirationTime, inverse)
-    local remaining = expirationTime - GetTime();
-    local progress = duration ~= 0 and remaining / duration or 0;
-    -- Need to invert?
-    if (
-      (region.inverseDirection and not inverse)
-      or (inverse and not region.inverseDirection)
-      )
-    then
-      progress = 1 - progress;
-    end
-    if (data.smoothProgress) then
-      region.bar.targetValue = progress
-      region.bar:SetSmoothedValue(progress);
-    else
-      region.bar:SetValue(progress);
-    end
-  end
-
-  function region:SetIconColor(r, g, b, a)
-    self.icon:SetVertexColor(r, g, b, a);
-  end
-
-  function region:SetIconDesaturated(b)
-    self.icon:SetDesaturated(b);
-  end
-
-  function region:SetBackgroundColor(r, g, b, a)
-    self.bar:SetBackgroundColor(r, g, b, a);
-  end
-
-  function region:SetSparkColor(r, g, b, a)
-    self.bar.spark:SetVertexColor(r, g, b, a);
-  end
-
-  function region:SetSparkHeight(height)
-    self.bar.spark:SetHeight(height);
-  end
-
-  function region:SetSparkWidth(width)
-    self.bar.spark:SetWidth(width);
-  end
-
-  function region:SetRegionWidth(width)
-    self.width = width;
-    self:Scale(self.scalex, self.scaley);
-  end
-
-  function region:SetRegionHeight(height)
-    self.height = height;
-    self:Scale(self.scalex, self.scaley);
-  end
-
-  function region:SetInverse(inverse)
-    if (region.inverseDirection == inverse) then
-      return;
-    end
-    region.inverseDirection = inverse;
-    if (data.smoothProgress) then
-      if (region.bar.targetValue) then
-        region.bar.targetValue = 1 - region.bar.targetValue
-        region.bar:SetSmoothedValue(region.bar.targetValue);
-      end
-    else
-      region.bar:SetValue(1 - region.bar:GetValue());
-    end
-  end
-
-  function region:SetOrientation(orientation)
-    orient(region, data, orientation);
-    if (data.smoothProgress) then
-      if region.bar.targetValue then
-        region.bar:SetSmoothedValue(region.bar.targetValue);
-      end
-    else
-      region.bar:SetValue(region.bar:GetValue());
-    end
-  end
-
-  function region:SetOverlayColor(id, r, g, b, a)
-    region.bar:SetAdditionalBarColor(id, { r, g, b, a});
-  end
   -- Update internal bar alignment
   region.bar:Update();
 

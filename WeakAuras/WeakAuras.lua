@@ -1917,7 +1917,7 @@ local function scanForLoadsImpl(toCheck, event, arg1, ...)
 
   local _, class = UnitClass("player");
 
-  local incombat = UnitAffectingCombat("player") -- or UnitAffectingCombat("pet");
+  local inCombat = UnitAffectingCombat("player") -- or UnitAffectingCombat("pet");
   local vehicle = UnitInVehicle("player") or UnitOnTaxi("player")
   local vehicleUi = UnitHasVehicleUI("player")
 
@@ -1936,8 +1936,8 @@ local function scanForLoadsImpl(toCheck, event, arg1, ...)
     if (data and not data.controlledChildren) then
       local loadFunc = loadFuncs[id];
       local loadOpt = loadFuncsForOptions[id];
-      shouldBeLoaded = loadFunc and loadFunc("ScanForLoads_Auras", incombat, vehicle, vehicleUi, group, player, realm, class, faction, playerLevel, zone, size, difficulty);
-      couldBeLoaded =  loadOpt and loadOpt("ScanForLoads_Auras",   incombat, vehicle, vehicleUi, group, player, realm, class, faction, playerLevel, zone, size, difficulty);
+      shouldBeLoaded = loadFunc and loadFunc("ScanForLoads_Auras", inCombat, vehicle, vehicleUi, group, player, realm, class, faction, playerLevel, zone, size, difficulty);
+      couldBeLoaded =  loadOpt and loadOpt("ScanForLoads_Auras",   inCombat, vehicle, vehicleUi, group, player, realm, class, faction, playerLevel, zone, size, difficulty);
 
       if(shouldBeLoaded and not loaded[id]) then
         changed = changed + 1;
@@ -2031,18 +2031,6 @@ function WeakAuras.RegisterLoadEvents()
     WeakAuras.ScanForLoads(nil, ...)
     WeakAuras.StopProfileSystem("load");
   end);
-
---[[
-  C_Timer.NewTicker(0.5, function()
-    WeakAuras.StartProfileSystem("load");
-    local zoneId = C_Map.GetBestMapForUnit("player");
-    if loadFrame.zoneId ~= zoneId then
-      WeakAuras.ScanForLoads(nil, "ZONE_CHANGED")
-      loadFrame.zoneId = zoneId;
-    end
-    WeakAuras.StopProfileSystem("load");
-  end)
-]]
 
   unitLoadFrame:SetScript("OnEvent", function(frame, e, arg1, ...)
     WeakAuras.StartProfileSystem("load");
@@ -5758,7 +5746,7 @@ end
 local function ApplyStateToRegion(id, cloneId, region, parent)
   region:Update();
 
-  region.subRegionEvents:Notify("Update")
+  region.subRegionEvents:Notify("Update", region.state, region.states)
 
   WeakAuras.UpdateMouseoverTooltip(region);
   region:Expand();
@@ -6232,7 +6220,7 @@ function WeakAuras.ReplacePlaceHolders(textStr, region, customFunc, useHiddenSta
     result = result .. string.sub(textStr, start, currentPos - 1)
   elseif state == 2 and currentPos > start then
     local symbol = string.sub(textStr, start, currentPos - 1)
-    result = result .. ValueForSymbol(symbol, region, customFunc, regionState, regionStates)
+    result = result .. ValueForSymbol(symbol, region, customFunc, regionState, regionStates, useHiddenStates)
   elseif state == 1 then
     result = result .. "%"
   end
@@ -6692,9 +6680,12 @@ for i = 1, 5 do
 end
 
 for i = 1, 4 do
-  trackableUnits["boss" .. i] = true
   trackableUnits["party" .. i] = true
   trackableUnits["partypet" .. i] = true
+end
+
+for i = 1, MAX_BOSS_FRAMES do
+  trackableUnits["boss" .. i] = true
 end
 
 for i = 1, 40 do

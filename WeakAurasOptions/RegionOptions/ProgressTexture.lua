@@ -221,13 +221,6 @@ local function createOptions(id, data)
       bigStep = 0.01,
       isPercent = true
     },
-    smoothProgress = {
-      type = "toggle",
-      width = WeakAuras.normalWidth,
-      name = L["Smooth Progress"],
-      desc = L["Animates progress changes"],
-      order = 55.1
-    },
     textureWrapMode = {
       type = "select",
       width = WeakAuras.normalWidth,

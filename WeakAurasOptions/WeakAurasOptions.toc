@@ -32,6 +32,7 @@ SubRegionOptions\SubText.lua
 SubRegionOptions\Border.lua
 SubRegionOptions\Glow.lua
 SubRegionOptions\BarModel.lua
+SubRegionOptions\Tick.lua
 
 Cache.lua
 

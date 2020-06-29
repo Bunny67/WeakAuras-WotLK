@@ -938,7 +938,7 @@ end
 local function MultiUnitLoop(Func, unit, ...)
   unit = string.lower(unit)
   if unit == "boss" or unit == "arena" then
-    for i = 1, 5 do
+    for i = 1, MAX_BOSS_FRAMES do
       Func(unit..i, ...)
     end
   elseif unit == "group" then
@@ -2503,6 +2503,7 @@ function WeakAuras.WatchUnitChange(unit)
     watchUnitChange:RegisterEvent("PLAYER_TARGET_CHANGED")
     watchUnitChange:RegisterEvent("PLAYER_FOCUS_CHANGED");
     watchUnitChange:RegisterEvent("UNIT_TARGET");
+    watchUnitChange:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT");
     watchUnitChange:RegisterEvent("PARTY_MEMBERS_CHANGED");
     watchUnitChange:RegisterEvent("RAID_ROSTER_UPDATE");
     watchUnitChange:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -3036,10 +3037,9 @@ do
           if(v:GetObjectType() == "FontString") then
             local text = v:GetText();
             if(text) then
-              local _, _, name = text:find("^(.+) %(%d+ [^%)]+%)$");
+              local _, _, name, shortenedName = text:find("^((.-) ?+?[VI%d]*) %(%d+ .+%)$");
               if(name) then
-                local _, _, shortenedName = name:find("^(.+) [VI%d]+$")
-                return name, shortenedName or name;
+                return name, shortenedName;
               end
             end
           end

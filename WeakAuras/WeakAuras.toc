@@ -57,3 +57,4 @@ SubRegionTypes\SubText.lua
 SubRegionTypes\Border.lua
 SubRegionTypes\Glow.lua
 SubRegionTypes\BarModel.lua
+SubRegionTypes\Tick.lua

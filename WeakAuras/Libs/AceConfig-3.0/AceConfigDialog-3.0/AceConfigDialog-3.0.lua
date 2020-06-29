@@ -580,6 +580,7 @@ local function confirmPopup(appName, rootframe, basepath, info, message, func, .
 	t.text = message
 	t.button1 = ACCEPT
 	t.button2 = CANCEL
+	t.preferredIndex = STATICPOPUP_NUMDIALOGS
 	local dialog, oldstrata
 	t.OnAccept = function()
 		safecall(func, unpack(t))
@@ -604,6 +605,31 @@ local function confirmPopup(appName, rootframe, basepath, info, message, func, .
 	t.hideOnEscape = 1
 
 	dialog = StaticPopup_Show("ACECONFIGDIALOG30_CONFIRM_DIALOG")
+	if dialog then
+		oldstrata = dialog:GetFrameStrata()
+		dialog:SetFrameStrata("TOOLTIP")
+	end
+end
+
+local function validationErrorPopup(message)
+	if not StaticPopupDialogs["ACECONFIGDIALOG30_VALIDATION_ERROR_DIALOG"] then
+		StaticPopupDialogs["ACECONFIGDIALOG30_VALIDATION_ERROR_DIALOG"] = {}
+	end
+	local t = StaticPopupDialogs["ACECONFIGDIALOG30_VALIDATION_ERROR_DIALOG"]
+	t.text = message
+	t.button1 = OKAY
+	t.preferredIndex = STATICPOPUP_NUMDIALOGS
+	local dialog, oldstrata
+	t.OnAccept = function()
+		if dialog and oldstrata then
+			dialog:SetFrameStrata(oldstrata)
+		end
+	end
+	t.timeout = 0
+	t.whileDead = 1
+	t.hideOnEscape = 1
+
+	dialog = StaticPopup_Show("ACECONFIGDIALOG30_VALIDATION_ERROR_DIALOG")
 	if dialog then
 		oldstrata = dialog:GetFrameStrata()
 		dialog:SetFrameStrata("TOOLTIP")

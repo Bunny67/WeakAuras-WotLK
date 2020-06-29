@@ -28,12 +28,8 @@ WeakAuras.prettyPrint = function(msg)
   print(WeakAuras.printPrefix .. msg)
 end
 
-WeakAuras.versionMismatchPrint = function()
-  WeakAuras.prettyPrint("You need to restart your game client to complete the WeakAuras update!")
-end
-
 if versionString ~= versionStringFromToc and versionStringFromToc ~= "Dev" then
-  C_Timer.After(1, WeakAuras.versionMismatchPrint)
+  WeakAuras.prettyPrint("You need to restart your game client to complete the WeakAuras update!")
 end
 
 WeakAuras.PowerAurasPath = "Interface\\Addons\\WeakAuras\\PowerAurasMedia\\Auras\\"

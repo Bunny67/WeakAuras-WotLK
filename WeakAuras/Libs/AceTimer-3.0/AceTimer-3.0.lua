@@ -2,8 +2,7 @@
 -- AceTimer supports one-shot timers and repeating timers. All timers are stored in an efficient
 -- data structure that allows easy dispatching and fast rescheduling. Timers can be registered
 -- or canceled at any time, even from within a running timer, without conflict or large overhead.\\
--- AceTimer is currently limited to firing timers at a frequency of 0.01s as this is what the WoW timer API
--- restricts us to.
+-- AceTimer is currently limited to firing timers at a frequency of 0.01s.
 --
 -- All `:Schedule` functions will return a handle to the current timer, which you will need to store if you
 -- need to cancel the timer you just registered.
@@ -15,23 +14,69 @@
 -- make into AceTimer.
 -- @class file
 -- @name AceTimer-3.0
--- @release $Id: AceTimer-3.0.lua 1202 2019-05-15 23:11:22Z nevcairiel $
+-- @release $Id$
 
-local MAJOR, MINOR = "AceTimer-3.0", 17 -- Bump minor on changes
+local MAJOR, MINOR = "AceTimer-3.0", 117 -- Bump minor on changes
 local AceTimer, oldminor = LibStub:NewLibrary(MAJOR, MINOR)
 
 if not AceTimer then return end -- No upgrade needed
+AceTimer.frame = AceTimer.frame or CreateFrame("Frame", "AceTimer30Frame")
 AceTimer.activeTimers = AceTimer.activeTimers or {} -- Active timer list
 local activeTimers = AceTimer.activeTimers -- Upvalue our private data
 
 -- Lua APIs
+local assert, loadstring, rawset, tconcat = assert, loadstring, rawset, table.concat
 local type, unpack, next, error, select = type, unpack, next, error, select
 -- WoW APIs
-local GetTime, C_TimerAfter = GetTime, C_Timer.After
+local GetTime = GetTime
+
+--[[
+	 xpcall safecall implementation
+]]
+local xpcall = xpcall
+
+local function errorhandler(err)
+	return geterrorhandler()(err)
+end
+
+local function CreateDispatcher(argCount)
+	local code = [[
+		local xpcall, eh = ...
+		local method, ARGS
+		local function call() return method(ARGS) end
+
+		local function dispatch(func, ...)
+			method = func
+			if not method then return end
+			ARGS = ...
+			return xpcall(call, eh)
+		end
+
+		return dispatch
+	]]
+
+	local ARGS = {}
+	for i = 1, argCount do ARGS[i] = "arg"..i end
+	code = code:gsub("ARGS", tconcat(ARGS, ", "))
+	return assert(loadstring(code, "safecall Dispatcher["..argCount.."]"))(xpcall, errorhandler)
+end
+
+local Dispatchers = setmetatable({}, {__index=function(self, argCount)
+	local dispatcher = CreateDispatcher(argCount)
+	rawset(self, argCount, dispatcher)
+	return dispatcher
+end})
+Dispatchers[0] = function(func)
+	return xpcall(func, errorhandler)
+end
+
+local function safecall(func, ...)
+	return Dispatchers[select("#", ...)](func, ...)
+end
 
 local function new(self, loop, func, delay, ...)
 	if delay < 0.01 then
-		delay = 0.01 -- Restrict to the lowest time that the C_Timer API allows us
+		delay = 0.01 -- Restrict to the lowest time
 	end
 
 	local timer = {
@@ -40,39 +85,13 @@ local function new(self, loop, func, delay, ...)
 		looping = loop,
 		argsCount = select("#", ...),
 		delay = delay,
+		timeleft = delay,
 		ends = GetTime() + delay,
 		...
 	}
 
 	activeTimers[timer] = timer
 
-	-- Create new timer closure to wrap the "timer" object
-	timer.callback = function()
-		if not timer.cancelled then
-			if type(timer.func) == "string" then
-				-- We manually set the unpack count to prevent issues with an arg set that contains nil and ends with nil
-				-- e.g. local t = {1, 2, nil, 3, nil} print(#t) will result in 2, instead of 5. This fixes said issue.
-				timer.object[timer.func](timer.object, unpack(timer, 1, timer.argsCount))
-			else
-				timer.func(unpack(timer, 1, timer.argsCount))
-			end
-
-			if timer.looping and not timer.cancelled then
-				-- Compensate delay to get a perfect average delay, even if individual times don't match up perfectly
-				-- due to fps differences
-				local time = GetTime()
-				local delay = timer.delay - (time - timer.ends)
-				-- Ensure the delay doesn't go below the threshold
-				if delay < 0.01 then delay = 0.01 end
-				C_TimerAfter(delay, timer.callback)
-				timer.ends = time + delay
-			else
-				activeTimers[timer.handle or timer] = nil
-			end
-		end
-	end
-
-	C_TimerAfter(delay, timer.callback)
 	return timer
 end
 
@@ -211,7 +230,6 @@ if oldminor and oldminor < 10 then
 elseif oldminor and oldminor < 17 then
 	-- Upgrade from old animation based timers to C_Timer.After timers.
 	AceTimer.inactiveTimers = nil
-	AceTimer.frame = nil
 	local oldTimers = AceTimer.activeTimers
 	-- Clear old timer table and update upvalue
 	AceTimer.activeTimers = {}
@@ -276,3 +294,41 @@ end
 for addon in next, AceTimer.embeds do
 	AceTimer:Embed(addon)
 end
+
+AceTimer.frame:SetScript("OnUpdate", function(self, elapsed)
+--	local total = 0
+
+	for _, timer in next, activeTimers do
+	--	print(timer.timeleft, timer.object.name)
+		if not timer.cancelled then
+			if timer.timeleft > elapsed then
+				timer.timeleft = timer.timeleft - elapsed
+			else
+				if type(timer.func) == "string" then
+					-- We manually set the unpack count to prevent issues with an arg set that contains nil and ends with nil
+					-- e.g. local t = {1, 2, nil, 3, nil} print(#t) will result in 2, instead of 5. This fixes said issue.
+					safecall(timer.object[timer.func], timer.object, unpack(timer, 1, timer.argsCount))
+				else
+					safecall(timer.func, unpack(timer, 1, timer.argsCount))
+				end
+
+				if timer.looping and not timer.cancelled then
+					-- Compensate delay to get a perfect average delay, even if individual times don't match up perfectly
+					-- due to fps differences
+					local time = GetTime()
+					local delay = timer.delay - (time - timer.ends)
+					-- Ensure the delay doesn't go below the threshold
+					if delay < 0.01 then delay = 0.01 end
+					timer.ends = time + delay
+					timer.timeleft = timer.delay
+				else
+					activeTimers[timer.handle or timer] = nil
+				end
+			end
+		end
+	end
+
+--	if total == 0 then
+--		self:Hide()
+--	end
+end)

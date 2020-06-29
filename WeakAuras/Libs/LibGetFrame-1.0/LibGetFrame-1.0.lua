@@ -7,7 +7,7 @@ if not lib then return end
 lib.callbacks = lib.callbacks or LibStub("CallbackHandler-1.0"):New(lib)
 local callbacks = lib.callbacks
 
-local GetPlayerInfoByGUID, UnitExists, IsAddOnLoaded, C_Timer, UnitIsUnit, SecureButton_GetUnit = GetPlayerInfoByGUID, UnitExists, IsAddOnLoaded, C_Timer, UnitIsUnit, SecureButton_GetUnit
+local GetPlayerInfoByGUID, UnitExists, IsAddOnLoaded, UnitIsUnit, SecureButton_GetUnit = GetPlayerInfoByGUID, UnitExists, IsAddOnLoaded, UnitIsUnit, SecureButton_GetUnit
 local tinsert, CopyTable, wipe = tinsert, CopyTable, wipe
 
 local maxDepth = 50
@@ -118,14 +118,23 @@ local function doScanForUnitFrames()
         end
     end
 end
+
+local waitFrame = CreateFrame("Frame")
+local function waitFrame_OnUpdate(self, elapsed)
+	self.delay = (self.delay or 1) - elapsed
+	if self.delay < elapsed then
+		doScanForUnitFrames()
+		self:SetScript("OnUpdate", nil)
+		self.delay = nil
+	end
+end
+
 local function ScanForUnitFrames(noDelay)
     if noDelay then
         doScanForUnitFrames()
     elseif not wait then
         wait = true
-        C_Timer.After(1, function()
-            doScanForUnitFrames()
-        end)
+		waitFrame:SetScript("OnUpdate", waitFrame_OnUpdate)
     end
 end
 

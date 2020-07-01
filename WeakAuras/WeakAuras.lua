@@ -4586,12 +4586,6 @@ function WeakAuras.PerformActions(data, when, region)
     WeakAuras.HandleChatAction(actions.message_type, actions.message, actions.message_dest, actions.message_channel, actions.r, actions.g, actions.b, region, customFunc, when);
   end
 
-  if (actions.stop_sound) then
-    if (region.SoundStop) then
-      region:SoundStop();
-    end
-  end
-
   if(actions.do_sound and actions.sound) then
     if (region.SoundPlay) then
       region:SoundPlay(actions);

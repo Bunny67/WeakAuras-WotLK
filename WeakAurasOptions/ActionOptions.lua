@@ -557,12 +557,6 @@ function WeakAuras.AddActionOption(id, data)
         hidden = function() return data.actions.finish.sound ~= " KitID" end,
         disabled = function() return not data.actions.finish.do_sound end
       },
-      finish_stop_sound = {
-        type = "toggle",
-        width = WeakAuras.doubleWidth,
-        name = L["Stop Sound"],
-        order = 29.1,
-      },
       finish_do_glow = {
         type = "toggle",
         width = WeakAuras.normalWidth,

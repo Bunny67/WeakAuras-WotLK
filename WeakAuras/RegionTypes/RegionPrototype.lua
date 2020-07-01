@@ -210,18 +210,9 @@ local function SoundRepeatStop(self)
   WeakAuras.StopProfileSystem("sound");
 end
 
-local function SoundStop(self)
-  WeakAuras.StartProfileSystem("sound");
-  if (self.soundHandle) then
-    StopSound(self.soundHandle);
-  end
-  WeakAuras.StopProfileSystem("sound");
-end
-
 local function SoundPlayHelper(self)
   WeakAuras.StartProfileSystem("sound");
   local options = self.soundOptions;
-  self.soundHandle = nil;
   if (not options or options.sound_type == "Stop") then
     WeakAuras.StopProfileSystem("sound");
     return;
@@ -234,23 +225,14 @@ local function SoundPlayHelper(self)
 
   if (options.sound == " custom") then
     if (options.sound_path) then
-      local ok, _, handle = pcall(PlaySoundFile, options.sound_path, options.sound_channel or "Master");
-      if ok then
-        self.soundHandle = handle;
-      end
+      PlaySoundFile(options.sound_path, options.sound_channel or "Master");
     end
   elseif (options.sound == " KitID") then
     if (options.sound_kit_id) then
-      local ok, _, handle = pcall(PlaySound,options.sound_kit_id, options.sound_channel or "Master");
-      if ok then
-        self.soundHandle = handle;
-      end
+      PlaySound(options.sound_kit_id, options.sound_channel or "Master");
     end
   else
-    local ok, _, handle = pcall(PlaySoundFile, options.sound, options.sound_channel or "Master");
-    if ok then
-      self.soundHandle = handle;
-    end
+    PlaySoundFile(options.sound, options.sound_channel or "Master");
   end
   WeakAuras.StopProfileSystem("sound");
 end
@@ -260,7 +242,6 @@ local function SoundPlay(self, options)
     return
   end
   WeakAuras.StartProfileSystem("sound");
-  self:SoundStop();
   self:SoundRepeatStop();
 
   self.soundOptions = options;
@@ -459,7 +440,6 @@ end
 
 function WeakAuras.regionPrototype.create(region)
   region.SoundPlay = SoundPlay;
-  region.SoundStop = SoundStop;
   region.SoundRepeatStop = SoundRepeatStop;
   region.SendChat = SendChat;
   region.RunCode = RunCode;

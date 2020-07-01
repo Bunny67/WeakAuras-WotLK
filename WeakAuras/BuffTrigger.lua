@@ -466,7 +466,7 @@ function WeakAuras.ScanAuras(unit)
   -- Iterate over all displays (list of display lists)
   for _, aura_list in pairs(aura_lists) do
     -- Locals
-    local name, rank, icon, count, duration, expirationTime, unitCaster, isStealable, spellId = true;
+    local name, icon, count, duration, expirationTime, unitCaster, isStealable, spellId = true;
     local tooltip, debuffClass, tooltipSize;
     local remaining, checkPassed;
 
@@ -501,7 +501,7 @@ function WeakAuras.ScanAuras(unit)
               -- Update scan cache
               if(aura_scan_cache[unit][filter].up_to_date < index) then
                 -- Query aura data
-                name, rank, icon, count, debuffClass, duration, expirationTime, unitCaster, isStealable, _, spellId = UnitAura(unit, index, filter);
+                name, _, icon, count, debuffClass, duration, expirationTime, unitCaster, isStealable, _, spellId = UnitAura(unit, index, filter);
                 if (debuffClass == nil) then
                   debuffClass = "none";
                 elseif (debuffClass == "") then
@@ -624,7 +624,7 @@ function WeakAuras.ScanAuras(unit)
               -- Fetch aura data
               local detected
               for i = 1, BUFF_MAX_DISPLAY do
-                name, rank, icon, count, _, duration, expirationTime, unitCaster, isStealable, _, spellId = UnitAura(unit, i, filter);
+                name, _, icon, count, _, duration, expirationTime, unitCaster, isStealable, _, spellId = UnitAura(unit, i, filter);
                 if not name then break end
                 if name == checkname then
                   detected = true
@@ -1040,9 +1040,9 @@ do
       for triggernum, data in pairs(triggers) do
         local filter = data.debuffType..(data.ownOnly and "|PLAYER" or "");
         local detected
-        local name, rank, icon, count, duration, expirationTime, unitCaster, spellId, _
+        local name, icon, count, duration, expirationTime, unitCaster, spellId, _
         for i = 1, BUFF_MAX_DISPLAY do
-          name, rank, icon, count, _, duration, expirationTime, unitCaster, _, _, spellId = UnitAura(unit, i, filter);
+          name, _, icon, count, _, duration, expirationTime, unitCaster, _, _, spellId = UnitAura(unit, i, filter);
           if not name then break end
           if name == spellName then
             detected = true
@@ -1220,9 +1220,9 @@ do
               local filter = data.debuffType..(data.ownOnly and "|PLAYER" or "");
 
               local detected
-              local name, rank, icon, count, duration, expirationTime, unitCaster, _
+              local name, icon, count, duration, expirationTime, unitCaster, _
               for i = 1, BUFF_MAX_DISPLAY do
-                name, rank, icon, count, _, duration, expirationTime, unitCaster = UnitAura(uid, i, filter);
+                name, _, icon, count, _, duration, expirationTime, unitCaster = UnitAura(uid, i, filter);
                 if not name then break end
                 if name == spellName then
                   detected = true

@@ -313,7 +313,7 @@ function FixedSizeFramePoolCollectionMixin:CreatePool(frameType, parent, templat
 	return pool;
 end
 
-function FixedSizeFramePoolCollectionMixin:Acquire(template)	
+function FixedSizeFramePoolCollectionMixin:Acquire(template)
 	local pool = self:GetPool(template);
 	assert(pool);
 

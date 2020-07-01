@@ -173,7 +173,7 @@ local function filterFunc(_, event, msg, player, l, cs, t, flag, channelId, ...)
         local toon = BNGetNumFriendToons(i)
         for j=1, toon do
           local _, rName, rGame = BNGetFriendToonInfo(i, j)
-          if rName == trimmedPlayer and rGame == "WoW" then
+          if rName == player and rGame == "WoW" then
             return false, newMsg, player, l, cs, t, flag, channelId, ...; -- Player is a real id friend, allow it
           end
         end

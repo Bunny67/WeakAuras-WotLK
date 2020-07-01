@@ -3449,7 +3449,6 @@ WeakAuras.event_prototypes = {
             local activeName;
           ]]
           for index in pairs(trigger.talent.multi) do
-            local tier, column
             local tier = index and ceil(index / MAX_NUM_TALENTS)
             local column = index and ((index - 1) % MAX_NUM_TALENTS + 1)
             local ret2 = [[

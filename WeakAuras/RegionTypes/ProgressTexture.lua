@@ -640,7 +640,7 @@ local function modify(parent, region, data)
       if (progress < 0) then
         progress = 0;
       end
-      
+
       if (progress > 1) then
         progress = 1;
       end

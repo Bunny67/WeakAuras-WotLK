@@ -62,9 +62,6 @@ local tinsert, tconcat, wipe = table.insert, table.concat, wipe
 local tostring, pairs, type = tostring, pairs, type
 local error, setmetatable = error, setmetatable
 
--- WoW APIs
-local IsPlayerMoving = IsPlayerMoving
-
 WeakAurasAceEvents = setmetatable({}, {__tostring=function() return "WeakAuras" end});
 LibStub("AceEvent-3.0"):Embed(WeakAurasAceEvents);
 local aceEvents = WeakAurasAceEvents
@@ -3121,7 +3118,6 @@ end
 -- Mounted Frame
 do
   local mountedFrame
-  WeakAuras.frames["Mount Use Handler"] = mountedFrame;
   local elapsed = 0;
   local delay = 0.5;
   local isMounted = IsMounted();
@@ -3143,6 +3139,7 @@ do
   function WeakAuras.WatchForMounts()
     if not(mountedFrame) then
       mountedFrame = CreateFrame("frame");
+	  WeakAuras.frames["Mount Use Handler"] = mountedFrame;
       mountedFrame:RegisterEvent("COMPANION_UPDATE");
       mountedFrame:SetScript("OnEvent", function()
        elapsed = 0;

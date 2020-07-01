@@ -1869,7 +1869,7 @@ local function GetInstanceTypeAndSize()
         size = "fortyman"
       end
     end
-    if isDynamic then
+    if isDynamicInstance then
       if playerDifficulty == 0 then
         difficulty = "normal"
       elseif playerDifficulty == 1 then

@@ -7,7 +7,6 @@ local LSM = LibStub("LibSharedMedia-3.0");
 
 local wipe, tinsert = wipe, tinsert
 local GetNumShapeshiftForms, GetShapeshiftFormInfo = GetNumShapeshiftForms, GetShapeshiftFormInfo
-local WrapTextInColorCode, GetClassColor = WrapTextInColorCode, GetClassColor -- for Classic
 
 WeakAuras.glow_action_types = {
   show = L["Show"],

@@ -4372,14 +4372,10 @@ function WeakAuras.HandleChatAction(message_type, message, message_dest, message
     elseif UnitInParty("player") then
       pcall(function() SendChatMessage(message, "PARTY") end)
     else
-      if IsInInstance() then
-        pcall(function() SendChatMessage(message, "SAY") end)
-      end
+      pcall(function() SendChatMessage(message, "SAY") end)
     end
   elseif(message_type == "SAY" or message_type == "YELL") then
-    if IsInInstance() then
-      pcall(function() SendChatMessage(message, message_type, nil, nil) end)
-    end
+    pcall(function() SendChatMessage(message, message_type, nil, nil) end)
   else
     pcall(function() SendChatMessage(message, message_type, nil, nil) end);
   end

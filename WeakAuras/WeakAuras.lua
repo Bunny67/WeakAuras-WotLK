@@ -4374,8 +4374,6 @@ function WeakAuras.HandleChatAction(message_type, message, message_dest, message
     else
       pcall(function() SendChatMessage(message, "SAY") end)
     end
-  elseif(message_type == "SAY" or message_type == "YELL") then
-    pcall(function() SendChatMessage(message, message_type, nil, nil) end)
   else
     pcall(function() SendChatMessage(message, message_type, nil, nil) end);
   end

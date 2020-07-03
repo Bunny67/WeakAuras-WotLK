@@ -483,7 +483,7 @@ local function modify(parent, region, data)
     foreground:SetPoint("LEFT", region, "LEFT");
     region.orientation = "HORIZONTAL_INVERSE";
     if(data.compress) then
-      function region:SetValue(progress)
+      function region:SetValueOnTexture(progress)
         region.progress = progress;
 
         local ULx, ULy = ApplyTransform(0, 0, region)
@@ -496,7 +496,7 @@ local function modify(parent, region, data)
         background:SetTexCoord(ULx, ULy, LLx, LLy, URx, URy, LRx, LRy);
       end
     else
-      function region:SetValue(progress)
+      function region:SetValueOnTexture(progress)
         region.progress = progress;
 
         local ULx , ULy  = ApplyTransform(0, 0, region)
@@ -517,7 +517,7 @@ local function modify(parent, region, data)
     foreground:SetPoint("RIGHT", region, "RIGHT");
     region.orientation = "HORIZONTAL";
     if(data.compress) then
-      function region:SetValue(progress)
+      function region:SetValueOnTexture(progress)
         region.progress = progress;
 
         local ULx, ULy = ApplyTransform(0, 0, region)
@@ -530,7 +530,7 @@ local function modify(parent, region, data)
         background:SetTexCoord(ULx, ULy, LLx, LLy, URx, URy, LRx, LRy);
       end
     else
-      function region:SetValue(progress)
+      function region:SetValueOnTexture(progress)
         region.progress = progress;
 
         local ULx , ULy  = ApplyTransform(1-progress, 0, region)
@@ -551,7 +551,7 @@ local function modify(parent, region, data)
     foreground:SetPoint("BOTTOM", region, "BOTTOM");
     region.orientation = "VERTICAL_INVERSE";
     if(data.compress) then
-      function region:SetValue(progress)
+      function region:SetValueOnTexture(progress)
         region.progress = progress;
 
         local ULx, ULy = ApplyTransform(0, 0, region)
@@ -564,7 +564,7 @@ local function modify(parent, region, data)
         background:SetTexCoord(ULx, ULy, LLx, LLy, URx, URy, LRx, LRy);
       end
     else
-      function region:SetValue(progress)
+      function region:SetValueOnTexture(progress)
         region.progress = progress;
 
         local ULx , ULy  = ApplyTransform(0, 1 - progress, region)
@@ -585,7 +585,7 @@ local function modify(parent, region, data)
     foreground:SetPoint("TOP", region, "TOP");
     region.orientation = "VERTICAL";
     if(data.compress) then
-      function region:SetValue(progress)
+      function region:SetValueOnTexture(progress)
         region.progress = progress;
 
         local ULx, ULy = ApplyTransform(0, 0, region)
@@ -598,7 +598,7 @@ local function modify(parent, region, data)
         background:SetTexCoord(ULx, ULy, LLx, LLy, URx, URy, LRx, LRy);
       end
     else
-      function region:SetValue(progress)
+      function region:SetValueOnTexture(progress)
         region.progress = progress;
 
         local ULx , ULy  = ApplyTransform(0, 0, region)
@@ -634,7 +634,7 @@ local function modify(parent, region, data)
 
     backgroundSpinner:SetProgress(region, startAngle, endAngle, 1, clockwise);
 
-    function region:SetValue(progress)
+    function region:SetValueOnTexture(progress)
       progress = progress or 0;
       region.progress = progress;
       if (progress < 0) then
@@ -682,7 +682,7 @@ local function modify(parent, region, data)
     orientCircular(false);
   end
 
-  region:SetValue(0.667);
+  region:SetValueOnTexture(0.667);
 
   function region:Scale(scalex, scaley)
     region.scalex = scalex;
@@ -748,7 +748,7 @@ local function modify(parent, region, data)
     region.rotation = angle or 0;
     region.cos_rotation = cos(region.rotation);
     region.sin_rotation = sin(region.rotation);
-    region:SetValue(region.progress);
+    region:SetValueOnTexture(region.progress);
   end
 
   function region:GetRotation()
@@ -798,7 +798,19 @@ local function modify(parent, region, data)
     end
 
     progress = progress > 0.0001 and progress or 0.0001;
-    region:SetValue(progress);
+    region:SetValueOnTexture(progress);
+  end
+
+  function region:SetValue(value, total)
+    local progress = 1
+    if(total > 0) then
+      progress = value / total;
+      if(region.inverseDirection) then
+        progress = 1 - progress;
+      end
+    end
+    progress = progress > 0.0001 and progress or 0.0001;
+    region:SetValueOnTexture(progress);
   end
 
   function region:Update()
@@ -907,7 +919,7 @@ local function modify(parent, region, data)
     region.inverseDirection = inverse;
     local progress = 1 - region.progress;
     progress = progress > 0.0001 and progress or 0.0001;
-    region:SetValue(progress);
+    region:SetValueOnTexture(progress);
   end
 
   WeakAuras.regionPrototype.modifyFinish(parent, region, data);

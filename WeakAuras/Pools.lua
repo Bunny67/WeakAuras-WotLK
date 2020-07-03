@@ -119,46 +119,44 @@ end
 TexturePoolMixin = CreateFromMixins(ObjectPoolMixin);
 
 local function TexturePoolFactory(texturePool)
-	return texturePool.parent:CreateTexture(nil, texturePool.layer, texturePool.textureTemplate, texturePool.subLayer);
+	return texturePool.parent:CreateTexture(nil, texturePool.layer, texturePool.textureTemplate);
 end
 
-function TexturePoolMixin:OnLoad(parent, layer, subLayer, textureTemplate, resetterFunc)
+function TexturePoolMixin:OnLoad(parent, layer, textureTemplate, resetterFunc)
 	ObjectPoolMixin.OnLoad(self, TexturePoolFactory, resetterFunc);
 	self.parent = parent;
 	self.layer = layer;
-	self.subLayer = subLayer;
 	self.textureTemplate = textureTemplate;
 end
 
 TexturePool_Hide = FramePool_Hide;
 TexturePool_HideAndClearAnchors = FramePool_HideAndClearAnchors;
 
-function CreateTexturePool(parent, layer, subLayer, textureTemplate, resetterFunc)
+function CreateTexturePool(parent, layer, textureTemplate, resetterFunc)
 	local texturePool = CreateFromMixins(TexturePoolMixin);
-	texturePool:OnLoad(parent, layer, subLayer, textureTemplate, resetterFunc or TexturePool_HideAndClearAnchors);
+	texturePool:OnLoad(parent, layer, textureTemplate, resetterFunc or TexturePool_HideAndClearAnchors);
 	return texturePool;
 end
 
 FontStringPoolMixin = CreateFromMixins(ObjectPoolMixin);
 
 local function FontStringPoolFactory(fontStringPool)
-	return fontStringPool.parent:CreateFontString(nil, fontStringPool.layer, fontStringPool.fontStringTemplate, fontStringPool.subLayer);
+	return fontStringPool.parent:CreateFontString(nil, fontStringPool.layer, fontStringPool.fontStringTemplate);
 end
 
-function FontStringPoolMixin:OnLoad(parent, layer, subLayer, fontStringTemplate, resetterFunc)
+function FontStringPoolMixin:OnLoad(parent, layer, fontStringTemplate, resetterFunc)
 	ObjectPoolMixin.OnLoad(self, FontStringPoolFactory, resetterFunc);
 	self.parent = parent;
 	self.layer = layer;
-	self.subLayer = subLayer;
 	self.fontStringTemplate = fontStringTemplate;
 end
 
 FontStringPool_Hide = FramePool_Hide;
 FontStringPool_HideAndClearAnchors = FramePool_HideAndClearAnchors;
 
-function CreateFontStringPool(parent, layer, subLayer, fontStringTemplate, resetterFunc)
+function CreateFontStringPool(parent, layer, fontStringTemplate, resetterFunc)
 	local fontStringPool = CreateFromMixins(FontStringPoolMixin);
-	fontStringPool:OnLoad(parent, layer, subLayer, fontStringTemplate, resetterFunc or FontStringPool_HideAndClearAnchors);
+	fontStringPool:OnLoad(parent, layer, fontStringTemplate, resetterFunc or FontStringPool_HideAndClearAnchors);
 	return fontStringPool;
 end
 

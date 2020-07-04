@@ -3184,7 +3184,8 @@ do
   local WorldGetChildren = WorldFrame.GetChildren
   local WorldGetNumChildren = WorldFrame.GetNumChildren
 
-  local numChildren = 0
+  local lastUpdate = 0
+  local lastChildern, numChildren = 0, 0
   local nameplateList = {}
   local visibleNameplates = {}
 
@@ -3206,10 +3207,9 @@ do
     WeakAuras.StopProfileSystem("nameplatetrigger")
   end
 
-  local function findNewPlate(num)
-    if num == numChildren then return end
-      for i = numChildren + 1, num do
-      local frame = select(i, WorldGetChildren(WorldFrame))
+  function findNewPlate(...)
+    for i = lastChildern + 1, numChildren do
+      local frame = select(i, ...)
       local region, _, _, _, _, _, nameText = frame:GetRegions()
       if (frame.UnitFrame or (region and region:GetObjectType() == "Texture" and region:GetTexture() == OVERLAY)) and not nameplateList[frame] then
         frame.nameText = nameText
@@ -3218,13 +3218,19 @@ do
         nameplateShow(frame)
       end
     end
-    numChildren = num
   end
 
-  local function nameplatesUpdate()
-    WeakAuras.StartProfileSystem("nameplatetrigger")
-    findNewPlate(WorldGetNumChildren(WorldFrame))
-    WeakAuras.StopProfileSystem("nameplatetrigger")
+  function nameplatesUpdate(_, elaps)
+    lastUpdate = lastUpdate + elaps
+    if lastUpdate < 1 then return end
+    numChildren = WorldGetNumChildren(WorldFrame)
+    if lastChildern ~= numChildren then
+      WeakAuras.StartProfileSystem("nameplatetrigger")
+      findNewPlate(WorldGetChildren(WorldFrame))
+      WeakAuras.StopProfileSystem("nameplatetrigger")
+      lastChildern = numChildren
+    end
+    lastUpdate = 0
   end
 
   function WeakAuras.GetUnitNameplate(name)

@@ -92,10 +92,13 @@ local function CreateModel()
 end
 
 -- Keep the two model apis separate
-local pool = CreateObjectPool(CreateModel)
+local poolModelApi = CreateObjectPool(CreateModel)
+local poolUnitApi = CreateObjectPool(CreateModel)
 
 local function AcquireModel(region, data)
+  local pool = data.modelIsUnit and poolUnitApi or poolModelApi
   local model = pool:Acquire()
+  model.modelIsUnit = data.modelIsUnit
 
   model:ClearAllPoints()
   model:SetAllPoints(region)
@@ -152,6 +155,7 @@ local function ReleaseModel(model)
   model:UnregisterEvent("PLAYER_TARGET_CHANGED");
   model:UnregisterEvent("PLAYER_FOCUS_CHANGED");
   model:SetScript("OnEvent", nil);
+  local pool = model.modelIsUnit and poolUnitApi or poolModelApi
   pool:Release(model)
 end
 

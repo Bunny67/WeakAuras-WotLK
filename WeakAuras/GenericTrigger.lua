@@ -3207,7 +3207,7 @@ do
     WeakAuras.StopProfileSystem("nameplatetrigger")
   end
 
-  function findNewPlate(...)
+  local function findNewPlate(...)
     for i = lastChildern + 1, numChildren do
       local frame = select(i, ...)
       local region, _, _, _, _, _, nameText = frame:GetRegions()
@@ -3220,7 +3220,7 @@ do
     end
   end
 
-  function nameplatesUpdate(_, elaps)
+  local function nameplatesUpdate(_, elaps)
     lastUpdate = lastUpdate + elaps
     if lastUpdate < 1 then return end
     numChildren = WorldGetNumChildren(WorldFrame)

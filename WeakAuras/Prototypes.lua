@@ -2050,12 +2050,12 @@ WeakAuras.event_prototypes = {
         test = "true",
         conditionType = "bool",
         conditionTest = function(state, needle)
-          return state and state.show and (IsUsableSpell(state.spellname) == (needle == 1))
+          return state and state.show and (IsUsableSpell(state.spellname) == needle)
         end,
         conditionEvents = {
           "SPELL_UPDATE_USABLE",
           "PLAYER_TARGET_CHANGED",
-          "UNIT_POWER_FREQUENT",
+          "UNIT_MANA", "UNIT_RAGE", "UNIT_FOCUS", "UNIT_ENERGY", "UNIT_RUNIC_POWER"
         },
       },
       {
@@ -2065,12 +2065,12 @@ WeakAuras.event_prototypes = {
         test = "true",
         conditionType = "bool",
         conditionTest = function(state, needle)
-          return state and state.show and (select(2, IsUsableSpell(state.spellname)) == (needle == 1));
+          return state and state.show and (select(2, IsUsableSpell(state.spellname)) == needle);
         end,
         conditionEvents = {
           "SPELL_UPDATE_USABLE",
           "PLAYER_TARGET_CHANGED",
-          "UNIT_POWER_FREQUENT",
+          "UNIT_MANA", "UNIT_RAGE", "UNIT_FOCUS", "UNIT_ENERGY", "UNIT_RUNIC_POWER"
         }
       },
       {

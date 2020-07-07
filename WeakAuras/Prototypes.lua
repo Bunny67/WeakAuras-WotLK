@@ -2050,7 +2050,7 @@ WeakAuras.event_prototypes = {
         test = "true",
         conditionType = "bool",
         conditionTest = function(state, needle)
-          return state and state.show and ((IsUsableSpell(state.spellname) == 1 and true or false) == (needle == 1))
+          return state and state.show and (IsUsableSpell(state.spellname) and needle == 1)
         end,
         conditionEvents = {
           "SPELL_UPDATE_USABLE",
@@ -2065,7 +2065,7 @@ WeakAuras.event_prototypes = {
         test = "true",
         conditionType = "bool",
         conditionTest = function(state, needle)
-          return state and state.show and ((select(2, IsUsableSpell(state.spellname)) == 1 and true or false) == (needle == 1));
+          return state and state.show and (select(2, IsUsableSpell(state.spellname)) and needle == 1);
         end,
         conditionEvents = {
           "SPELL_UPDATE_USABLE",

@@ -1656,6 +1656,23 @@ do
           event = "SWING_TIMER_START";
           timer:CancelTimer(offTimer);
           offTimer = timer:ScheduleTimerFixed(swingEnd, offSpeed, "off");
+        else
+          -- A swing occurred while both weapons are supposed to be on cooldown
+          -- Simply refresh the timer of the weapon swing which would have ended sooner
+          local mainRem, offRem = (lastSwingMain or math.huge) + mainSpeed - currentTime, (lastSwingOff or math.huge) + offSpeed - currentTime;
+          if(mainRem < offRem or not OffhandHasWeapon()) then
+            timer:CancelTimer(mainTimer, true);
+            lastSwingMain = currentTime;
+            swingDurationMain = mainSpeed;
+            event = "SWING_TIMER_CHANGE";
+            mainTimer = timer:ScheduleTimer(swingEnd, mainSpeed, "main");
+          else
+            timer:CancelTimer(mainTimer, true);
+            lastSwingOff = currentTime;
+            swingDurationOff = offSpeed;
+            event = "SWING_TIMER_CHANGE";
+            offTimer = timer:ScheduleTimer(swingEnd, offSpeed, "off");
+          end
         end
         WeakAuras.ScanEvents(event);
       end

@@ -184,7 +184,7 @@ local function ConstructModelPicker(frame)
         end
       end
     else
-      group:Pick(group.givenPath, group.givenZ, group.givenX, group.givenY);
+      group:Pick(group.givenModel, group.givenZ, group.givenX, group.givenY);
     end
     group.Close();
   end

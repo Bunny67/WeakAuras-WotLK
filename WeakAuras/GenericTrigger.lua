@@ -3888,9 +3888,7 @@ do
   local class = select(2, UnitClass("player"))
   if class == "DRUID" then
     function WeakAuras.CalculatedGcdDuration()
-      local id = GetShapeshiftFormID()
-      local haste = GetHaste()
-      return id == 1 and 1 or max(0.75, 1.5 * 100 / (100 + GetCombatRatingBonus(CR_HASTE_SPELL)))
+      return GetShapeshiftForm() == 3 and 1 or max(0.75, 1.5 * 100 / (100 + GetCombatRatingBonus(CR_HASTE_SPELL)))
     end
   elseif class == "ROGUE" then
     function WeakAuras.CalculatedGcdDuration()

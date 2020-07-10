@@ -117,7 +117,7 @@ local screenWidth, screenHeight = math.ceil(GetScreenWidth() / 20) * 20, math.ce
 function WeakAuras.GetAnchorsForData(parentData, type)
   local result
   if not parentData.controlledChildren then
-    if not WeakAuras.regionOptions[parentData.regionType].getAnchors then
+    if not WeakAuras.regionOptions[parentData.regionType] or not WeakAuras.regionOptions[parentData.regionType].getAnchors then
       return
     end
 
@@ -258,7 +258,7 @@ local function SendChat(self, options)
   if (not options or WeakAuras.IsOptionsOpen()) then
     return
   end
-  WeakAuras.HandleChatAction(options.message_type, options.message, options.message_dest, options.message_channel, options.r, options.g, options.b, self, options.message_custom);
+  WeakAuras.HandleChatAction(options.message_type, options.message, options.message_dest, options.message_channel, options.r, options.g, options.b, self, options.message_custom, nil, options.message_formaters);
 end
 
 local function RunCode(self, func)
@@ -532,6 +532,22 @@ function WeakAuras.regionPrototype.modify(parent, region, data)
       WeakAuras.AnchorFrame(data, region, parent);
     end
   end
+
+  region.startFormatters = WeakAuras.CreateFormatters(data.actions.start.message, function(key, default)
+    local fullKey = "message_format_" .. key
+    if data.actions.start[fullKey] == nil then
+      data.actions.start[fullKey] = default
+    end
+    return data.actions.start[fullKey]
+  end)
+
+  region.finishFormatters = WeakAuras.CreateFormatters(data.actions.finish.message, function(key, default)
+    local fullKey = "message_format_" .. key
+    if data.actions.finish[fullKey] == nil then
+      data.actions.finish[fullKey] = default
+    end
+    return data.actions.finish[fullKey]
+  end)
 end
 
 function WeakAuras.regionPrototype.modifyFinish(parent, region, data)
@@ -848,8 +864,4 @@ function WeakAuras.regionPrototype.AddExpandFunction(data, region, cloneId, pare
   if not region.Expand then
     function region:Expand() end
   end
-end
-
-function WeakAuras.SetTexture(texture, path, wrapModeH, wrapModeV)
-  texture:SetTexture(path, wrapModeH, wrapModeV);
 end

@@ -1175,6 +1175,9 @@ local function findMatch(data, children)
       if old.uid ~= new.uid then
         return
       else
+        if (children == nil) ~= (old.controlledChildren == nil) then
+          return
+        end
         return true
       end
     else

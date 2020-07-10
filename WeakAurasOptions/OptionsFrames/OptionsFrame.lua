@@ -748,7 +748,7 @@ function WeakAuras.CreateFrame()
     tremove(tempGroup.controlledChildren, index)
     displayButtons[id]:ClearPick()
 
-    WeakAuras.ReloadTriggerOptions(tempGroup)
+    WeakAuras.AddOption(tempGroup.id, tempGroup)
     self:FillOptions(displayOptions[tempGroup.id])
   end
 
@@ -962,7 +962,7 @@ function WeakAuras.CreateFrame()
         end
       end
 
-      WeakAuras.ReloadTriggerOptions(data)
+      WeakAuras.AddOption(data.id, data)
       self:FillOptions(displayOptions[id], tab) -- TODO: remove tab parametter once legacy aura trigger is removed
 
       WeakAuras.SetMoverSizer(id)
@@ -1041,7 +1041,7 @@ function WeakAuras.CreateFrame()
         WeakAuras.EnsureOptions(id)
         displayButtons[id]:Pick()
         tinsert(tempGroup.controlledChildren, id)
-        WeakAuras.ReloadTriggerOptions(tempGroup)
+        WeakAuras.AddOption(tempGroup.id, tempGroup)
         self:FillOptions(displayOptions[tempGroup.id])
       end
     end
@@ -1062,7 +1062,7 @@ function WeakAuras.CreateFrame()
         tinsert(tempGroup.controlledChildren, id)
       end
     end
-    WeakAuras.ReloadTriggerOptions(tempGroup)
+    WeakAuras.AddOption(tempGroup.id, tempGroup)
     self:FillOptions(displayOptions[tempGroup.id])
     self.pickedDisplay = tempGroup
   end

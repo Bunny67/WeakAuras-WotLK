@@ -86,7 +86,7 @@ end
 
 local function modify(parent, region, data)
   WeakAuras.regionPrototype.modify(parent, region, data);
-  WeakAuras.SetTexture(region.texture, data.texture);
+  region.texture:SetTexture(data.texture);
   region.texture:SetDesaturated(data.desaturate)
   region:SetWidth(data.width);
   region:SetHeight(data.height);
@@ -182,7 +182,7 @@ local function modify(parent, region, data)
 
   function region:Update()
     if region.state.texture then
-      WeakAuras.SetTexture(region.texture, region.state.texture);
+      region.texture:SetTexture(region.state.texture);
     end
   end
 

@@ -75,10 +75,7 @@ local UpdatedFrames = {}
 
 local function ScanFrames(depth, frame, ...)
     if not frame then return end
-    if depth < maxDepth
-    and frame.IsForbidden
-    and not frame:IsForbidden()
-    then
+    if depth < maxDepth then
         local frameType = frame:GetObjectType()
         if frameType == "Frame" or frameType == "Button" then
             ScanFrames(depth + 1, frame:GetChildren())

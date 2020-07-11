@@ -4603,7 +4603,7 @@ WeakAuras.event_prototypes = {
         local aggro, status, threatpct, rawthreatpct, threatvalue, threattotal
         if unit then
           aggro, status, threatpct, rawthreatpct, threatvalue = WeakAuras.UnitDetailedThreatSituation('player', unit)
-          threattotal = (threatvalue or 0) * 100 / (threatpct or 1)
+          threattotal = (threatvalue or 0) * 100 / (threatpct ~= 0 and threatpct or 1)
         else
           status = UnitThreatSituation('player')
           aggro = status == 2 or status == 3
@@ -5722,7 +5722,7 @@ WeakAuras.dynamic_texts = {
       end
     end,
     func = function(duration, state, totalPrecision)
-      if state.progressType ~= "timed" then
+      if not state or state.progressType ~= "timed" then
         return duration
       end
       if type(duration) ~= "number" then
@@ -5755,6 +5755,7 @@ WeakAuras.dynamic_texts = {
   },
   ["n"] = {
     get = function(state)
+      if not state then return "" end
       return state.name or state.id or "", true
     end,
     func = function(v)
@@ -5763,6 +5764,7 @@ WeakAuras.dynamic_texts = {
   },
   ["i"] = {
     get = function(state)
+      if not state then return "" end
       return state.icon or "Interface\\Icons\\INV_Misc_QuestionMark"
     end,
     func = function(v)

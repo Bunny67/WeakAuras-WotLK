@@ -16,7 +16,7 @@
 -- @name AceTimer-3.0
 -- @release $Id$
 
-local MAJOR, MINOR = "AceTimer-3.0", 117 -- Bump minor on changes
+local MAJOR, MINOR = "AceTimer-3.0", 1017 -- Bump minor on changes
 local AceTimer, oldminor = LibStub:NewLibrary(MAJOR, MINOR)
 
 if not AceTimer then return end -- No upgrade needed
@@ -296,10 +296,7 @@ for addon in next, AceTimer.embeds do
 end
 
 AceTimer.frame:SetScript("OnUpdate", function(self, elapsed)
---	local total = 0
-
 	for _, timer in next, activeTimers do
-	--	print(timer.timeleft, timer.object.name)
 		if not timer.cancelled then
 			if timer.timeleft > elapsed then
 				timer.timeleft = timer.timeleft - elapsed
@@ -327,8 +324,4 @@ AceTimer.frame:SetScript("OnUpdate", function(self, elapsed)
 			end
 		end
 	end
-
---	if total == 0 then
---		self:Hide()
---	end
 end)

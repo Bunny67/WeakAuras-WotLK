@@ -749,11 +749,11 @@ WeakAuras.load_prototype = {
       desc = constants.nameRealmFilterDesc,
     },
     {
-      name = "namerealmblack",
-      display = L["Blacklisted Player Name/Realm"],
+      name = "ignoreNameRealm",
+      display = L["|cFFFF0000Not|r Player Name/Realm"],
       type = "string",
-      test = "not nameRealmBlacklistChecker:Check(player, realm)",
-      preamble = "local nameRealmBlacklistChecker = WeakAuras.ParseNameCheck(%q)",
+      test = "not nameRealmIgnoreChecker:Check(player, realm)",
+      preamble = "local nameRealmIgnoreChecker = WeakAuras.ParseNameCheck(%q)",
       desc = constants.nameRealmFilterDesc,
     },
     {

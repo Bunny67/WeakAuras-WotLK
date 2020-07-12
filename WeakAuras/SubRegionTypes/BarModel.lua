@@ -12,7 +12,7 @@ local default = function(parentType)
     model_z = 0,
     rotation = 0,
 
-    model_path = "235338",
+    model_path = "Environments/Stars/NexusRaid_RuneEffects_Nebula.m2",
     bar_model_clip = true
   }
 end

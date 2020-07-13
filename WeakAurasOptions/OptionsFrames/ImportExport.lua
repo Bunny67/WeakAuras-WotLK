@@ -53,7 +53,6 @@ local function ConstructImportExport(frame)
         elseif(mode == "table") then
           displayStr = WeakAuras.DataToString(id);
         end
-        input.editBox:SetMaxBytes(nil);
         input.editBox:SetScript("OnEscapePressed", function() group:Close(); end);
         input.editBox:SetScript("OnChar", function() input:SetText(displayStr); input.editBox:HighlightText(); end);
         input.editBox:SetScript("OnMouseUp", function() input.editBox:HighlightText(); end);
@@ -71,12 +70,14 @@ local function ConstructImportExport(frame)
       input.editBox:SetScript("OnMouseUp", nil)
       input.editBox:SetScript("OnTextChanged", function()
         local str = input:GetText()
+        str = str:match("^%s*(.-)%s*$")
         input:SetLabel(""..#str)
         if #str > 20 then
           WeakAuras.Import(str)
         end
       end)
       input:SetText("")
+      input:SetLabel("0");
       input:SetFocus();
     end
   end

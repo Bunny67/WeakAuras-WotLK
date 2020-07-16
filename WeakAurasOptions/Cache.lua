@@ -118,8 +118,9 @@ function spellCache.AddIcon(name, id, icon)
   if cache then
     if name then
       cache[name] = cache[name] or {}
+      cache[name].spells = cache[name].spells or {}
       if id and icon then
-        cache[name][id] = icon
+        cache[name].spells[id] = icon
       end
     end
   else

@@ -165,6 +165,12 @@ WeakAuras.format_types = {
         hidden = hidden
       })
     end,
+      addOption(symbol .. "_big_number_space", {
+        type = "description",
+        name = "",
+        width = WeakAuras.normalWidth,
+        hidden = hidden
+      })
     CreateFormatter = function(symbol, get)
       local format = get(symbol .. "_big_number_format", "AbbreviateNumbers")
       if (format == "AbbreviateNumbers") then
@@ -255,7 +261,7 @@ WeakAuras.format_types = {
       local abbreviateFunc
       if color == "class" then
         colorFunc = function(unit, text)
-          if UnitPlayerControlled(unit) then
+          if unit and UnitPlayerControlled(unit) then
             return GetClassColoredTextForUnit(unit, text)
           end
           return text
@@ -263,9 +269,14 @@ WeakAuras.format_types = {
       end
 
       if realm == "never" then
-        nameFunc = UnitName
+        nameFunc = function(unit)
+          return unit and UnitName(unit)
+        end
       elseif realm == "star" then
         nameFunc = function(unit)
+          if not unit then
+            return ""
+          end
           local name, realm = UnitName(unit)
           if realm then
             return name .. "*"
@@ -274,6 +285,9 @@ WeakAuras.format_types = {
         end
       elseif realm == "differentServer" then
         nameFunc = function(unit)
+          if not unit then
+            return ""
+          end
           local name, realm = UnitName(unit)
           if realm then
             return name .. "-" .. realm
@@ -282,6 +296,9 @@ WeakAuras.format_types = {
         end
       elseif realm == "always" then
         nameFunc = function(unit)
+          if not unit then
+            return ""
+          end
           local name, realm = WeakAuras.UnitNameWithRealm(unit)
           return name .. "-" .. realm
         end
@@ -350,6 +367,7 @@ WeakAuras.format_types = {
         min = 1,
         max = 20,
         hidden = hidden,
+        step = 1,
         disabled = function()
           return not get(symbol .. "_abbreviate")
         end
@@ -366,7 +384,7 @@ WeakAuras.format_types = {
       local abbreviateFunc
       if color == "class" then
         colorFunc = function(class, text)
-          local color = RAID_CLASS_COLORS[class]
+          local color = class and RAID_CLASS_COLORS[class]
           if color then
             return string.format("|c%s%s|r", string.format("ff%.2x%.2x%.2x", color.r * 255, color.g * 255, color.b * 255), text)
           else

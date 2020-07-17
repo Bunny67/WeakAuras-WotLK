@@ -683,7 +683,7 @@ local function GetBuffTriggerOptions(data, triggernum)
 
     useUnitName = {
       type = "toggle",
-      width = "WeakAuras.normalWidth",
+      width = WeakAuras.normalWidth,
       name = L["UnitName Filter"],
       order = 69.1,
       hidden = function() return

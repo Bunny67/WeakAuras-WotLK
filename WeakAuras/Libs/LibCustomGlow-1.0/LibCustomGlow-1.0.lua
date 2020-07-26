@@ -4,7 +4,7 @@ if not LibStub then error(MAJOR_VERSION .. " requires LibStub.") end
 local lib, oldversion = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not lib then return end
 
-local pairs = pairs
+local pairs, ipairs = pairs, ipairs
 local ceil, floor, min, mod = math.ceil, math.floor, math.min, mod
 local tinsert, tremove = table.insert, table.remove
 
@@ -41,7 +41,7 @@ local FramePoolResetter = function(framePool, frame)
 	end
 
 	if frame.textures then
-		for _, texture in pairs(frame.textures) do
+		for _, texture in ipairs(frame.textures) do
 			GlowTexPool:Release(texture)
 		end
 	end
@@ -69,8 +69,8 @@ local function addFrameAndTex(r, color, name, key, N, xOffset, yOffset, texture,
 
 	local f = r[name..key]
 	f:SetFrameLevel(r:GetFrameLevel() + frameLevel)
-	f:SetPoint("TOPLEFT", r, "TOPLEFT", -xOffset + 0.05, yOffset + 0.05)
-	f:SetPoint("BOTTOMRIGHT", r, "BOTTOMRIGHT", xOffset, -yOffset + 0.05)
+	f:SetPoint("TOPLEFT", r, "TOPLEFT", -xOffset, yOffset)
+	f:SetPoint("BOTTOMRIGHT", r, "BOTTOMRIGHT", xOffset, -yOffset)
 	f:Show()
 
 	if not f.textures then

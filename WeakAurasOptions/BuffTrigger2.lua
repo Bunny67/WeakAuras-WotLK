@@ -659,7 +659,7 @@ local function GetBuffTriggerOptions(data, triggernum)
 
     ignoreDead = {
       type = "toggle",
-      name = WeakAuras.newFeatureString .. L["Ignore Dead"],
+      name = L["Ignore Dead"],
       order = 68.7,
       width = WeakAuras.doubleWidth,
       hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")) end
@@ -667,14 +667,14 @@ local function GetBuffTriggerOptions(data, triggernum)
 
     ignoreDisconnected = {
       type = "toggle",
-      name = WeakAuras.newFeatureString .. L["Ignore Disconnected"],
+      name = L["Ignore Disconnected"],
       order = 68.8,
       width = WeakAuras.doubleWidth,
       hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")) end
     },
     ignoreInvisible = {
       type = "toggle",
-      name = WeakAuras.newFeatureString .. L["Ignore out of checking range"],
+      name = L["Ignore out of checking range"],
       desc = L["Uses UnitIsVisible() to check if in range. This is polled every second."],
       order = 68.9,
       width = WeakAuras.doubleWidth,

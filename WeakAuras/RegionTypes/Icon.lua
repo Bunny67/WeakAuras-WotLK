@@ -31,7 +31,7 @@ local default = {
   zoom = 0,
   keepAspectRatio = false,
   frameStrata = 1,
-
+  cooldown = false,
   cooldownEdge = false,
   subRegions = {}
 };

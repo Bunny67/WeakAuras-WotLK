@@ -4635,6 +4635,7 @@ WeakAuras.event_prototypes = {
       {
         name = "aggro",
         display = L["Aggro"],
+        type = "tristate",
         store = true,
         conditionType = "bool",
       },

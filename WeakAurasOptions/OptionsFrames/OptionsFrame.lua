@@ -760,7 +760,7 @@ function WeakAuras.CreateFrame()
       end
     end
     if (type(self.pickedDisplay) == "string" and self.pickedDisplay == id)
-       or (type(self.pickedDisplay == "table") and id == tempGroup.id)
+       or (type(self.pickedDisplay) == "table" and id == tempGroup.id)
     then
       frame:UpdateOptions()
     end
@@ -1182,6 +1182,13 @@ function WeakAuras.CreateFrame()
     frame:ClearOptions(tempGroup.id)
     self.pickedDisplay = tempGroup
     self:FillOptions()
+  end
+
+  frame.GetPickedDisplay = function(self)
+    if type(self.pickedDisplay) == "string" then
+      return WeakAuras.GetData(self.pickedDisplay)
+    end
+    return self.pickedDisplay
   end
 
   frame:SetClampedToScreen(true)

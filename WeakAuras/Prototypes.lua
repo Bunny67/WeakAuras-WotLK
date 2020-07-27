@@ -729,7 +729,7 @@ WeakAuras.load_prototype = {
       events = {"PARTY_MEMBERS_CHANGED", "RAID_ROSTER_UPDATE"}
     },
     {
-      name = "name",
+      name = "player",
       hidden = true,
       init = "arg",
       test = "true"

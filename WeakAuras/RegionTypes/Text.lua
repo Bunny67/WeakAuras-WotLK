@@ -77,10 +77,11 @@ local function modify(parent, region, data)
   region.useAuto = WeakAuras.CanHaveAuto(data);
 
   local fontPath = SharedMedia:Fetch("font", data.font);
-  text:SetFont(fontPath, data.fontSize, data.outline);
+  text:SetFont(fontPath, data.fontSize < 33 and data.fontSize or 33, data.outline);
   if not text:GetFont() then -- Font invalid, set the font but keep the setting
-    text:SetFont(STANDARD_TEXT_FONT, data.fontSize, data.outline);
+    text:SetFont(STANDARD_TEXT_FONT, data.fontSize <= 33 and data.fontSize or 33, data.outline);
   end
+  text:SetTextHeight(data.fontSize);
   if text:GetFont() then
     text:SetText("")
     text:SetText(WeakAuras.ReplaceRaidMarkerSymbols(data.displayText));
@@ -96,7 +97,6 @@ local function modify(parent, region, data)
   region:SetWidth(region.width);
   region:SetHeight(region.height);
 
-  text:SetTextHeight(data.fontSize);
   text:SetShadowColor(unpack(data.shadowColor))
   text:SetShadowOffset(data.shadowXOffset, data.shadowYOffset)
 
@@ -246,7 +246,7 @@ local function modify(parent, region, data)
 
   function region:SetTextHeight(size)
     local fontPath = SharedMedia:Fetch("font", data.font);
-    region.text:SetFont(fontPath, size, data.outline);
+    region.text:SetFont(fontPath, size < 33 and size or 33, data.outline);
     region.text:SetTextHeight(size)
   end
 
@@ -261,7 +261,8 @@ local function fallbackmodify(parent, region, data)
   WeakAuras.regionPrototype.modify(parent, region, data);
   local text = region.text;
 
-  text:SetFont(STANDARD_TEXT_FONT, data.fontSize, data.outline and "OUTLINE" or nil);
+  text:SetFont(STANDARD_TEXT_FONT, data.fontSize < 33 and data.fontSize or 33, data.outline and "OUTLINE" or nil);
+  text:SetTextHeight(data.fontSize);
   if text:GetFont() then
     text:SetText(WeakAuras.L["Region type %s not supported"]:format(data.regionType));
   end

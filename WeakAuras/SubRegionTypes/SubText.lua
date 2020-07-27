@@ -210,15 +210,14 @@ local function modify(parent, region, parentData, data, first)
   end
 
   local fontPath = SharedMedia:Fetch("font", data.text_font);
-  text:SetFont(fontPath, data.text_fontSize, data.text_fontType);
+  text:SetFont(fontPath, data.text_fontSize < 33 and data.text_fontSize or 33, data.text_fontType);
   if not text:GetFont() then -- Font invalid, set the font but keep the setting
-    text:SetFont(STANDARD_TEXT_FONT, data.text_fontSize, data.text_fontType);
+    text:SetFont(STANDARD_TEXT_FONT, data.text_fontSize < 33 and data.text_fontSize or 33, data.text_fontType);
   end
+  text:SetTextHeight(data.text_fontSize);
   if text:GetFont() then
     text:SetText(WeakAuras.ReplaceRaidMarkerSymbols(data.text_text));
   end
-
-  text:SetTextHeight(data.text_fontSize);
 
   text:SetShadowColor(unpack(data.text_shadowColor))
   text:SetShadowOffset(data.text_shadowXOffset, data.text_shadowYOffset)
@@ -358,7 +357,7 @@ local function modify(parent, region, parentData, data, first)
 
   function region:SetTextHeight(size)
     local fontPath = SharedMedia:Fetch("font", data.text_font);
-    region.text:SetFont(fontPath, size, data.text_fontType);
+    region.text:SetFont(fontPath, size < 33 and size or 33, data.text_fontType);
     region.text:SetTextHeight(size)
     region:UpdateAnchorOnTextChange();
   end

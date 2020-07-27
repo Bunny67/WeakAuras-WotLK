@@ -6898,7 +6898,8 @@ function WeakAuras.AnchorFrame(data, region, parent)
     region:SetAnchor(data.selfPoint, anchorParent, data.anchorPoint);
 
     if(data.frameStrata == 1) then
-      region:SetFrameStrata(region:GetParent():GetFrameStrata());
+      local frameStrata = region:GetParent():GetFrameStrata()
+      region:SetFrameStrata(frameStrata ~= "UNKNOWN" and frameStrata or "BACKGROUND");
     else
       region:SetFrameStrata(WeakAuras.frame_strata_types[data.frameStrata]);
     end

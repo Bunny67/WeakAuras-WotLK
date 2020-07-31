@@ -301,7 +301,7 @@ local barPrototype = {
   end,
 
   ["UpdateAdditionalBars"] = function(self)
-    if (self.additionalBars) then
+    if (type(self.additionalBars) == "table") then
       for index, additionalBar in ipairs(self.additionalBars) do
         if (not self.extraTextures[index]) then
           local extraTexture = self:CreateTexture(nil, "ARTWORK");
@@ -1174,8 +1174,6 @@ local function modify(parent, region, data)
         region:UpdateRegionHasTimerTick()
       end
     end
-
-    max = max or 0
 
     local path = state.icon or "Interface\\Icons\\INV_Misc_QuestionMark"
     local iconPath = (

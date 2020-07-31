@@ -1,3 +1,5 @@
+local AddonName, Private = ...
+
 local internalVersion = 33;
 
 -- Lua APIs
@@ -59,7 +61,7 @@ function WeakAuras.InternalVersion()
   return internalVersion;
 end
 
-function WeakAuras.LoadOptions(msg)
+function Private.LoadOptions(msg)
   if not(IsAddOnLoaded("WeakAurasOptions")) then
     if not WeakAuras.IsLoginFinished() then
       prettyPrint(WeakAuras.LoginMessage())
@@ -74,7 +76,7 @@ function WeakAuras.LoadOptions(msg)
       local loaded, reason = LoadAddOn("WeakAurasOptions");
       if not(loaded) then
         reason = string.lower("|cffff2020" .. _G["ADDON_" .. reason] .. "|r.")
-        print(WeakAuras.printPrefix .. "Options could not be loaded, the addon is " .. reason);
+        WeakAuras.prettyPrint("Options could not be loaded, the addon is " .. reason);
         return false;
       end
     end
@@ -85,12 +87,12 @@ end
 function WeakAuras.OpenOptions(msg)
   if WeakAuras.NeedToRepairDatabase() then
     StaticPopup_Show("WEAKAURAS_CONFIRM_REPAIR", nil, nil, {reason = "downgrade"})
-  elseif (WeakAuras.IsLoginFinished() and WeakAuras.LoadOptions(msg)) then
+  elseif (WeakAuras.IsLoginFinished() and Private.LoadOptions(msg)) then
     WeakAuras.ToggleOptions(msg);
   end
 end
 
-function WeakAuras.PrintHelp()
+function Private.PrintHelp()
   print(L["Usage:"])
   print(L["/wa help - Show this message"])
   print(L["/wa minimap - Toggle the minimap icon"])
@@ -120,9 +122,9 @@ function SlashCmdList.WEAKAURAS(input)
   elseif msg == "pcancel" then
     WeakAuras.CancelScheduledProfile()
   elseif msg == "minimap" then
-    WeakAuras.ToggleMinimap();
+    Private.ToggleMinimap();
   elseif msg == "help" then
-    WeakAuras.PrintHelp();
+    Private.PrintHelp();
   elseif msg == "repair" then
     StaticPopup_Show("WEAKAURAS_CONFIRM_REPAIR", nil, nil, {reason = "user"})
   else
@@ -143,7 +145,7 @@ function WeakAuras.ApplyToDataOrChildData(data, func, ...)
   end
 end
 
-function WeakAuras.ToggleMinimap()
+function Private.ToggleMinimap()
   WeakAurasSaved.minimap.hide = not WeakAurasSaved.minimap.hide
   if WeakAurasSaved.minimap.hide then
     LDBIcon:Hide("WeakAuras");
@@ -168,10 +170,6 @@ local registeredFromAddons;
 -- List of addons that registered displays
 WeakAuras.addons = {};
 local addons = WeakAuras.addons;
-
--- A list of tutorials, filled in by the WeakAuras_Tutorials addon by calling RegisterTutorial
-WeakAuras.tutorials = {};
-local tutorials = WeakAuras.tutorials;
 
 -- used if an addon tries to register a display under an id that the user already has a display with that id
 WeakAuras.collisions = {};
@@ -908,6 +906,19 @@ local function CreateTestForCondition(uid, input, allConditionsTemplate, usedSta
         check = string.format("state and WeakAuras.CallCustomConditionTest(%q, %s, state[%s], %s, %s, %s)",
                               uid, testFunctionNumber, trigger, valueString, (opString or "nil"), preambleString or "nil");
       end
+    elseif (cType == "customcheck") then
+      if value then
+        local customCheck = WeakAuras.LoadFunction("return " .. value, "custom check")
+        if customCheck then
+          WeakAuras.conditionHelpers[uid] = WeakAuras.conditionHelpers[uid] or {}
+          WeakAuras.conditionHelpers[uid].customTestFunctions = WeakAuras.conditionHelpers[uid].customTestFunctions or {}
+          tinsert(WeakAuras.conditionHelpers[uid].customTestFunctions, customCheck);
+          local testFunctionNumber = #(WeakAuras.conditionHelpers[uid].customTestFunctions);
+
+          check = string.format("state and WeakAuras.CallCustomConditionTest(%q, %s, state)",
+                                uid, testFunctionNumber, trigger);
+        end
+      end
     elseif (cType == "number" and op) then
       local v = tonumber(value)
       if (v) then
@@ -1212,6 +1223,10 @@ local globalConditions =
       state.attackabletarget = UnitCanAttack("player", "target") == 1 and true or false;
     end
   },
+  ["customcheck"] = {
+    display = L["Custom Check"],
+    type = "customcheck"
+  }
 }
 
 function WeakAuras.GetGlobalConditions()
@@ -1362,6 +1377,16 @@ local function EvaluateCheckForRegisterForGlobalConditions(id, check, allConditi
         EvaluateCheckForRegisterForGlobalConditions(id, subcheck, allConditionsTemplate, register);
       end
     end
+  elseif trigger == -1 and variable == "customcheck" then
+    if check.op then
+      for event in string.gmatch(check.op, "[%w_]+") do
+        if (not dynamicConditions[event]) then
+          register[event] = true;
+          dynamicConditions[event] = {};
+        end
+        dynamicConditions[event][id] = true;
+      end
+    end
   elseif (trigger and variable) then
     local conditionTemplate = allConditionsTemplate[trigger] and allConditionsTemplate[trigger][variable];
     if (conditionTemplate and conditionTemplate.events) then
@@ -1414,7 +1439,7 @@ function WeakAuras.RegisterForGlobalConditions(id)
         dynamicConditionsFrame.onUpdate = true;
       end
     else
-      dynamicConditionsFrame:RegisterEvent(event);
+      pcall(dynamicConditionsFrame.RegisterEvent, dynamicConditionsFrame, event);
     end
   end
 end
@@ -1530,7 +1555,7 @@ Broker_WeakAuras = LDB:NewDataObject("WeakAuras", {
         WeakAuras.OpenOptions();
       end
     elseif(button == 'MiddleButton') then
-      WeakAuras.ToggleMinimap();
+      Private.ToggleMinimap();
     else
       WeakAuras.RealTimeProfilingWindow:Toggle()
     end
@@ -2433,6 +2458,9 @@ function WeakAuras.Rename(data, newid)
   WeakAuras.ProfileRenameAura(oldid, newid);
 
   WeakAuras.RenameCollapsedData(oldid, newid)
+
+  -- This should not be necessary
+  WeakAuras.Add(data)
 end
 
 function WeakAuras.Convert(data, newType)
@@ -5664,17 +5692,6 @@ function WeakAuras.ProfileDisplays(all)
   end
 end
 
-function WeakAuras.RegisterTutorial(name, displayName, description, icon, steps, order)
-  tutorials[name] = {
-    name = name,
-    displayName = displayName,
-    description = description,
-    icon = icon,
-    steps = steps,
-    order = order
-  };
-end
-
 function WeakAuras.ValueFromPath(data, path)
   if not data then
     return nil
@@ -5847,7 +5864,7 @@ end
 
 function WeakAuras.RegisterTriggerSystemOptions(types, func)
   for _, v in ipairs(types) do
-    triggerTypesOptions[v] = func;
+    WeakAuras.triggerTypesOptions[v] = func;
   end
 end
 
@@ -7021,41 +7038,44 @@ function WeakAuras.ReplaceLocalizedRaidMarkers(txt)
   end
 end
 
-local trackableUnits = {}
-trackableUnits["player"] = true
-trackableUnits["target"] = true
-trackableUnits["focus"] = true
-trackableUnits["pet"] = true
-trackableUnits["vehicle"] = true
+do
+  local trackableUnits = {}
+  trackableUnits["player"] = true
+  trackableUnits["target"] = true
+  trackableUnits["focus"] = true
+  trackableUnits["pet"] = true
+  trackableUnits["vehicle"] = true
+  
+  for i = 1, 5 do
+    trackableUnits["arena" .. i] = true
+    trackableUnits["arenapet" .. i] = true
+  end
+  
+  for i = 1, 4 do
+    trackableUnits["party" .. i] = true
+    trackableUnits["partypet" .. i] = true
+  end
+  
+  for i = 1, MAX_BOSS_FRAMES do
+    trackableUnits["boss" .. i] = true
+  end
+  
+  for i = 1, 40 do
+    trackableUnits["raid" .. i] = true
+    trackableUnits["raidpet" .. i] = true
+  end
 
-for i = 1, 5 do
-  trackableUnits["arena" .. i] = true
-  trackableUnits["arenapet" .. i] = true
+  function WeakAuras.UntrackableUnit(unit)
+    return not trackableUnits[unit]
+  end
 end
 
-for i = 1, 4 do
-  trackableUnits["party" .. i] = true
-  trackableUnits["partypet" .. i] = true
-end
-
-for i = 1, MAX_BOSS_FRAMES do
-  trackableUnits["boss" .. i] = true
-end
-
-for i = 1, 40 do
-  trackableUnits["raid" .. i] = true
-  trackableUnits["raidpet" .. i] = true
-end
-
-
-function WeakAuras.UntrackableUnit(unit)
-  return not trackableUnits[unit]
-end
-
-local ownRealm = GetRealmName()
-function WeakAuras.UnitNameWithRealm(unit)
-  local name, realm = UnitName(unit)
-  return name or "", realm or ownRealm or ""
+do
+  local ownRealm = GetRealmName()
+  function WeakAuras.UnitNameWithRealm(unit)
+    local name, realm = UnitName(unit)
+    return name or "", realm or ownRealm or ""
+  end
 end
 
 function WeakAuras.ParseNameCheck(name)

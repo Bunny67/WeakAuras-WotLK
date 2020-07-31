@@ -1,4 +1,5 @@
 if not WeakAuras.IsCorrectVersion() then return end
+local AddonName, Private = ...
 
 local SharedMedia = LibStub("LibSharedMedia-3.0");
 local L = WeakAuras.L
@@ -6,7 +7,7 @@ local MSQ, MSQ_Version = LibStub("Masque", true);
 if MSQ then
   if MSQ_Version <= 80100 then
     MSQ = nil
-    print(print(WeakAuras.printPrefix .. L["Please upgrade your Masque version"]))
+   WeakAuras.prettyPrint(L["Please upgrade your Masque version"])
   else
     MSQ:AddType("WA_Aura", {"Icon", "Cooldown"})
   end

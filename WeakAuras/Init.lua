@@ -25,15 +25,12 @@ function WeakAuras.IsCorrectVersion()
 end
 
 WeakAuras.prettyPrint = function(msg)
-  print(WeakAuras.printPrefix .. msg)
+  print("|cff9900ffWeakAuras:|r " .. msg)
 end
 
 if versionString ~= versionStringFromToc and versionStringFromToc ~= "Dev" then
   WeakAuras.prettyPrint("You need to restart your game client to complete the WeakAuras update!")
 end
-
-WeakAuras.PowerAurasPath = "Interface\\Addons\\WeakAuras\\PowerAurasMedia\\Auras\\"
-WeakAuras.PowerAurasSoundPath = "Interface\\Addons\\WeakAuras\\PowerAurasMedia\\Sounds\\"
 
 -- Force enable WeakAurasCompanion and Archive because some addon managers interfere with it
 EnableAddOn("WeakAurasCompanion")

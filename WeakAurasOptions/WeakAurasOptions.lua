@@ -1,4 +1,5 @@
 if not WeakAuras.IsCorrectVersion() then return end
+local AddonName, OptionsPrivate = ...
 
 -- Lua APIs
 local tinsert, tremove, wipe = table.insert, table.remove, wipe
@@ -1214,7 +1215,7 @@ function WeakAuras.DropIndicator()
     indicator:SetHeight(4)
     indicator:SetFrameStrata("FULLSCREEN")
 
-    local texture = indicator:CreateTexture(nil, "FULLSCREEN")
+    local texture = indicator:CreateTexture(nil, "HIGHLIGHT")
     texture:SetBlendMode("ADD")
     texture:SetAllPoints(indicator)
     texture:SetTexture("Interface\\PaperDollInfoFrame\\UI-Character-Tab-Highlight")
@@ -1253,8 +1254,8 @@ function WeakAuras.UpdateThumbnail(data)
   button:UpdateThumbnail()
 end
 
-function WeakAuras.OpenTexturePicker(data, field, textures, stopMotion)
-  frame.texturePicker:Open(data, field, textures, stopMotion);
+function WeakAuras.OpenTexturePicker(data, parentData, field, textures, stopMotion)
+  frame.texturePicker:Open(data, parentData, field, textures, stopMotion);
 end
 
 function WeakAuras.OpenIconPicker(data, field, groupIcon)
@@ -1266,7 +1267,7 @@ function WeakAuras.OpenModelPicker(data, field, parentData)
     local loaded, reason = LoadAddOn("WeakAurasModelPaths");
     if not(loaded) then
       reason = string.lower("|cffff2020" .. _G["ADDON_" .. reason] .. "|r.")
-      print(WeakAuras.printPrefix .. "ModelPaths could not be loaded, the addon is " .. reason);
+      WeakAuras.prettyPrint("ModelPaths could not be loaded, the addon is " .. reason);
       WeakAuras.ModelPaths = {};
     end
     frame.modelPicker.modelTree:SetTree(WeakAuras.ModelPaths);
@@ -1287,7 +1288,7 @@ function WeakAuras.OpenTriggerTemplate(data, targetId)
     local loaded, reason = LoadAddOn("WeakAurasTemplates");
     if not(loaded) then
       reason = string.lower("|cffff2020" .. _G["ADDON_" .. reason] .. "|r.")
-      print(WeakAuras.printPrefix .. "Templates could not be loaded, the addon is " .. reason);
+      WeakAuras.prettyPrint("Templates could not be loaded, the addon is " .. reason);
       return;
     end
     frame.newView = WeakAuras.CreateTemplateView(frame);
@@ -1662,4 +1663,23 @@ function WeakAuras.AddTextFormatOption(input, withHeader, get, addOption, hidden
   end
 
   return next(seenSymbols) ~= nil
+end
+
+function WeakAuras.HandleRename(data, oldid, newid)
+  WeakAuras.displayButtons[newid] = WeakAuras.displayButtons[oldid];
+  WeakAuras.displayButtons[newid]:SetData(data)
+  WeakAuras.displayButtons[oldid] = nil;
+  WeakAuras.ClearOptions(oldid)
+
+  WeakAuras.displayButtons[newid]:SetTitle(newid);
+
+  if(data.controlledChildren) then
+    for index, childId in pairs(data.controlledChildren) do
+      WeakAuras.displayButtons[childId]:SetGroup(newid)
+    end
+  end
+
+  WeakAuras.SetGrouping()
+  WeakAuras.SortDisplayButtons()
+  WeakAuras.PickDisplay(newid)
 end

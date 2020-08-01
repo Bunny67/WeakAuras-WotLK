@@ -3049,7 +3049,7 @@ end
 local _addon_channel_codec
 
 local function GenerateWoWAddonChannelCodec()
-	return LibDeflate:CreateCodec("\000", "\001", "")
+	return LibDeflate:CreateCodec("\000\124", "\001", "")
 end
 
 --- Encode the string to make it ready to be transmitted in World of

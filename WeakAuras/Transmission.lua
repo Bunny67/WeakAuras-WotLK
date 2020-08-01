@@ -654,7 +654,11 @@ function TableToString(inTable, forChat)
     end
   end
   local encoded = "!WA:2!"
-  encoded = encoded .. LibDeflate:EncodeForPrint(compressed)
+  if(forChat) then
+    encoded = encoded .. LibDeflate:EncodeForPrint(compressed)
+  else
+    encoded = encoded .. LibDeflate:EncodeForWoWAddonChannel(compressed)
+  end
   return encoded
 end
 
@@ -672,10 +676,14 @@ function StringToTable(inString, fromChat)
   end
 
   local decoded
-  if encodeVersion > 0 then
-    decoded = LibDeflate:DecodeForPrint(encoded)
+  if(fromChat) then
+    if encodeVersion > 0 then
+      decoded = LibDeflate:DecodeForPrint(encoded)
+    else
+      decoded = decodeB64(encoded)
+    end
   else
-    decoded = decodeB64(encoded)
+    decoded = LibDeflate:DecodeForWoWAddonChannel(encoded)
   end
 
   if not decoded then

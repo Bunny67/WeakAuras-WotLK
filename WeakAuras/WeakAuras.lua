@@ -7045,21 +7045,21 @@ do
   trackableUnits["focus"] = true
   trackableUnits["pet"] = true
   trackableUnits["vehicle"] = true
-  
+
   for i = 1, 5 do
     trackableUnits["arena" .. i] = true
     trackableUnits["arenapet" .. i] = true
   end
-  
+
   for i = 1, 4 do
     trackableUnits["party" .. i] = true
     trackableUnits["partypet" .. i] = true
   end
-  
+
   for i = 1, MAX_BOSS_FRAMES do
     trackableUnits["boss" .. i] = true
   end
-  
+
   for i = 1, 40 do
     trackableUnits["raid" .. i] = true
     trackableUnits["raidpet" .. i] = true

@@ -34,6 +34,9 @@ Profiling.lua
 WeakAuras.lua
 History.lua
 Transmission.lua
+Modernize.lua
+Animations.lua
+Conditions.lua
 
 # trigger systems
 BuffTrigger.lua

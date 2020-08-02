@@ -2215,12 +2215,6 @@ function BuffTrigger.Add(data)
   end
 end
 
---- Updates old data to the new format.
--- @param data
-function BuffTrigger.Modernize(data)
-  -- Does nothing yet!
-end
-
 --- Returns whether the trigger can have a duration.
 -- @param data
 -- @param triggernum
@@ -2667,7 +2661,7 @@ local function TrackUid(unit)
   unit = unit.."target"
   GUID = UnitGUID(unit)
   if GUID then
-    WeakAuras.SetUID(GUID, unit)
+    SetUID(GUID, unit)
     BuffTrigger.HandlePendingTracks(unit, GUID)
   else
     ReleaseUID(unit)

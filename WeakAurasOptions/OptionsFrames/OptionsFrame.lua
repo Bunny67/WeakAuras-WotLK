@@ -268,8 +268,8 @@ function WeakAuras.CreateFrame()
   title:SetPoint("BOTTOMLEFT", titleBG, "BOTTOMLEFT", -25, 0)
   title:SetPoint("TOPRIGHT", titleBG, "TOPRIGHT", 25, 0)
 
-  CreateFrameSizer(frame, commitWindowChanges, "BOTTOMLEFT")
-  CreateFrameSizer(frame, commitWindowChanges, "BOTTOMRIGHT")
+  frame.bottomLeftResizer = CreateFrameSizer(frame, commitWindowChanges, "BOTTOMLEFT")
+  frame.bottomRightResizer = CreateFrameSizer(frame, commitWindowChanges, "BOTTOMRIGHT")
 
   local minimize = CreateDecoration(frame)
   minimize:SetPoint("TOPRIGHT", -65, 12)
@@ -292,13 +292,27 @@ function WeakAuras.CreateFrame()
       self.toolbarContainer.frame:Hide()
       self.filterInput:Hide();
       self.filterInputClear:Hide();
+      self.tipFrame.frame:Hide()
+      self.bottomLeftResizer:Hide()
+      self.bottomRightResizer:Hide()
     else
+      if self.tipFrameIsVisible then
+        self.tipFrame.frame:Show()
+      end
+      self.bottomLeftResizer:Show()
+      self.bottomRightResizer:Show()
       if self.window == "default" then
         self.buttonsContainer.frame:Show()
         self.container.frame:Show()
+        if self.tipFrameIsVisible then
+          self.tipFrame.frame:Show()
+        else
+          self.tipFrame.frame:Hide()
+        end
       else
         self.buttonsContainer.frame:Hide()
         self.container.frame:Hide()
+        self.tipFrame.frame:Hide()
       end
 
       if self.window == "texture" then
@@ -394,45 +408,132 @@ function WeakAuras.CreateFrame()
     frame:UpdateFrameVisible()
   end)
 
-  local _, _, _, enabled, loadable = GetAddOnInfo("WeakAurasTutorials")
-  if enabled and loadable then
-    local tutorial = CreateDecoration(frame)
-    tutorial:SetPoint("TOPRIGHT", -140, 12)
+  local tipFrame = AceGUI:Create("SimpleGroup")
+  tipFrame.frame:SetParent(frame)
+  tipFrame:SetLayout("Flow")
+  tipFrame.frame:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 22, 15)
+  tipFrame.frame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -17, 15)
+  tipFrame.frame:Hide()
+  frame.tipFrame = tipFrame
 
-    local tutorialbutton = CreateFrame("BUTTON", nil, tutorial)
-    tutorialbutton:SetWidth(30)
-    tutorialbutton:SetHeight(30)
-    tutorialbutton:SetPoint("CENTER", tutorial, "CENTER", 1, -1)
-    tutorialbutton:SetNormalTexture("Interface\\GossipFrame\\DailyActiveQuestIcon")
-    tutorialbutton:GetNormalTexture():ClearAllPoints()
-    tutorialbutton:GetNormalTexture():SetSize(16, 16)
-    tutorialbutton:GetNormalTexture():SetPoint("center", -2, 0)
-    tutorialbutton:SetPushedTexture("Interface\\GossipFrame\\DailyActiveQuestIcon")
-    tutorialbutton:GetPushedTexture():ClearAllPoints()
-    tutorialbutton:GetPushedTexture():SetSize(16, 16)
-    tutorialbutton:GetPushedTexture():SetPoint("center", -2, -2)
-    tutorialbutton:SetHighlightTexture("Interface\\BUTTONS\\UI-Panel-MinimizeButton-Highlight.blp")
-    tutorialbutton:SetScript("OnClick", function()
-      if not IsAddOnLoaded("WeakAurasTutorials") then
-        local loaded, reason = LoadAddOn("WeakAurasTutorials")
-        if not loaded then
-          reason = string.lower("|cffff2020" .. _G["ADDON_" .. reason] .. "|r.")
-          prettyPrint("Tutorials could not be loaded, the addon is " .. reason)
-          return
-        end
-      end
-      WeakAuras.ToggleTutorials()
+  local tipPopup = CreateFrame("Frame", nil, frame)
+  tipPopup:SetFrameStrata("FULLSCREEN")
+  tipPopup:SetBackdrop({
+    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = true,
+    tileSize = 16,
+    edgeSize = 16,
+    insets = { left = 4, right = 4, top = 4, bottom = 4 }
+  })
+  tipPopup:SetBackdropColor(0, 0, 0, 0.8)
+  --tipPopup:SetHeight(100)
+  tipPopup:Hide()
+
+  local tipPopupTitle = tipPopup:CreateFontString(nil, "BACKGROUND", "GameFontNormalLarge")
+  tipPopupTitle:SetPoint("TOPLEFT", tipPopup, "TOPLEFT", 10, -10)
+  tipPopupTitle:SetPoint("TOPRIGHT", tipPopup, "TOPRIGHT", -10, -10)
+  tipPopupTitle:SetJustifyH("LEFT")
+  tipPopupTitle:SetJustifyV("TOP")
+
+  local tipPopupLabel = tipPopup:CreateFontString(nil, "BACKGROUND", "GameFontWhite")
+  tipPopupLabel:SetPoint("TOPLEFT", tipPopupTitle, "BOTTOMLEFT", 0, -6)
+  tipPopupLabel:SetPoint("TOPRIGHT", tipPopupTitle, "BOTTOMRIGHT", 0, -6)
+  tipPopupLabel:SetJustifyH("LEFT")
+  tipPopupLabel:SetJustifyV("TOP")
+
+  local urlWidget = CreateFrame("EDITBOX", nil, tipPopup, "InputBoxTemplate")
+  urlWidget:SetFont(STANDARD_TEXT_FONT, 12)
+  urlWidget:SetPoint("TOPLEFT", tipPopupLabel, "BOTTOMLEFT", 6, 0)
+  urlWidget:SetPoint("TOPRIGHT", tipPopupLabel, "BOTTOMRIGHT", 0, 0)
+  urlWidget:SetScript("OnChar", function() urlWidget:SetText(urlWidget.text); urlWidget:HighlightText(); end);
+  urlWidget:SetScript("OnMouseUp", function() urlWidget:HighlightText(); end);
+  urlWidget:SetScript("OnEscapePressed", function() tipPopup:Hide() end)
+  urlWidget:SetHeight(34)
+
+  local tipPopupCtrlC = tipPopup:CreateFontString(nil, "BACKGROUND", "GameFontWhite")
+  tipPopupCtrlC:SetPoint("TOPLEFT", urlWidget, "BOTTOMLEFT", -6, 0)
+  tipPopupCtrlC:SetPoint("TOPRIGHT", urlWidget, "BOTTOMRIGHT", 0, 0)
+  tipPopupCtrlC:SetJustifyH("LEFT")
+  tipPopupCtrlC:SetJustifyV("TOP")
+  tipPopupCtrlC:SetText("Press Ctrl+C to copy the URL")
+
+  local function ToggleTip(referenceWidget, url, title, description)
+    if tipPopup:IsVisible() and urlWidget.text == url then
+      tipPopup:Hide()
+      return
+    end
+    urlWidget.text = url
+    urlWidget:SetText(url)
+    tipPopupTitle:SetText(title)
+    tipPopupLabel:SetText(description)
+    urlWidget:HighlightText()
+
+    tipPopup:SetWidth(400)
+    tipPopup:SetHeight(26 + tipPopupTitle:GetHeight() + tipPopupLabel:GetHeight() + urlWidget:GetHeight() + tipPopupCtrlC:GetHeight())
+
+    tipPopup:SetPoint("BOTTOMLEFT", referenceWidget.frame, "TOPLEFT", -6, 4)
+    tipPopup:Show()
+  end
+
+  local addFooter = function(title, texture, url, description)
+    local button = AceGUI:Create("WeakAurasToolbarButton")
+    button:SetText(title)
+    button:SetTexture(texture)
+    button:SetCallback("OnClick", function()
+      ToggleTip(button, url, title, description)
     end)
+    tipFrame:AddChild(button)
+  end
+
+  addFooter(L["Get Help"], [[Interface\AddOns\WeakAuras\Media\Textures\discord.tga]], "https://discord.gg/wa2",
+            L["Chat with WeakAuras experts on our Discord server."])
+  addFooter(L["Documentation"], [[Interface\AddOns\WeakAuras\Media\Textures\GitHub.tga]], "https://github.com/WeakAuras/WeakAuras2/wiki",
+            L["Check out our wiki for a large collection of examples and snippets."])
+  addFooter(L["Find Auras"], [[Interface\AddOns\WeakAuras\Media\Textures\wagoupdate_logo.tga]], "https://wago.io",
+            L["Browse Wago, the largest collection of auras."])
+
+  if not WeakAurasCompanion then
+    addFooter(L["Update Auras"], [[Interface\AddOns\WeakAuras\Media\Textures\wagoupdate_refresh.tga]], "https://weakauras.wtf",
+            L["Keep your Wago imports up to date with the Companion App."])
+  end
+  addFooter(L["Found a Bug?"], [[Interface\AddOns\WeakAuras\Media\Textures\bug_report.tga]], "https://github.com/WeakAuras/WeakAuras2/issues/new",
+            L["Report bugs our our issue tracker."])
+
+  -- Disable for now
+  --local closeTipButton = CreateFrame("Button", nil, tipFrame.frame, "UIPanelCloseButton")
+  --closeTipButton:SetScript("OnClick", function()
+  --  frame:HideTip()
+  --end)
+  --closeTipButton:SetPoint("TOPRIGHT", tipFrame.frame, "TOPRIGHT", 0, 6)
+  --closeTipButton:Show()
+
+  frame.ShowTip = function(self)
+    self.tipFrameIsVisible = true
+    self.tipFrame.frame:Show()
+    self.buttonsContainer.frame:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 17, 30)
+    self.container.frame:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -17, 28)
+  end
+
+  frame.HideTip = function(self)
+    self.tipFrameIsVisible = false
+    self.tipFrame.frame:Hide()
+    self.buttonsContainer.frame:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 17, 12)
+    self.container.frame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -17, 10)
   end
 
   -- Right Side Container
   local container = AceGUI:Create("InlineGroup")
   container.frame:SetParent(frame)
-  container.frame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -17, 12)
-  container.frame:SetPoint("TOPLEFT", frame, "TOPRIGHT", -83 - WeakAuras.normalWidth * 340, -14)
+  container.frame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -17, 10)
+  container.frame:SetPoint("TOPLEFT", frame, "TOPRIGHT", -63 - WeakAuras.normalWidth * 340, -14)
   container.frame:Show()
   --container.frame:SetClipsChildren(true)
   container.titletext:Hide()
+  -- Hide the border
+  container.content:GetParent():SetBackdrop(nil)
+  container.content:SetPoint("TOPLEFT", 0, 0)
+  container.content:SetPoint("BOTTOMRIGHT", 0, 0)
   frame.container = container
 
   frame.texturePicker = WeakAuras.TexturePicker(frame)
@@ -451,7 +552,7 @@ function WeakAuras.CreateFrame()
   filterInput:SetScript("OnEnterPressed", function(...) filterInput:ClearFocus() end)
   filterInput:SetScript("OnEscapePressed", function(...) filterInput:SetText("") filterInput:ClearFocus() end)
   filterInput:SetHeight(15)
-  filterInput:SetPoint("TOP", frame, "TOP", 0, -34)
+  filterInput:SetPoint("TOP", frame, "TOP", 0, -44)
   filterInput:SetPoint("LEFT", frame, "LEFT", 24, 0)
   filterInput:SetPoint("RIGHT", container.frame, "LEFT", -5, 0)
   filterInput:SetTextInsets(16, 16, 0, 0)
@@ -481,7 +582,7 @@ function WeakAuras.CreateFrame()
   buttonsContainer:SetWidth(170)
   buttonsContainer.frame:SetParent(frame)
   buttonsContainer.frame:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 17, 12)
-  buttonsContainer.frame:SetPoint("TOP", frame, "TOP", 0, -34)
+  buttonsContainer.frame:SetPoint("TOP", frame, "TOP", 0, -46)
   buttonsContainer.frame:SetPoint("RIGHT", container.frame, "LEFT", -17)
   buttonsContainer.frame:Show()
   frame.buttonsContainer = buttonsContainer
@@ -489,9 +590,9 @@ function WeakAuras.CreateFrame()
   -- Toolbar
   local toolbarContainer = AceGUI:Create("SimpleGroup")
   toolbarContainer.frame:SetParent(buttonsContainer.frame)
-  toolbarContainer.frame:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -10)
-  toolbarContainer.frame:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -17, -10)
-  toolbarContainer.frame:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 20, -32)
+  toolbarContainer.frame:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -16)
+  toolbarContainer.frame:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -17, -16)
+  toolbarContainer.frame:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 20, -38)
   toolbarContainer:SetLayout("Flow")
 
   local newButton = AceGUI:Create("WeakAurasToolbarButton")
@@ -839,6 +940,7 @@ function WeakAuras.CreateFrame()
 
     local tabsWidget
 
+    container.frame:SetPoint("TOPLEFT", frame, "TOPRIGHT", -63 - WeakAuras.normalWidth * 340, -14)
     container:ReleaseChildren()
     container:SetLayout("Fill")
     tabsWidget = AceGUI:Create("TabGroup")
@@ -846,10 +948,10 @@ function WeakAuras.CreateFrame()
     local tabs = {
       { value = "region", text = L["Display"]},
       { value = "trigger", text = L["Trigger"]},
-      { value = "load", text = L["Load"]},
+      { value = "conditions", text = L["Conditions"]},
       { value = "action", text = L["Actions"]},
       { value = "animation", text = L["Animations"]},
-      { value = "conditions", text = L["Conditions"]},
+      { value = "load", text = L["Load"]},
       { value = "authorOptions", text = L["Custom Options"]},
       { value = "information", text = L["Information"]},
     }
@@ -936,10 +1038,15 @@ function WeakAuras.CreateFrame()
     self.moversizer:Hide()
     self.pickedOption = "New"
 
+    container.frame:SetPoint("TOPLEFT", frame, "TOPRIGHT", -63 - WeakAuras.normalWidth * 340, -8)
+    container:SetLayout("fill")
+    local border = AceGUI:Create("InlineGroup")
+    border:SetLayout("Fill")
+    container:AddChild(border)
+
     local containerScroll = AceGUI:Create("ScrollFrame")
     containerScroll:SetLayout("flow")
-    container:SetLayout("fill")
-    container:AddChild(containerScroll)
+    border:AddChild(containerScroll)
 
     local _, _, _, enabled = GetAddOnInfo("WeakAurasTemplates")
     if enabled then

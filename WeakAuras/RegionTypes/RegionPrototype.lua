@@ -740,12 +740,11 @@ function WeakAuras.regionPrototype.AddExpandFunction(data, region, cloneId, pare
       if region.PreHide then
         region:PreHide()
       end
-      if WeakAuras.checkConditions[id] then
-        WeakAuras.checkConditions[id](region, true);
-      end
+
+      Private.RunConditions(region, id, true)
       region:Hide();
       if (cloneId) then
-        WeakAuras.ReleaseClone(region.id, cloneId, data.regionType);
+        Private.ReleaseClone(region.id, cloneId, data.regionType);
         parent:RemoveChild(id, cloneId)
       else
         parent:DeactivateChild(id, cloneId);
@@ -756,12 +755,10 @@ function WeakAuras.regionPrototype.AddExpandFunction(data, region, cloneId, pare
       if region.PreHide then
         region:PreHide()
       end
-      if WeakAuras.checkConditions[id] then
-        WeakAuras.checkConditions[id](region, true);
-      end
+      Private.RunConditions(region, id, true)
       region:Hide();
       if (cloneId) then
-        WeakAuras.ReleaseClone(region.id, cloneId, data.regionType);
+        Private.ReleaseClone(region.id, cloneId, data.regionType);
       end
     end
   end

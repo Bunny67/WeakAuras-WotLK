@@ -1498,6 +1498,10 @@ function WeakAuras.GetDataByUID(uid)
   return WeakAuras.GetData(UIDtoID[uid])
 end
 
+function WeakAuras.UIDtoID(uid)
+  return UIDtoID[uid]
+end
+
 function WeakAuras.Delete(data)
   local id = data.id;
   if(data.parent) then
@@ -1664,8 +1668,6 @@ function WeakAuras.Rename(data, newid)
       regions[newid]:ReloadControlledChildren()
     end
   end
-
-  Private.RenameAnimations(oldid, newid)
 
   if (WeakAuras.mouseFrame) then
     WeakAuras.mouseFrame:rename(oldid, newid);
@@ -2647,7 +2649,7 @@ function WeakAuras.SetRegion(data, cloneId)
         clonePool[regionType] = clonePool[regionType] or {};
       end
       if(anim_cancelled) then
-        WeakAuras.Animate("display", data, "main", data.animation.main, region, false, nil, true, cloneId);
+        WeakAuras.Animate("display", data.uid, "main", data.animation.main, region, false, nil, true, cloneId);
       end
       return region;
     end

@@ -32,7 +32,7 @@ local ignoreForCopyingDisplay = {
   semver = true,
   version = true,
   internalVersion = true,
-  tocbuild = true
+  tocversion = true
 }
 
 local function copyAuraPart(source, destination, part)
@@ -422,26 +422,26 @@ local function GetAction(target, area, source)
           Actions["Group"](_source)
         end,
         Icons["Ungroup"]
-    else -- area == "BOTTOM"
-      if source.data.parent == target.data.id then
-        return Actions["Move"], Icons["Move"]
-    else
-      return function(_source, _target)
-        Actions["Ungroup"](_source)
-        Actions["Group"](_source, _target.data.id)
-      end,
-      Icons["Group"]
-    end
-    end
+      else -- area == "BOTTOM"
+        if source.data.parent == target.data.id then
+          return Actions["Move"], Icons["Move"]
+        else
+          return function(_source, _target)
+            Actions["Ungroup"](_source)
+            Actions["Group"](_source, _target.data.id)
+          end,
+          Icons["Group"]
+        end
+      end
     else -- not target.data.parent and not source.data.parent
       if target:IsGroup() and area == "BOTTOM" then
         return function(_source, _target)
           Actions["Group"](_source, _target.data.id)
         end,
         Icons["Group"]
-    else
-      return nil
-    end
+      else
+        return nil
+      end
     end
   end
 end
@@ -692,8 +692,8 @@ local methods = {
             WeakAuras.SortDisplayButtons();
             local updata = {duration = 0.15, type = "custom", use_translate = true, x = 0, y = -32};
             local downdata = {duration = 0.15, type = "custom", use_translate = true, x = 0, y = 32};
-            WeakAuras.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index-1]), "main", updata, self.frame, true, function() WeakAuras.SortDisplayButtons() end);
-            WeakAuras.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index]), "main", downdata, otherbutton.frame, true, function() WeakAuras.SortDisplayButtons() end);
+            WeakAuras.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index-1]).uid, "main", updata, self.frame, true, function() WeakAuras.SortDisplayButtons() end);
+            WeakAuras.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index]).uid, "main", downdata, otherbutton.frame, true, function() WeakAuras.SortDisplayButtons() end);
             WeakAuras.UpdateDisplayButton(parentData);
             WeakAuras.FillOptions()
           end
@@ -731,8 +731,8 @@ local methods = {
             WeakAuras.SortDisplayButtons()
             local updata = {duration = 0.15, type = "custom", use_translate = true, x = 0, y = -32};
             local downdata = {duration = 0.15, type = "custom", use_translate = true, x = 0, y = 32};
-            WeakAuras.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index+1]), "main", downdata, self.frame, true, function() WeakAuras.SortDisplayButtons() end);
-            WeakAuras.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index]), "main", updata, otherbutton.frame, true, function() WeakAuras.SortDisplayButtons() end);
+            WeakAuras.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index+1]).uid, "main", downdata, self.frame, true, function() WeakAuras.SortDisplayButtons() end);
+            WeakAuras.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index]).uid, "main", updata, otherbutton.frame, true, function() WeakAuras.SortDisplayButtons() end);
             WeakAuras.UpdateDisplayButton(parentData);
             WeakAuras.FillOptions()
           end
@@ -805,7 +805,6 @@ local methods = {
       if (WeakAuras.IsImporting()) then return end;
       local oldid = data.id;
       if not(newid == oldid) then
-
         WeakAuras.Rename(data, newid);
         WeakAuras.HandleRename(data, oldid, newid)
       end

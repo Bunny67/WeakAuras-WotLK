@@ -100,6 +100,8 @@ local function valueToString(a, propertytype)
   elseif (propertytype == "chat" or propertytype == "sound" or propertytype == "customcode"
           or propertytype == "glowexternal" or propertytype == "customcheck") then
     return tostring(a);
+  elseif (propertytype == "alwaystrue") then
+    return ""
   elseif (propertytype == "bool") then
     return (a == 1 or a == true) and L["True"] or L["False"];
   end
@@ -689,9 +691,6 @@ local function addControlsForChange(args, order, data, conditionVariable, condit
       name = blueIfNoValue2(data, conditions[i].changes[j], "value", "message", L["Message"], L["Message"]),
       desc = descMessage,
       order = order,
-      get = function()
-        return type(conditions[i].changes[j].value) == "table" and conditions[i].changes[j].value.message;
-      end,
       get = message_getter,
       set = setValueComplex("message", true)
     }
@@ -1274,10 +1273,15 @@ local function addControlsForIfLine(args, order, data, conditionVariable, condit
       end
     end
   else
+    local isLinked = conditions[i].linked and i > 1
     if (needsTriggerName) then
-      optionsName = optionsName .. string.format(L["If Trigger %s"], check.trigger);
+      if isLinked then
+        optionsName = optionsName .. string.format(L["Else If Trigger %s"], check.trigger);
+      else
+        optionsName = optionsName .. string.format(L["If Trigger %s"], check.trigger);
+      end
     else
-      optionsName = optionsName .. L["If"];
+        optionsName = optionsName .. (isLinked and L["Else If"] or L["If"])
     end
   end
 
@@ -1648,9 +1652,11 @@ local function addControlsForIfLine(args, order, data, conditionVariable, condit
         set = setValue
       }
       order = order + 1;
+    elseif currentConditionTemplate.type == "alwaystrue" then
+      order = addSpace(args, order)
     elseif currentConditionTemplate.type == "customcheck" then
       args["condition" .. i .. tostring(path) .. "_op"] = {
-        name = blueIfNoValue(data, conditions[i].check, "op", L["Events"], L["Events"]),
+        name = blueIfNoValue(data, conditions[i].check, "op", L["Additional Events"], L["Additional Events"]),
         desc = descIfNoValue(data, conditions[i].check, "op", currentConditionTemplate.type) or "",
         type = "input",
         width = WeakAuras.doubleWidth,
@@ -1751,6 +1757,12 @@ local function addControlsForIfLine(args, order, data, conditionVariable, condit
   return order;
 end
 
+local function fixUpLinkedInFirstCondition(conditions)
+  if conditions[1] and conditions[1].linked then
+    conditions[1].linked = false
+  end
+end
+
 local function addControlsForCondition(args, order, data, conditionVariable, conditions, i, conditionTemplates, conditionTemplateWithoutCombinations, allProperties)
   if (not conditions[i].check) then
     return;
@@ -1774,7 +1786,6 @@ local function addControlsForCondition(args, order, data, conditionVariable, con
     name = L["Condition %i"]:format(i),
     order = order,
     width = WeakAuras.doubleWidth - 0.45,
-    --fontSize = "large",
     func = function()
       if data.controlledChildren then
         for id, reference in pairs(conditions[i].check.references) do
@@ -1819,6 +1830,7 @@ local function addControlsForCondition(args, order, data, conditionVariable, con
             local tmp = auraData[conditionVariable][reference.conditionIndex];
             tremove(auraData[conditionVariable], reference.conditionIndex);
             tinsert(auraData[conditionVariable], reference.conditionIndex - 1, tmp);
+            fixUpLinkedInFirstCondition(auraData[conditionVariable])
             WeakAuras.Add(auraData);
           end
         end
@@ -1828,6 +1840,7 @@ local function addControlsForCondition(args, order, data, conditionVariable, con
           local tmp = conditions[i];
           tremove(conditions, i);
           tinsert(conditions, i - 1, tmp);
+          fixUpLinkedInFirstCondition(conditions)
           WeakAuras.Add(data);
           WeakAuras.ClearAndUpdateOptions(data.id, true)
         end
@@ -1868,6 +1881,7 @@ local function addControlsForCondition(args, order, data, conditionVariable, con
             local tmp = auraData[conditionVariable][reference.conditionIndex];
             tremove(auraData[conditionVariable], reference.conditionIndex);
             tinsert(auraData[conditionVariable], reference.conditionIndex + 1, tmp);
+            fixUpLinkedInFirstCondition(auraData[conditionVariable])
             WeakAuras.Add(auraData);
           end
         end
@@ -1878,6 +1892,7 @@ local function addControlsForCondition(args, order, data, conditionVariable, con
           local tmp = conditions[i];
           tremove(conditions, i);
           tinsert(conditions, i + 1, tmp);
+          fixUpLinkedInFirstCondition(conditions)
           WeakAuras.Add(data);
           WeakAuras.ClearAndUpdateOptions(data.id, true)
           return;
@@ -1901,12 +1916,14 @@ local function addControlsForCondition(args, order, data, conditionVariable, con
         for id, reference in pairs(conditions[i].check.references) do
           local auraData = WeakAuras.GetData(id);
           tremove(auraData[conditionVariable], reference.conditionIndex);
+          fixUpLinkedInFirstCondition(auraData[conditionVariable])
           WeakAuras.Add(auraData);
         end
         WeakAuras.ClearAndUpdateOptions(data.id, true)
         return;
       else
         tremove(conditions, i);
+        fixUpLinkedInFirstCondition(conditions)
         WeakAuras.Add(data);
         WeakAuras.ClearAndUpdateOptions(data.id, true)
         return;
@@ -1963,7 +1980,56 @@ local function addControlsForCondition(args, order, data, conditionVariable, con
     end
   }
   order = order + 1;
-  order = addSpace(args, order);
+
+  local showElseIf = false
+  local isLinked = false
+
+  if (data.controlledChildren) then
+    for id, reference in pairs(conditions[i].check.references) do
+      if reference.conditionIndex > 1 then
+        local auradata = WeakAuras.GetData(id);
+        isLinked = auradata[conditionVariable][reference.conditionIndex].linked
+        showElseIf = true
+        break;
+      end
+    end
+  else
+    if i > 1 then
+      showElseIf = true
+      isLinked = conditions[i].linked
+    end
+  end
+
+  if showElseIf then
+    args["condition" .. i .. "_else"] = {
+      type = "toggle",
+      width = WeakAuras.normalWidth,
+      name = L["Else If"],
+      order = order,
+      get = function()
+        return isLinked
+      end,
+      set = function()
+        if (data.controlledChildren) then
+          for id, reference in pairs(conditions[i].check.references) do
+            local auradata = WeakAuras.GetData(id);
+            if reference.conditionIndex > 1 then
+              auradata[conditionVariable][reference.conditionIndex].linked = not isLinked
+              WeakAuras.Add(auradata);
+            end
+          end
+          WeakAuras.ClearAndUpdateOptions(data.id, true)
+        else
+          conditions[i].linked = not isLinked
+          WeakAuras.Add(data);
+          WeakAuras.ClearAndUpdateOptions(data.id, true)
+        end
+      end
+    }
+    order = order + 1;
+  else
+    order = addSpace(args, order)
+  end
 
   return order;
 end
@@ -2213,6 +2279,8 @@ local function compareSubChecks(a, b, allConditionTemplates)
         if (a[i].value ~= b[i].value) then
           return false;
         end
+      elseif (type == "alwaystrue") then
+        return true
       end
     end
   end
@@ -2226,7 +2294,8 @@ local function findMatchingCondition(all, needle, start, allConditionTemplates)
       return nil;
     end
 
-    if (condition.check.trigger == needle.check.trigger and condition.check.variable == needle.check.variable) then
+    if (condition.check.trigger == needle.check.trigger and condition.check.variable == needle.check.variable
+        and condition.linked == needle.linked) then
       if condition.check.variable == "customcheck" then
         -- Be a bit more strict for custom checks, there's little benefit in merging them
         if condition.check.op == needle.check.op and condition.check.value == needle.check.value then

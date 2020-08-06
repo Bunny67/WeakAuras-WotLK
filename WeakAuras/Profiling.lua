@@ -272,6 +272,14 @@ local function StopProfileAura(id)
   StopProfiling(profileData.auras, id)
 end
 
+local function StartProfileUID(uid)
+  StartProfiling(profileData.auras, WeakAuras.UIDtoID(uid))
+end
+
+local function StopProfileUID(uid)
+  StopProfiling(profileData.auras, WeakAuras.UIDtoID(uid))
+end
+
 function WeakAuras.ProfileRenameAura(oldid, id)
   profileData.auras[id] = profileData.auras[id]
   profileData.auras[oldid] = nil
@@ -324,8 +332,10 @@ function WeakAuras.StartProfile(startType)
 
   WeakAuras.StartProfileSystem = StartProfileSystem
   WeakAuras.StartProfileAura = StartProfileAura
+  WeakAuras.StartProfileUID = StartProfileUID
   WeakAuras.StopProfileSystem = StopProfileSystem
   WeakAuras.StopProfileAura = StopProfileAura
+  WeakAuras.StopProfileUID = StopProfileUID
 end
 
 local function doNothing()
@@ -344,8 +354,10 @@ function WeakAuras.StopProfile()
 
   WeakAuras.StartProfileSystem = doNothing
   WeakAuras.StartProfileAura = doNothing
+  WeakAuras.StartProfileUID = doNothing
   WeakAuras.StopProfileSystem = doNothing
   WeakAuras.StopProfileAura = doNothing
+  WeakAuras.StopProfileUID = doNothing
 
   currentProfileState = nil
   RealTimeProfilingWindow:UnregisterAllEvents()

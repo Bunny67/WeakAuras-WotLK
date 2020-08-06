@@ -158,7 +158,7 @@ local function CreateTestForCondition(uid, input, allConditionsTemplate, usedSta
     end
   end
 
-  if (trigger and variable and value) then
+  if (trigger and variable) then
     usedStates[trigger] = true;
 
     local conditionTemplate = allConditionsTemplate[trigger] and allConditionsTemplate[trigger][variable];
@@ -203,27 +203,29 @@ local function CreateTestForCondition(uid, input, allConditionsTemplate, usedSta
                                 uid, testFunctionNumber, trigger);
         end
       end
-    elseif (cType == "number" and op) then
+    elseif cType == "alwaystrue" then
+      check = "true"
+    elseif (cType == "number" and value and op) then
       local v = tonumber(value)
       if (v) then
         check = stateCheck .. stateVariableCheck .. "state[" .. trigger .. "]." .. variable .. op .. v;
       end
-    elseif (cType == "timer" and op) then
+    elseif (cType == "timer" and value and op) then
       if (op == "==") then
         check = stateCheck .. stateVariableCheck .. "abs(state[" .. trigger .. "]." ..variable .. "- now -" .. value .. ") < 0.05";
       else
         check = stateCheck .. stateVariableCheck .. "state[" .. trigger .. "]." .. variable .. "- now" .. op .. value;
       end
-    elseif (cType == "select" and op) then
+    elseif (cType == "select" and value and op) then
       if (tonumber(value)) then
         check = stateCheck .. stateVariableCheck .. "state[" .. trigger .. "]." .. variable .. op .. tonumber(value);
       else
         check = stateCheck .. stateVariableCheck .. "state[" .. trigger .. "]." .. variable .. op .. "'" .. value .. "'";
       end
-    elseif (cType == "bool") then
+    elseif (cType == "bool" and value) then
       local rightSide = value == 0 and "false" or "true";
       check = stateCheck .. stateVariableCheck .. "state[" .. trigger .. "]." .. variable .. "==" .. rightSide
-    elseif (cType == "string") then
+    elseif (cType == "string" and value) then
       if(op == "==") then
         check = stateCheck .. stateVariableCheck .. "state[" .. trigger .. "]." .. variable .. " == [[" .. value .. "]]";
       elseif (op  == "find('%s')") then
@@ -244,14 +246,19 @@ local function CreateTestForCondition(uid, input, allConditionsTemplate, usedSta
   return check, recheckCode;
 end
 
-local function CreateCheckCondition(uid, ret, condition, conditionNumber, allConditionsTemplate, debug)
+local function CreateCheckCondition(uid, ret, condition, conditionNumber, allConditionsTemplate, nextIsLinked, debug)
   local usedStates = {};
   local check, recheckCode = CreateTestForCondition(uid, condition.check, allConditionsTemplate, usedStates);
   if (check) then
-    ret = ret .. "    state = region.states\n"
-    ret = ret .. "    if (" .. check .. ") then\n";
-    ret = ret .. "      newActiveConditions[" .. conditionNumber .. "] = true;\n";
-    ret = ret .. "    end\n";
+    if condition.linked and conditionNumber > 1 then
+      ret = ret .. "      elseif (" .. check .. ") then\n";
+    else
+      ret = ret .. "      if (" .. check .. ") then\n";
+    end
+    ret = ret .. "        newActiveConditions[" .. conditionNumber .. "] = true;\n";
+    if not nextIsLinked then
+      ret = ret .. "      end\n";
+    end
   end
   if (recheckCode) then
     ret = ret .. recheckCode;
@@ -474,6 +481,10 @@ local globalConditions =
   ["customcheck"] = {
     display = L["Custom Check"],
     type = "customcheck"
+  },
+  ["alwaystrue"] = {
+    display = L["Always True"],
+    type = "alwaystrue"
   }
 }
 
@@ -500,6 +511,7 @@ local function ConstructConditionFunction(data)
   if (debug) then ret = ret .. "  print('check conditions for:', region.id, region.cloneId)\n"; end
   ret = ret .. "  local id = region.id\n";
   ret = ret .. "  local cloneId = region.cloneId or ''\n";
+  ret = ret .. "  local state = region.states\n"
   ret = ret .. "  local activatedConditions = WeakAuras.GetActiveConditions(id, cloneId)\n";
   ret = ret .. "  wipe(newActiveConditions)\n";
   ret = ret .. "  local recheckTime;\n"
@@ -507,11 +519,12 @@ local function ConstructConditionFunction(data)
 
   local normalConditionCount = data.conditions and #data.conditions;
   -- First Loop gather which conditions are active
-  ret = ret .. " if (not hideRegion) then\n"
+  ret = ret .. "  if (not hideRegion) then\n"
   if (data.conditions) then
     WeakAuras.conditionHelpers[data.uid] = nil
     for conditionNumber, condition in ipairs(data.conditions) do
-      ret = CreateCheckCondition(data.uid, ret, condition, conditionNumber, allConditionsTemplate, debug)
+      local nextIsLinked = data.conditions[conditionNumber + 1] and data.conditions[conditionNumber + 1].linked
+      ret = CreateCheckCondition(data.uid, ret, condition, conditionNumber, allConditionsTemplate, nextIsLinked, debug)
     end
   end
   ret = ret .. "  end\n";
@@ -574,7 +587,6 @@ function Private.LoadConditionFunction(data)
 end
 
 function Private.RunConditions(region, id, hideRegion)
-  -- TODO rename show
   if (checkConditions[id]) then
     checkConditions[id](region, hideRegion);
   end

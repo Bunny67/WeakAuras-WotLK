@@ -265,10 +265,7 @@ end
 local function RunCode(self, func)
   if func and not WeakAuras.IsOptionsOpen() then
     WeakAuras.ActivateAuraEnvironment(self.id, self.cloneId, self.state, self.states);
-    local ok, ret = pcall(func);
-    if not ok then
-      geterrorhandler()(ret)
-    end
+    xpcall(func, geterrorhandler());
     WeakAuras.ActivateAuraEnvironment(nil);
   end
 end
@@ -716,7 +713,7 @@ function WeakAuras.regionPrototype.AddExpandFunction(data, region, cloneId, pare
   local inGroup = parentRegionType == "group";
 
   local startMainAnimation = function()
-    WeakAuras.Animate("display", data, "main", data.animation.main, region, false, nil, true, cloneId);
+    WeakAuras.Animate("display", data.uid, "main", data.animation.main, region, false, nil, true, cloneId);
   end
 
   function region:OptionsClosed()
@@ -772,7 +769,7 @@ function WeakAuras.regionPrototype.AddExpandFunction(data, region, cloneId, pare
       region:SetScript("OnUpdate", nil)
 
       WeakAuras.PerformActions(data, "finish", region);
-      if (not WeakAuras.Animate("display", data, "finish", data.animation.finish, region, false, hideRegion, nil, cloneId)) then
+      if (not WeakAuras.Animate("display", data.uid, "finish", data.animation.finish, region, false, hideRegion, nil, cloneId)) then
         hideRegion();
       end
 
@@ -797,7 +794,7 @@ function WeakAuras.regionPrototype.AddExpandFunction(data, region, cloneId, pare
       WeakAuras.ApplyFrameLevel(region)
       region:Show();
       WeakAuras.PerformActions(data, "start", region);
-      if not(WeakAuras.Animate("display", data, "start", data.animation.start, region, true, startMainAnimation, nil, cloneId)) then
+      if not(WeakAuras.Animate("display", data.uid, "start", data.animation.start, region, true, startMainAnimation, nil, cloneId)) then
         startMainAnimation();
       end
       parent:ActivateChild(data.id, cloneId);
@@ -814,7 +811,7 @@ function WeakAuras.regionPrototype.AddExpandFunction(data, region, cloneId, pare
       region:SetScript("OnUpdate", nil)
 
       WeakAuras.PerformActions(data, "finish", region);
-      if (not WeakAuras.Animate("display", data, "finish", data.animation.finish, region, false, hideRegion, nil, cloneId)) then
+      if (not WeakAuras.Animate("display", data.uid, "finish", data.animation.finish, region, false, hideRegion, nil, cloneId)) then
         hideRegion();
       end
 
@@ -851,7 +848,7 @@ function WeakAuras.regionPrototype.AddExpandFunction(data, region, cloneId, pare
       WeakAuras.ApplyFrameLevel(region)
       region:Show();
       WeakAuras.PerformActions(data, "start", region);
-      if not(WeakAuras.Animate("display", data, "start", data.animation.start, region, true, startMainAnimation, nil, cloneId)) then
+      if not(WeakAuras.Animate("display", data.uid, "start", data.animation.start, region, true, startMainAnimation, nil, cloneId)) then
         startMainAnimation();
       end
 

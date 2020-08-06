@@ -657,7 +657,7 @@ local function Constructor()
 	treeframe:SetScript("OnSizeChanged", Tree_OnSizeChanged)
 	treeframe:SetScript("OnMouseWheel", Tree_OnMouseWheel)
 
-	local treeframeBG = CreateFrame("Frame", nil, treeframe, BackdropTemplateMixin and "BackdropTemplate")
+	local treeframeBG = CreateFrame("Frame", nil, treeframe)
 	treeframeBG:SetBackdrop(PaneBackdrop)
 	treeframeBG:SetBackdropColor(0.1, 0.1, 0.1, 0.5)
 	treeframeBG:SetBackdropBorderColor(0.4, 0.4, 0.4)

@@ -291,6 +291,7 @@ function WeakAuras.AddTriggerMetaFunctions(options, data, triggernum)
           end,
           showAlert = 1,
           whileDead = 1,
+          timeout = 0,
           preferredindex = STATICPOPUP_NUMDIALOGS,
         }
         StaticPopup_Show("WEAKAURAS_CONFIRM_TRIGGER_DELETE")

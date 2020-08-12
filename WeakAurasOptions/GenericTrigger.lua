@@ -225,6 +225,8 @@ local function GetCustomTriggerOptions(data, triggernum)
       end,
       set = function(info, v)
         trigger.duration = v
+        WeakAuras.Add(data)
+        WeakAuras.ClearAndUpdateOptions(data.id)
       end
     },
     addOverlayFunction = {
@@ -256,7 +258,6 @@ local function GetCustomTriggerOptions(data, triggernum)
         end
         WeakAuras.Add(data);
         WeakAuras.ClearAndUpdateOptions(data.id)
-        WeakAuras.FillOptions()
       end
     }
   };
@@ -316,6 +317,7 @@ local function GetCustomTriggerOptions(data, triggernum)
       end
       WeakAuras.Add(data);
       WeakAuras.ClearAndUpdateOptions(data.id)
+      WeakAuras.FillOptions()
     end
 
     local extraFunctions = {

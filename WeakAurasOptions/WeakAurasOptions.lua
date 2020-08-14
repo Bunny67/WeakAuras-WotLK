@@ -1633,12 +1633,12 @@ function WeakAuras.AddTextFormatOption(input, withHeader, get, addOption, hidden
       if sym == "c" or sym == "i" then
         -- No special options for these
       else
-      addOption(symbol .. "desc", {
-        type = "description",
-        name = L["Format for %s"]:format("%" .. symbol),
-        width = WeakAuras.normalWidth,
-        hidden = hidden
-      })
+        addOption(symbol .. "desc", {
+          type = "description",
+          name = L["Format for %s"]:format("%" .. symbol),
+          width = WeakAuras.normalWidth,
+          hidden = hidden
+        })
         addOption(symbol .. "_format", {
           type = "select",
           name = L["Format"],
@@ -1652,10 +1652,9 @@ function WeakAuras.AddTextFormatOption(input, withHeader, get, addOption, hidden
         if (WeakAuras.format_types[selectedFormat]) then
           WeakAuras.format_types[selectedFormat].AddOptions(symbol, hidden, addOption, get)
         end
-
+        seenSymbols[symbol] = true
       end
     end
-    seenSymbols[symbol] = true
   end)
 
   if not next(seenSymbols) and withHeader then

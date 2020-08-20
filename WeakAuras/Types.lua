@@ -245,6 +245,7 @@ WeakAuras.format_types = {
         min = 1,
         max = 20,
         hidden = hidden,
+        step = 1,
         disabled = function()
           return not get(symbol .. "_abbreviate")
         end
@@ -366,7 +367,6 @@ WeakAuras.format_types = {
         min = 1,
         max = 20,
         hidden = hidden,
-        step = 1,
         disabled = function()
           return not get(symbol .. "_abbreviate")
         end
@@ -734,12 +734,6 @@ form_frame:SetScript("OnEvent", update_forms);
 WeakAuras.blend_types = {
   ADD = L["Glow"],
   BLEND = L["Opaque"]
-}
-
-WeakAuras.texture_wrap_types = {
-  CLAMP = L["Clamp"],
-  MIRROR = L["Mirror"],
-  REPEAT = L["Repeat"]
 }
 
 WeakAuras.slant_mode = {
@@ -1337,7 +1331,7 @@ WeakAuras.texture_types = {
     ["Interface\\AddOns\\WeakAuras\\Media\\Textures\\Trapezoid"] = "Trapezoid",
     ["Interface\\AddOns\\WeakAuras\\Media\\Textures\\triangle-border.tga"] = "Triangle with Border",
     ["Interface\\AddOns\\WeakAuras\\Media\\Textures\\triangle.tga"] = "Triangle",
-    ["Interface\\AddOns\\WeakAuras\\Media\\Textures\\Circle_Smooth2.tga"] = "Smoohth Circle Small",
+    ["Interface\\AddOns\\WeakAuras\\Media\\Textures\\Circle_Smooth2.tga"] = "Smooth Circle Small",
     ["Interface\\AddOns\\WeakAuras\\Media\\Textures\\circle_border5.tga"] = "Circle Border",
     ["Interface\\AddOns\\WeakAuras\\Media\\Textures\\ring_glow3.tga"] = "Circle Border Glow",
     ["Interface\\AddOns\\WeakAuras\\Media\\Textures\\square_mini.tga"] = "Small Square",
@@ -1404,8 +1398,8 @@ WeakAuras.texture_types["PowerAuras Icons"] = {
   [PowerAurasPath.."Aura27"] = "Alert",
   [PowerAurasPath.."Aura29"] = "Paw",
   [PowerAurasPath.."Aura30"] = "Bull",
-  --   [PowerAurasPath.."Aura31"] = "Heiroglyphics Horizontal",
-  [PowerAurasPath.."Aura32"] = "Heiroglyphics",
+  --   [PowerAurasPath.."Aura31"] = "Hieroglyphics Horizontal",
+  [PowerAurasPath.."Aura32"] = "Hieroglyphics",
   [PowerAurasPath.."Aura34"] = "Circled Arrow",
   [PowerAurasPath.."Aura35"] = "Short Sword",
   --   [PowerAurasPath.."Aura36"] = "Short Sword Horizontal",
@@ -1447,7 +1441,7 @@ WeakAuras.texture_types["PowerAuras Icons"] = {
   --   [PowerAurasPath.."Aura111"] = "Hunter's Mark Horizontal",
   [PowerAurasPath.."Aura112"] = "Kaleidoscope",
   [PowerAurasPath.."Aura113"] = "Jesus Face",
-  [PowerAurasPath.."Aura114"] = "Green Mushrrom",
+  [PowerAurasPath.."Aura114"] = "Green Mushroom",
   [PowerAurasPath.."Aura115"] = "Red Mushroom",
   [PowerAurasPath.."Aura116"] = "Fire Flower",
   [PowerAurasPath.."Aura117"] = "Radioactive",
@@ -1520,7 +1514,7 @@ WeakAuras.texture_types["PowerAuras Words"] = {
   [PowerAurasPath.."Aura39"] = "Silence",
   [PowerAurasPath.."Aura40"] = "Root",
   [PowerAurasPath.."Aura41"] = "Disorient",
-  [PowerAurasPath.."Aura42"] = "Dispell",
+  [PowerAurasPath.."Aura42"] = "Dispel",
   [PowerAurasPath.."Aura43"] = "Danger",
   [PowerAurasPath.."Aura44"] = "Buff",
   [PowerAurasPath.."Aura44"] = "Buff",
@@ -2075,18 +2069,6 @@ WeakAuras.combat_event_type = {
 WeakAuras.bool_types = {
   [0] = L["False"],
   [1] = L["True"]
-}
-
-WeakAuras.absorb_modes = {
-  OVERLAY_FROM_START = L["Attach to Start"],
-  OVERLAY_FROM_END = L["Attach to End"]
-}
-
-WeakAuras.mythic_plus_affixes = {}
-
-local mythic_plus_blacklist = {
-  [1] = true,
-  [15] = true
 }
 
 WeakAuras.update_categories = {

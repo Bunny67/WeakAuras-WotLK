@@ -886,10 +886,10 @@ local function modify(parent, region, data)
 
   function region:SetTexture(texture)
     region.currentTexture = texture;
-    region.foreground:SetTexture(texture, region.textureWrapMode, region.textureWrapMode);
+    region.foreground:SetTexture(texture);
     foregroundSpinner:SetTexture(texture);
     if (data.sameTexture) then
-      background:SetTexture(texture, region.textureWrapMode, region.textureWrapMode);
+      background:SetTexture(texture);
       backgroundSpinner:SetTexture(texture);
     end
   end

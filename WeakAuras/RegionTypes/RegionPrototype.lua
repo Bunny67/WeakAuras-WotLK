@@ -259,14 +259,15 @@ local function SendChat(self, options)
   if (not options or WeakAuras.IsOptionsOpen()) then
     return
   end
+
   WeakAuras.HandleChatAction(options.message_type, options.message, options.message_dest, options.message_channel, options.r, options.g, options.b, self, options.message_custom, nil, options.message_formaters);
 end
 
 local function RunCode(self, func)
   if func and not WeakAuras.IsOptionsOpen() then
-    WeakAuras.ActivateAuraEnvironment(self.id, self.cloneId, self.state, self.states);
+    Private.ActivateAuraEnvironment(self.id, self.cloneId, self.state, self.states);
     xpcall(func, geterrorhandler());
-    WeakAuras.ActivateAuraEnvironment(nil);
+    Private.ActivateAuraEnvironment(nil);
   end
 end
 

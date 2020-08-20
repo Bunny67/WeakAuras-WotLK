@@ -31,6 +31,8 @@ LibStub("AceTimer-3.0"):Embed(WeakAurasTimers)
 WeakAuras.maxTimerDuration = 604800; -- A week, in seconds
 WeakAuras.maxUpTime = 4294967; -- 2^32 / 1000
 
+Private.callbacks = LibStub("CallbackHandler-1.0"):New(Private)
+
 function WeakAuras:Mixin(object, ...)
   for i = 1, select("#", ...) do
     local mixin = select(i, ...);
@@ -88,7 +90,7 @@ function WeakAuras.OpenOptions(msg)
   if WeakAuras.NeedToRepairDatabase() then
     StaticPopup_Show("WEAKAURAS_CONFIRM_REPAIR", nil, nil, {reason = "downgrade"})
   elseif (WeakAuras.IsLoginFinished() and Private.LoadOptions(msg)) then
-    WeakAuras.ToggleOptions(msg);
+    WeakAuras.ToggleOptions(msg, Private);
   end
 end
 
@@ -1000,6 +1002,7 @@ end
 local frame = CreateFrame("FRAME", "WeakAurasFrame", UIParent);
 WeakAuras.frames["WeakAuras Main Frame"] = frame;
 frame:SetAllPoints(UIParent);
+
 local loadedFrame = CreateFrame("FRAME");
 WeakAuras.frames["Addon Initialization Handler"] = loadedFrame;
 loadedFrame:RegisterEvent("ADDON_LOADED");
@@ -1493,7 +1496,7 @@ end
 -- this cache is loaded lazily via pAdd()
 local UIDtoID = {}
 
-function WeakAuras.GetDataByUID(uid)
+function Private.GetDataByUID(uid)
   return WeakAuras.GetData(UIDtoID[uid])
 end
 
@@ -1514,7 +1517,7 @@ function WeakAuras.Delete(data)
       if parentData.sortHybridTable then
         parentData.sortHybridTable[id] = nil
       end
-      WeakAuras.ClearAuraEnvironment(data.parent);
+      Private.ClearAuraEnvironment(data.parent);
     end
   end
 
@@ -1572,7 +1575,7 @@ function WeakAuras.Delete(data)
 
   db.displays[id] = nil;
 
-  WeakAuras.DeleteAuraEnvironment(id)
+  Private.DeleteAuraEnvironment(id)
   triggerState[id] = nil;
 
   if (WeakAuras.mouseFrame) then
@@ -1588,6 +1591,8 @@ function WeakAuras.Delete(data)
   WeakAuras.conditionHelpers[data.uid] = nil
 
   WeakAuras.DeleteCollapsedData(id)
+
+  Private.callbacks:Fire("Delete", data.uid)
 end
 
 function WeakAuras.Rename(data, newid)
@@ -1641,7 +1646,7 @@ function WeakAuras.Rename(data, newid)
   triggerState[newid] = triggerState[oldid];
   triggerState[oldid] = nil;
 
-  WeakAuras.RenameAuraEnvironment(oldid, newid)
+  Private.RenameAuraEnvironment(oldid, newid)
 
   db.displays[newid] = db.displays[oldid];
   db.displays[oldid] = nil;
@@ -2447,9 +2452,9 @@ local function pAdd(data, simpleChange)
     WeakAuras.UpdatedTriggerState(id)
   else
     if (data.controlledChildren) then
-      WeakAuras.ClearAuraEnvironment(id);
+      Private.ClearAuraEnvironment(id);
       if data.parent then
-        WeakAuras.ClearAuraEnvironment(data.parent);
+        Private.ClearAuraEnvironment(data.parent);
       end
       db.displays[id] = data;
       WeakAuras.SetRegion(data);
@@ -2465,9 +2470,9 @@ local function pAdd(data, simpleChange)
         end
       end
 
-      WeakAuras.ClearAuraEnvironment(id);
+      Private.ClearAuraEnvironment(id);
       if data.parent then
-        WeakAuras.ClearAuraEnvironment(data.parent);
+        Private.ClearAuraEnvironment(data.parent);
       end
 
       db.displays[id] = data;
@@ -2883,7 +2888,7 @@ function WeakAuras.HandleGlowAction(actions, region)
           glow_frame = regions[frame_name].region
         end
       else
-        glow_frame = WeakAuras.GetSanitizedGlobal(actions.glow_frame)
+        glow_frame = Private.GetSanitizedGlobal(actions.glow_frame)
       end
     elseif actions.glow_frame_type == "UNITFRAME" and region.state.unit then
       glow_frame = WeakAuras.GetUnitFrame(region.state.unit)
@@ -2958,12 +2963,9 @@ function WeakAuras.PerformActions(data, when, region)
   if(actions.do_custom and actions.custom) then
     local func = Private.customActionsFunctions[data.id][when]
     if func then
-      WeakAuras.ActivateAuraEnvironment(region.id, region.cloneId, region.state, region.states);
-      local ok, ret = pcall(func);
-      if not ok then
-        geterrorhandler()(ret)
-      end
-      WeakAuras.ActivateAuraEnvironment(nil);
+      Private.ActivateAuraEnvironment(region.id, region.cloneId, region.state, region.states);
+      xpcall(func, geterrorhandler());
+      Private.ActivateAuraEnvironment(nil);
     end
   end
 
@@ -3637,7 +3639,7 @@ end
 
 local function evaluateTriggerStateTriggers(id)
   local result = false;
-  WeakAuras.ActivateAuraEnvironment(id);
+  Private.ActivateAuraEnvironment(id);
 
   if WeakAuras.IsOptionsOpen() then
     -- While the options are open ignore the combination function
@@ -3660,7 +3662,7 @@ local function evaluateTriggerStateTriggers(id)
     end
   end
 
-  WeakAuras.ActivateAuraEnvironment(nil);
+  Private.ActivateAuraEnvironment(nil);
   return result;
 end
 
@@ -3815,7 +3817,7 @@ function WeakAuras.RunCustomTextFunc(region, customFunc)
     return nil
   end
   local state = region.state
-  WeakAuras.ActivateAuraEnvironment(region.id, region.cloneId, region.state, region.states);
+  Private.ActivateAuraEnvironment(region.id, region.cloneId, region.state, region.states);
 
   local progress = WeakAuras.dynamic_texts.p.func(WeakAuras.dynamic_texts.p.get(state), state, 1)
   local dur = WeakAuras.dynamic_texts.t.func( WeakAuras.dynamic_texts.t.get(state), state, 1)
@@ -3842,7 +3844,7 @@ function WeakAuras.RunCustomTextFunc(region, customFunc)
     table.remove(custom, 1)
   end
 
-  WeakAuras.ActivateAuraEnvironment(nil)
+  Private.ActivateAuraEnvironment(nil)
   return custom
 end
 
@@ -4443,8 +4445,8 @@ local function GetAnchorFrame(data, region, parent)
       end
       postponeAnchor(id);
     else
-      if (WeakAuras.GetSanitizedGlobal(anchorFrameFrame)) then
-        return WeakAuras.GetSanitizedGlobal(anchorFrameFrame);
+      if (Private.GetSanitizedGlobal(anchorFrameFrame)) then
+        return Private.GetSanitizedGlobal(anchorFrameFrame);
       end
       postponeAnchor(id);
       return parent;
@@ -4454,14 +4456,12 @@ local function GetAnchorFrame(data, region, parent)
   if (anchorFrameType == "CUSTOM" and region.customAnchorFunc) then
     WeakAuras.StartProfileSystem("custom region anchor")
     WeakAuras.StartProfileAura(region.id)
-    WeakAuras.ActivateAuraEnvironment(region.id, region.cloneId, region.state)
-    local ok, frame = pcall(region.customAnchorFunc)
-    WeakAuras.ActivateAuraEnvironment()
+    Private.ActivateAuraEnvironment(region.id, region.cloneId, region.state)
+    local ok, frame = xpcall(region.customAnchorFunc, geterrorhandler())
+    Private.ActivateAuraEnvironment()
     WeakAuras.StopProfileSystem("custom region anchor")
     WeakAuras.StopProfileAura(region.id)
-    if not ok then
-      geterrorhandler()(frame)
-    elseif ok and frame then
+    if ok and frame then
       return frame
     elseif WeakAuras.IsOptionsOpen() then
       return parent

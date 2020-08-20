@@ -70,8 +70,6 @@ local timer = WeakAuras.timer
 local BuffTrigger = {}
 local triggerInfos = {}
 
-local UnitGroupRolesAssigned = function() return "DAMAGER" end
-
 -- keyed on unit, debuffType, spellname, with a scan object value
 -- scan object: id, triggernum, scanFunc
 local scanFuncName = {}

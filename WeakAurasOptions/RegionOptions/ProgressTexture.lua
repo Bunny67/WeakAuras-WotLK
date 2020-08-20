@@ -1,4 +1,5 @@
 if not WeakAuras.IsCorrectVersion() then return end
+local AddonName, OptionsPrivate = ...
 
 local L = WeakAuras.L;
 
@@ -219,25 +220,18 @@ local function createOptions(id, data)
       bigStep = 0.01,
       isPercent = true
     },
-    textureWrapMode = {
-      type = "select",
-      width = WeakAuras.normalWidth,
-      name = L["Texture Wrap"],
-      order = 55.2,
-      values = WeakAuras.texture_wrap_types
-    },
     slanted = {
       type = "toggle",
       width = WeakAuras.normalWidth,
       name = L["Slanted"],
-      order = 55.3,
+      order = 55.2,
       hidden = function() return data.orientation == "CLOCKWISE" or data.orientation == "ANTICLOCKWISE"; end
     },
     slant = {
       type = "range",
       width = WeakAuras.normalWidth,
       name = L["Slant Amount"],
-      order = 55.4,
+      order = 55.3,
       min = 0,
       max = 1,
       bigStep = 0.1,
@@ -247,14 +241,14 @@ local function createOptions(id, data)
       type = "toggle",
       width = WeakAuras.normalWidth,
       name = L["Inverse Slant"],
-      order = 55.5,
+      order = 55.4,
       hidden = function() return not data.slanted or data.orientation == "CLOCKWISE" or data.orientation == "ANTICLOCKWISE" end
     },
     slantMode = {
       type = "select",
       width = WeakAuras.normalWidth,
       name = L["Slant Mode"],
-      order = 55.6,
+      order = 55.5,
       hidden = function() return not data.slanted or data.orientation == "CLOCKWISE" or data.orientation == "ANTICLOCKWISE" end,
       values = WeakAuras.slant_mode
     },

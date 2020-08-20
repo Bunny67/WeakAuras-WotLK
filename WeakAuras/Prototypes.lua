@@ -2471,7 +2471,6 @@ WeakAuras.event_prototypes = {
       end
     end,
     init = function(trigger)
-      --trigger.itemName = WeakAuras.CorrectItemName(trigger.itemName) or 0;
       trigger.itemName = trigger.itemName or 0;
       local itemName = type(trigger.itemName) == "number" and trigger.itemName or "[["..trigger.itemName.."]]";
       local ret = [=[
@@ -2780,7 +2779,6 @@ WeakAuras.event_prototypes = {
       WeakAuras.WatchItemCooldown(trigger.itemName);
     end,
     init = function(trigger)
-      --trigger.itemName = WeakAuras.CorrectItemName(trigger.itemName) or 0;
       trigger.itemName = trigger.itemName or 0;
     end,
     args = {
@@ -3880,7 +3878,6 @@ WeakAuras.event_prototypes = {
     force_events = "BAG_UPDATE",
     name = L["Item Count"],
     init = function(trigger)
-      --trigger.itemName = WeakAuras.CorrectItemName(trigger.itemName) or 0;
       trigger.itemName = trigger.itemName or 0;
       local itemName = type(trigger.itemName) == "number" and trigger.itemName or "[["..trigger.itemName.."]]";
       local ret = [[
@@ -4459,7 +4456,6 @@ WeakAuras.event_prototypes = {
     force_events = "UNIT_INVENTORY_CHANGED",
     name = L["Item Equipped"],
     init = function(trigger)
-      --trigger.itemName = WeakAuras.CorrectItemName(trigger.itemName) or 0;
       trigger.itemName = trigger.itemName or 0;
       local itemName = type(trigger.itemName) == "number" and trigger.itemName or "[[" .. trigger.itemName .. "]]";
 

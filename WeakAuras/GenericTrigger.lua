@@ -724,7 +724,7 @@ function WeakAuras.ScanUnitEvents(event, unit, ...)
     if event_list then
       for id, triggers in pairs(event_list) do
         WeakAuras.StartProfileAura(id);
-        WeakAuras.ActivateAuraEnvironment(id);
+        Private.ActivateAuraEnvironment(id);
         local updateTriggerState = false;
         for triggernum, data in pairs(triggers) do
           local allStates = WeakAuras.GetTriggerStateForTrigger(id, triggernum);
@@ -736,7 +736,7 @@ function WeakAuras.ScanUnitEvents(event, unit, ...)
           WeakAuras.UpdatedTriggerState(id);
         end
         WeakAuras.StopProfileAura(id);
-        WeakAuras.ActivateAuraEnvironment(nil);
+        Private.ActivateAuraEnvironment(nil);
       end
     end
   end
@@ -746,7 +746,7 @@ end
 function WeakAuras.ScanEventsInternal(event_list, event, arg1, arg2, ... )
   for id, triggers in pairs(event_list) do
     WeakAuras.StartProfileAura(id);
-    WeakAuras.ActivateAuraEnvironment(id);
+    Private.ActivateAuraEnvironment(id);
     local updateTriggerState = false;
     for triggernum, data in pairs(triggers) do
       local allStates = WeakAuras.GetTriggerStateForTrigger(id, triggernum);
@@ -758,7 +758,7 @@ function WeakAuras.ScanEventsInternal(event_list, event, arg1, arg2, ... )
       WeakAuras.UpdatedTriggerState(id);
     end
     WeakAuras.StopProfileAura(id);
-    WeakAuras.ActivateAuraEnvironment(nil);
+    Private.ActivateAuraEnvironment(nil);
   end
 end
 
@@ -776,7 +776,7 @@ end
 function GenericTrigger.CreateFakeStates(id, triggernum)
   local data = WeakAuras.GetData(id)
 
-  WeakAuras.ActivateAuraEnvironment(id);
+  Private.ActivateAuraEnvironment(id);
   local allStates = WeakAuras.GetTriggerStateForTrigger(id, triggernum);
   RunTriggerFunc(allStates, events[id][triggernum], id, triggernum, "OPTIONS")
 
@@ -805,12 +805,12 @@ function GenericTrigger.CreateFakeStates(id, triggernum)
     AddFakeTime(state)
   end
 
-  WeakAuras.ActivateAuraEnvironment(nil);
+  Private.ActivateAuraEnvironment(nil);
 end
 
 function GenericTrigger.ScanWithFakeEvent(id, fake)
   local updateTriggerState = false;
-  WeakAuras.ActivateAuraEnvironment(id);
+  Private.ActivateAuraEnvironment(id);
   for triggernum, event in pairs(events[id] or {}) do
     local allStates = WeakAuras.GetTriggerStateForTrigger(id, triggernum);
     if (event.force_events) then
@@ -839,7 +839,7 @@ function GenericTrigger.ScanWithFakeEvent(id, fake)
   if (updateTriggerState) then
     WeakAuras.UpdatedTriggerState(id);
   end
-  WeakAuras.ActivateAuraEnvironment(nil);
+  Private.ActivateAuraEnvironment(nil);
 end
 
 function GenericTrigger.ScanAll()
@@ -2431,7 +2431,10 @@ local watchUnitChange
 
 -- Nameplates only distinguish between friends and everyone else
 function WeakAuras.GetPlayerReaction(unit)
-  return UnitIsEnemy('player', unit) and 'hostile' or 'friendly'
+  local r = UnitReaction("player", unit)
+  if r then
+    return r < 5 and "hostile" or "friendly"
+  end
 end
 
 function WeakAuras.WatchUnitChange(unit)
@@ -3360,9 +3363,9 @@ function GenericTrigger.GetOverlayInfo(data, triggernum)
         end
       else
         local allStates = {};
-        WeakAuras.ActivateAuraEnvironment(data.id);
+        Private.ActivateAuraEnvironment(data.id);
         RunTriggerFunc(allStates, events[data.id][triggernum], data.id, triggernum, "OPTIONS");
-        WeakAuras.ActivateAuraEnvironment(nil);
+        Private.ActivateAuraEnvironment(nil);
         local count = 0;
         for id, state in pairs(allStates) do
           if (type(state.additionalProgress) == "table") then
@@ -3676,9 +3679,9 @@ function GenericTrigger.GetTriggerConditions(data, triggernum)
       return result;
     elseif (trigger.custom_type == "stateupdate") then
       if (events[data.id][triggernum] and events[data.id][triggernum].tsuConditionVariables) then
-        WeakAuras.ActivateAuraEnvironment(data.id, nil, nil, nil, true)
+        Private.ActivateAuraEnvironment(data.id, nil, nil, nil, true)
         local result = events[data.id][triggernum].tsuConditionVariables()
-        WeakAuras.ActivateAuraEnvironment(nil)
+        Private.ActivateAuraEnvironment(nil)
         if (type(result)) ~= "table" then
           return nil;
         end
@@ -3726,7 +3729,7 @@ function GenericTrigger.CreateFallbackState(data, triggernum, state)
   state.changed = true;
   local event = events[data.id][triggernum];
 
-  WeakAuras.ActivateAuraEnvironment(data.id, "", state);
+  Private.ActivateAuraEnvironment(data.id, "", state);
   local firstTrigger = data.triggers[1].trigger
   if (event.nameFunc) then
     local ok, name = pcall(event.nameFunc, firstTrigger);
@@ -3815,7 +3818,7 @@ function GenericTrigger.CreateFallbackState(data, triggernum, state)
   if (event.overlayFuncs) then
     RunOverlayFuncs(event, state);
   end
-  WeakAuras.ActivateAuraEnvironment(nil);
+  Private.ActivateAuraEnvironment(nil);
 end
 
 function GenericTrigger.GetName(triggerType)

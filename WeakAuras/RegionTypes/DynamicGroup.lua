@@ -311,9 +311,9 @@ local sorters = {
     local sortStr = data.customSort or ""
     local sortFunc = WeakAuras.LoadFunction("return " .. sortStr, data.id, "custom sort") or noop
     return function(a, b)
-      WeakAuras.ActivateAuraEnvironment(data.id)
+      Private.ActivateAuraEnvironment(data.id)
       local ok, result = pcall(sortFunc, a, b)
-      WeakAuras.ActivateAuraEnvironment()
+      Private.ActivateAuraEnvironment()
       if not ok then
         geterrorhandler()(result)
       else
@@ -370,12 +370,12 @@ local anchorers = {
     local anchorStr = data.customAnchorPerUnit or ""
     local anchorFunc = WeakAuras.LoadFunction("return " .. anchorStr, data.id, "custom frame anchor") or noop
     return function(frames, activeRegions)
-      WeakAuras.ActivateAuraEnvironment(data.id)
+      Private.ActivateAuraEnvironment(data.id)
       local ok, ret = pcall(anchorFunc, frames, activeRegions)
       if not ok then
         geterrorhandler()(ret)
       end
-      WeakAuras.ActivateAuraEnvironment()
+      Private.ActivateAuraEnvironment()
     end
   end
 }
@@ -735,9 +735,9 @@ local growers = {
     local growStr = data.customGrow or ""
     local growFunc = WeakAuras.LoadFunction("return " .. growStr, data.id, "custom grow") or noop
     return function(newPositions, activeRegions)
-      WeakAuras.ActivateAuraEnvironment(data.id)
+      Private.ActivateAuraEnvironment(data.id)
       local ok, ret = pcall(growFunc, newPositions, activeRegions)
-      WeakAuras.ActivateAuraEnvironment()
+      Private.ActivateAuraEnvironment()
       if not ok then
         geterrorhandler()(ret)
         wipe(newPositions)

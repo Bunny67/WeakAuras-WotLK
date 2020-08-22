@@ -4751,7 +4751,7 @@ WeakAuras.event_prototypes = {
         local remainingCheck = %s
         local inverseTrigger = %s
 
-        local show, expirationTime, castType, spell, icon, startTime, endTime, interruptible, remaining
+        local show, expirationTime, castType, spell, icon, startTime, endTime, interruptible, remaining, _
 
         spell, _, _, icon, startTime, endTime, _, _, interruptible = UnitCastingInfo(unit)
         if spell then

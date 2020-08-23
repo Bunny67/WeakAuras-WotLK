@@ -148,6 +148,7 @@ local properties = {
     min = 1,
     softMax = screenWidth,
     bigStep = 1,
+    default = 32
   },
   height = {
     display = L["Height"],
@@ -155,7 +156,8 @@ local properties = {
     type = "number",
     min = 1,
     softMax = screenHeight,
-    bigStep = 1
+    bigStep = 1,
+    default = 32
   },
 }
 
@@ -165,49 +167,60 @@ local spinnerFunctions = {};
 
 function spinnerFunctions.SetTexture(self, texture)
   for i = 1, 4 do
-    self.circularTextures[i]:SetTexture(texture);
+    self.textures[i]:SetTexture(texture);
   end
   self.wedge:SetTexture(texture);
 end
 
 function spinnerFunctions.SetDesaturated(self, desaturate)
   for i = 1, 4 do
-    self.circularTextures[i]:SetDesaturated(desaturate);
+    self.textures[i]:SetDesaturated(desaturate);
   end
   self.wedge:SetDesaturated(desaturate);
 end
 
 function spinnerFunctions.SetBlendMode(self, blendMode)
   for i = 1, 4 do
-    self.circularTextures[i]:SetBlendMode(blendMode);
+    self.textures[i]:SetBlendMode(blendMode);
   end
   self.wedge:SetBlendMode(blendMode);
 end
 
 function spinnerFunctions.Show(self)
+  for i = 1, 4 do
+    self.textures[i]:Show();
+  end
   self.wedge:Show();
 end
 
 function spinnerFunctions.Hide(self)
   for i = 1, 4 do
-    self.circularTextures[i]:Hide();
+    self.textures[i]:Hide();
   end
   self.wedge:Hide();
 end
 
-function spinnerFunctions.SetWidth(self, width)
-  self.wedge:SetWidth(width);
+function spinnerFunctions.Color(self, r, g, b, a)
+  for i = 1, 4 do
+    self.textures[i]:SetVertexColor(r, g, b, a);
+  end
+  self.wedge:SetVertexColor(r, g, b, a);
 end
 
-function spinnerFunctions.SetHeight(self, height)
+function spinnerFunctions.SetBackgroundOffset(self, region, offset)
+  self.offset = offset;
+  self.textures[1]:SetPoint("TOPRIGHT", region, offset, offset)
+  self.textures[2]:SetPoint("BOTTOMRIGHT", region, offset, -offset)
+  self.textures[3]:SetPoint("BOTTOMLEFT", region, -offset, -offset)
+  self.textures[4]:SetPoint("TOPLEFT", region, -offset, offset)
+end
+
+function spinnerFunctions:SetHeight(height)
   self.wedge:SetHeight(height);
 end
 
-function spinnerFunctions.Color(self, r, g, b, a)
-  for i = 1, 4 do
-    self.circularTextures[i]:SetVertexColor(r, g, b, a);
-  end
-  self.wedge:SetVertexColor(r, g, b, a);
+function spinnerFunctions:SetWidth(width)
+  self.wedge:SetWidth(width);
 end
 
 local function betweenAngles(low, high, needle1, needle2)
@@ -270,15 +283,15 @@ function spinnerFunctions.SetProgress(self, region, startAngle, endAngle, progre
 
     if clockwise then
       if betweenAngles(startAngle, pAngle, quadrantAngle1, quadrantAngle2) then
-        self.circularTextures[i]:Show()
+        self.textures[i]:Show()
       else
-        self.circularTextures[i]:Hide()
+        self.textures[i]:Hide()
       end
     else
       if betweenAngles(startAngle, pAngle, quadrantAngle1, quadrantAngle2) then
-        self.circularTextures[i]:Show()
+        self.textures[i]:Show()
       else
-        self.circularTextures[i]:Hide()
+        self.textures[i]:Hide()
       end
     end
   end
@@ -289,7 +302,7 @@ function spinnerFunctions.SetProgress(self, region, startAngle, endAngle, progre
     quadrant = 5 - quadrant;
   end
   self.scrollframe:Hide();
-  self.scrollframe:SetAllPoints(self.circularTextures[quadrant])
+  self.scrollframe:SetAllPoints(self.textures[quadrant])
   self.scrollframe:Show();
 
   local ULx, ULy = ApplyTransform(0, 0, region)
@@ -303,22 +316,15 @@ function spinnerFunctions.SetProgress(self, region, startAngle, endAngle, progre
   local Rx, Ry = ApplyTransform(1, 0.5, region)
   local Cx, Cy = ApplyTransform(0.5, 0.5, region)
 
-  self.circularTextures[1]:SetTexCoord(Tx, Ty, Cx, Cy, URx, URy, Rx, Ry);
-  self.circularTextures[2]:SetTexCoord(Cx, Cy, Bx, By, Rx, Ry, LRx, LRy);
-  self.circularTextures[3]:SetTexCoord(Lx, Ly, LLx, LLy, Cx, Cy, Bx, By);
-  self.circularTextures[4]:SetTexCoord(ULx, ULy, Lx, Ly, Tx, Ty, Cx, Cy);
+  self.textures[1]:SetTexCoord(Tx, Ty, Cx, Cy, URx, URy, Rx, Ry);
+  self.textures[2]:SetTexCoord(Cx, Cy, Bx, By, Rx, Ry, LRx, LRy);
+  self.textures[3]:SetTexCoord(Lx, Ly, LLx, LLy, Cx, Cy, Bx, By);
+  self.textures[4]:SetTexCoord(ULx, ULy, Lx, Ly, Tx, Ty, Cx, Cy);
 
   local degree = pAngle;
   if not clockwise then degree = -degree + 90 end
 
   animRotate(self.wedge, -degree, "BOTTOMRIGHT", region.rotation, region.aspect);
-end
-
-function spinnerFunctions.SetBackgroundOffset(self, region, offset)
-  self.circularTextures[1]:SetPoint("TOPRIGHT", region, offset, offset)
-  self.circularTextures[2]:SetPoint("BOTTOMRIGHT", region, offset, -offset)
-  self.circularTextures[3]:SetPoint("BOTTOMLEFT", region, -offset, -offset)
-  self.circularTextures[4]:SetPoint("TOPLEFT", region, -offset, offset)
 end
 
 local function createSpinner(parent, layer, frameLevel)
@@ -368,7 +374,7 @@ local function createSpinner(parent, layer, frameLevel)
 
   spinner.scrollframe = scrollframe
   spinner.wedge = wedge
-  spinner.circularTextures = {trTexture, brTexture, blTexture, tlTexture}
+  spinner.textures = {trTexture, brTexture, blTexture, tlTexture}
 
   for k, v in pairs(spinnerFunctions) do
     spinner[k] = v;

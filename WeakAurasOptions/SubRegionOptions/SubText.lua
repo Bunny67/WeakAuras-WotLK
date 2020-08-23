@@ -112,13 +112,6 @@ local function createOptions(parentData, data, index, subIndex)
           textJustify = " " ..  L["and aligned right"]
         end
 
-        local textRotate = ""
-        if data.rotateText == "LEFT" then
-          textRotate = " " .. L["and rotated left"]
-        elseif data.rotateText == "RIGHT" then
-          textRotate = " " .. L["and rotated right"]
-        end
-
         local textWidth = ""
         if data.text_automaticWidth == "Fixed" then
           local wordWarp = ""
@@ -130,7 +123,7 @@ local function createOptions(parentData, data, index, subIndex)
           textWidth = " "..L["and with width |cFFFF0000%s|r and %s"]:format(data.text_fixedWidth, wordWarp)
         end
 
-        local secondline = L["|cFFffcc00Font Flags:|r |cFFFF0000%s|r and shadow |c%sColor|r with offset |cFFFF0000%s/%s|r%s%s%s"]:format(textFlags, color, data.text_shadowXOffset, data.text_shadowYOffset, textRotate, textJustify, textWidth)
+        local secondline = L["|cFFffcc00Font Flags:|r |cFFFF0000%s|r and shadow |c%sColor|r with offset |cFFFF0000%s/%s|r%s%s%s"]:format(textFlags, color, data.text_shadowXOffset, data.text_shadowYOffset, "", textJustify, textWidth)
 
         return secondline
       end,
@@ -208,20 +201,12 @@ local function createOptions(parentData, data, index, subIndex)
       hidden = hiddenFontExtra,
       width = indentWidth
     },
-    rotateText = {
-      type = "select",
-      width = WeakAuras.normalWidth - indentWidth,
-      name = L["Rotate Text"],
-      values = WeakAuras.text_rotate_types,
-      order = 50,
-      hidden = hiddenFontExtra
-    },
     text_justify = {
       type = "select",
-      width = WeakAuras.normalWidth,
+      width = WeakAuras.normalWidth - indentWidth,
       name = L["Alignment"],
       values = WeakAuras.justify_types,
-      order = 50.5,
+      order = 50,
       hidden = hiddenFontExtra
     },
     text_font_space5 = {

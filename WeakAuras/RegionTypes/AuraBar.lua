@@ -1053,9 +1053,6 @@ local function modify(parent, region, data)
   end
   region:Color(data.barColor[1], data.barColor[2], data.barColor[3], data.barColor[4]);
 
-  -- Rotate text
-  local textDegrees = data.rotateText == "LEFT" and 90 or data.rotateText == "RIGHT" and -90 or 0;
-
   -- Update icon visibility
   if region.iconVisible then
     -- Update icon

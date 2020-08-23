@@ -28,7 +28,6 @@ local default = function(parentType)
       text_shadowColor = { 0, 0, 0, 1},
       text_shadowXOffset = 0,
       text_shadowYOffset = 0,
-      rotateText = "NONE",
 
       text_automaticWidth = "Auto",
       text_fixedWidth = 64,
@@ -53,7 +52,6 @@ local default = function(parentType)
       text_shadowColor = { 0, 0, 0, 1},
       text_shadowXOffset = 1,
       text_shadowYOffset = -1,
-      rotateText = "NONE",
 
       text_automaticWidth = "Auto",
       text_fixedWidth = 64,
@@ -100,64 +98,6 @@ local properties = {
     bigStep = 10,
   },
 }
-
-
--- Rotate object around its origin
-local function animRotate(object, degrees, anchor)
-  if (not anchor) then
-    anchor = "CENTER";
-  end
-  -- Something to rotate
-  if object.animationGroup or degrees ~= 0 then
-    -- Create AnimationGroup and rotation animation
-    object.animationGroup = object.animationGroup or object:CreateAnimationGroup();
-    local group = object.animationGroup;
-    group.rotate = group.rotate or group:CreateAnimation("rotation");
-    local rotate = group.rotate;
-
-    if rotate:GetDegrees() == degrees and rotate:GetOrigin() == anchor then
-      return
-    end
-
-    rotate:SetOrigin(anchor, 0, 0);
-    rotate:SetDegrees(degrees);
-    rotate:SetDuration(0);
-    rotate:SetEndDelay(2147483647);
-    group:Play();
-    rotate:SetSmoothProgress(1);
-    group:Pause();
-  end
-end
-
--- Calculate offset after rotation
-local function getRotateOffset(object, degrees, point)
-  -- Any rotation at all?
-  if degrees ~= 0 then
-    -- Basic offset
-    local originoffset = object:GetStringHeight() / 2;
-    local xo = -1 * originoffset * sin(degrees);
-    local yo = originoffset * (cos(degrees) - 1);
-
-    -- Alignment dependant offset
-    if point:find("BOTTOM", 1, true) then
-      yo = yo + (1 - cos(degrees)) * (object:GetStringWidth() / 2 - originoffset);
-    elseif point:find("TOP", 1, true) then
-      yo = yo - (1 - cos(degrees)) * (object:GetStringWidth() / 2 - originoffset);
-    end
-    if point:find("RIGHT", 1, true) then
-      xo = xo + (1 - cos(degrees)) * (object:GetStringWidth() / 2 - originoffset);
-    elseif point:find("LEFT", 1, true) then
-      xo = xo - (1 - cos(degrees)) * (object:GetStringWidth() / 2 - originoffset);
-    end
-
-    -- Done
-    return xo, yo;
-
-  -- No rotation
-  else
-    return 0, 0;
-  end
-end
 
 local function create()
   local region = CreateFrame("FRAME", nil, UIParent);
@@ -275,7 +215,6 @@ local function modify(parent, region, parentData, data, first)
       if text:GetFont() then
         text:SetText(WeakAuras.ReplaceRaidMarkerSymbols(textStr))
       end
-      region:UpdateAnchorOnTextChange()
     end
   end
 
@@ -359,7 +298,6 @@ local function modify(parent, region, parentData, data, first)
     local fontPath = SharedMedia:Fetch("font", data.text_font);
     region.text:SetFont(fontPath, size < 33 and size or 33, data.text_fontType);
     region.text:SetTextHeight(size)
-    region:UpdateAnchorOnTextChange();
   end
 
   function region:SetVisible(visible)
@@ -400,21 +338,11 @@ local function modify(parent, region, parentData, data, first)
   region.text_anchorXOffset = data.text_anchorXOffset
   region.text_anchorYOffset = data.text_anchorYOffset
 
-  local textDegrees = data.rotateText == "LEFT" and 90 or data.rotateText == "RIGHT" and -90 or 0;
-
   region.UpdateAnchor = function(self)
-    local xo, yo = getRotateOffset(text, textDegrees, selfPoint)
-    parent:AnchorSubRegion(text, "point", selfPoint, data.text_anchorPoint, (self.text_anchorXOffset or 0) + xo, (self.text_anchorYOffset or 0) + yo)
+    parent:AnchorSubRegion(text, "point", selfPoint, data.text_anchorPoint, self.text_anchorXOffset or 0, self.text_anchorYOffset or 0)
   end
 
   region:UpdateAnchor()
-  animRotate(text, textDegrees, selfPoint)
-
-  if textDegrees == 0 then
-    region.UpdateAnchorOnTextChange = function() end
-  else
-    region.UpdateAnchorOnTextChange = region.UpdateAnchor
-  end
 
   region.SetXOffset = function(self, xOffset)
     if self.text_anchorXOffset == xOffset then
@@ -453,8 +381,6 @@ local function addDefaultsForNewAura(data)
       text_shadowColor = { 0, 0, 0, 1},
       text_shadowXOffset = 1,
       text_shadowYOffset = -1,
-
-      rotateText = "NONE",
     });
 
     tinsert(data.subRegions, {
@@ -475,8 +401,6 @@ local function addDefaultsForNewAura(data)
       text_shadowColor = { 0, 0, 0, 1},
       text_shadowXOffset = 1,
       text_shadowYOffset = -1,
-
-      rotateText = "NONE",
     });
   elseif data.regionType == "icon" then
     tinsert(data.subRegions, {
@@ -497,8 +421,6 @@ local function addDefaultsForNewAura(data)
       text_shadowColor = { 0, 0, 0, 1},
       text_shadowXOffset = 0,
       text_shadowYOffset = 0,
-
-      rotateText = "NONE",
     });
   end
 end

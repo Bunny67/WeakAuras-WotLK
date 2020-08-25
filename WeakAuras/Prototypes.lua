@@ -5608,11 +5608,7 @@ WeakAuras.event_prototypes = {
     init = function(trigger)
       trigger.spellName = trigger.spellName or 0
       local ret = [=[
-        local spellid = tonumber(%q)
-        local button
-        if spellid then
-            button = WeakAuras.FindSpellActionButtons(spellid)
-        end
+        local button = WeakAuras.FindSpellActionButtons(%d)
       ]=]
       return ret:format(trigger.spellName)
     end,

@@ -59,7 +59,7 @@ if not WeakAuras.IsCorrectVersion() then return end
 
 -- Lua APIs
 local tinsert, tconcat, wipe = table.insert, table.concat, wipe
-local tostring, pairs, type = tostring, pairs, type
+local tonumber, tostring, pairs, type = tonumber, tostring, pairs, type
 local error, setmetatable = error, setmetatable
 
 WeakAurasAceEvents = setmetatable({}, {__tostring=function() return "WeakAuras" end});
@@ -3292,6 +3292,61 @@ do
       WeakAuras.frames["Watch NamePlates Frames"] = watchNameplates
     end
     watchNameplates:SetScript("OnUpdate", nameplatesUpdate)
+  end
+end
+
+-- Queued Action
+do
+  local GetActionInfo, GetMacroSpell, GetSpellLink = GetActionInfo, GetMacroSpell, GetSpellLink
+
+  local queuedActionFrame = nil
+  local buttonIDList = {}
+  local spellIDList = {}
+
+  local function GetActionSpellID(slot)
+    local actionType, id, _, spellId = GetActionInfo(slot)
+    if actionType == "spell" then
+      return spellId
+    elseif actionType == "macro" then
+      local name, rank = GetMacroSpell(id)
+      if name then
+        local spellLink = GetSpellLink(name, rank or "")
+        if spellLink then
+          return tonumber(spellLink:match("spell:(%d+)"))
+        end
+      end
+    end
+  end
+
+  function WeakAuras.WatchQueuedAction()
+    if not(queuedActionFrame) then
+      queuedActionFrame = CreateFrame("frame");
+      WeakAuras.frames["Queued Action Frame"] = queuedActionFrame
+      for slotID = 1, 120 do
+        local spellID = GetActionSpellID(slotID)
+        if spellID then
+          buttonIDList[slotID] = spellID
+          spellIDList[spellID] = slotID
+        end
+      end
+    end
+    queuedActionFrame:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
+    queuedActionFrame:SetScript("OnEvent", function(_, _, slotID)
+      WeakAuras.StartProfileSystem("generictrigger");
+      local spellID = GetActionSpellID(slotID)
+      if spellID then
+        buttonIDList[slotID] = spellID
+        spellIDList[spellID] = slotID
+      elseif buttonIDList[slotID] then
+        spellIDList[buttonIDList[slotID]] = nil
+        buttonIDList[slotID] = nil
+      end
+      WeakAuras.StopProfileSystem("generictrigger");
+    end)
+  end
+
+  function WeakAuras.FindSpellActionButtons(spellID)
+    return spellIDList[spellID]
   end
 end
 

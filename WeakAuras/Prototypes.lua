@@ -2,10 +2,9 @@ if not WeakAuras.IsCorrectVersion() then return end
 
 -- Lua APIs
 local tinsert, tsort = table.insert, table.sort
-local tonumber, tostring = tonumber, tostring
+local tostring = tostring
 local select, pairs, type = select, pairs, type
 local ceil, min = ceil, min
-local match = string.match
 
 -- WoW APIs
 local GetTalentInfo = GetTalentInfo
@@ -14,7 +13,6 @@ local GetSpellInfo, GetItemInfo, GetItemCount, GetItemIcon = GetSpellInfo, GetIt
 local GetShapeshiftFormInfo, GetShapeshiftForm = GetShapeshiftFormInfo, GetShapeshiftForm
 local GetRuneCooldown, UnitCastingInfo, UnitChannelInfo = GetRuneCooldown, UnitCastingInfo, UnitChannelInfo
 local UnitDetailedThreatSituation, UnitThreatSituation = UnitDetailedThreatSituation, UnitThreatSituation
-local GetActionInfo, GetMacroSpell, GetSpellLink = GetActionInfo, GetMacroSpell, GetSpellLink
 
 local WeakAuras = WeakAuras
 local L = WeakAuras.L
@@ -649,26 +647,6 @@ function WeakAuras.IsSpellKnownIncludingPet(spell)
   end
   if (WeakAuras.IsSpellKnown(spell) or WeakAuras.IsSpellKnown(spell, true)) then
     return true;
-  end
-end
-
-function WeakAuras.FindSpellActionButtons(spellID)
-  for i = 120, 1, -1 do
-    local actionType, id, _, globalID = GetActionInfo(i)
-    if actionType == "spell" and globalID and globalID == spellID then
-      return i
-    elseif actionType == "macro" then
-      local name, rank = GetMacroSpell(id)
-      if name then
-        local spellLink = GetSpellLink(name, rank or "")
-        if spellLink then
-          globalID = tonumber(match(spellLink, "spell:(%d+)"))
-          if globalID and globalID == spellID then
-            return i
-          end
-        end
-      end
-    end
   end
 end
 
@@ -5605,6 +5583,9 @@ WeakAuras.event_prototypes = {
       "ACTIONBAR_PAGE_CHANGED"
     },
     name = L["Queued Action"],
+    loadFunc = function()
+      WeakAuras.WatchQueuedAction()
+    end,
     init = function(trigger)
       trigger.spellName = trigger.spellName or 0
       local ret = [=[

@@ -2,9 +2,10 @@ if not WeakAuras.IsCorrectVersion() then return end
 
 -- Lua APIs
 local tinsert, tsort = table.insert, table.sort
-local tostring = tostring
+local tonumber, tostring = tonumber, tostring
 local select, pairs, type = select, pairs, type
 local ceil, min = ceil, min
+local match = string.match
 
 -- WoW APIs
 local GetTalentInfo = GetTalentInfo
@@ -13,6 +14,7 @@ local GetSpellInfo, GetItemInfo, GetItemCount, GetItemIcon = GetSpellInfo, GetIt
 local GetShapeshiftFormInfo, GetShapeshiftForm = GetShapeshiftFormInfo, GetShapeshiftForm
 local GetRuneCooldown, UnitCastingInfo, UnitChannelInfo = GetRuneCooldown, UnitCastingInfo, UnitChannelInfo
 local UnitDetailedThreatSituation, UnitThreatSituation = UnitDetailedThreatSituation, UnitThreatSituation
+local GetActionInfo, GetMacroSpell, GetSpellLink = GetActionInfo, GetMacroSpell, GetSpellLink
 
 local WeakAuras = WeakAuras
 local L = WeakAuras.L
@@ -647,6 +649,26 @@ function WeakAuras.IsSpellKnownIncludingPet(spell)
   end
   if (WeakAuras.IsSpellKnown(spell) or WeakAuras.IsSpellKnown(spell, true)) then
     return true;
+  end
+end
+
+function WeakAuras.FindSpellActionButtons(spellID)
+  for i = 120, 1, -1 do
+    local actionType, id, _, globalID = GetActionInfo(i)
+    if actionType == "spell" and globalID and globalID == spellID then
+      return i
+    elseif actionType == "macro" then
+      local name, rank = GetMacroSpell(id)
+      if name then
+        local spellLink = GetSpellLink(name, rank or "")
+        if spellLink then
+          globalID = tonumber(match(spellLink, "spell:(%d+)"))
+          if globalID and globalID == spellID then
+            return i
+          end
+        end
+      end
+    end
   end
 end
 
@@ -5570,6 +5592,48 @@ WeakAuras.event_prototypes = {
         test = "true"
       },
     },
+    automaticrequired = true
+  },
+
+  ["Queued Action"] = {
+    type = "status",
+    events = {
+      ["events"] = {"ACTIONBAR_UPDATE_STATE"}
+    },
+    internal_events = {
+      "ACTIONBAR_SLOT_CHANGED",
+      "ACTIONBAR_PAGE_CHANGED"
+    },
+    name = L["Queued Action"],
+    init = function(trigger)
+      trigger.spellName = trigger.spellName or 0
+      local ret = [=[
+        local spellid = tonumber(%q)
+        local button
+        if spellid then
+            button = WeakAuras.FindSpellActionButtons(spellid)
+        end
+      ]=]
+      return ret:format(trigger.spellName)
+    end,
+    args = {
+      {
+        name = "spellName",
+        required = true,
+        display = L["Spell"],
+        type = "spell",
+        test = "true",
+        forceExactOption = true,
+      },
+      {
+        hidden = true,
+        test = "button and IsCurrentAction(button)";
+      },
+    },
+    iconFunc = function(trigger)
+      local _, _, icon = GetSpellInfo(trigger.spellName or 0);
+      return icon;
+    end,
     automaticrequired = true
   },
 

@@ -5597,8 +5597,12 @@ do
   local hiddenTooltip;
   function WeakAuras.GetHiddenTooltip()
     if not(hiddenTooltip) then
-      hiddenTooltip = CreateFrame("GameTooltip", "WeakAurasTooltip", nil, "GameTooltipTemplate");
+      hiddenTooltip = CreateFrame("GameTooltip", "WeakAurasTooltip");
       hiddenTooltip:SetOwner(WorldFrame, "ANCHOR_NONE");
+      hiddenTooltip:AddFontStrings(
+        hiddenTooltip:CreateFontString("$parentTextLeft1", nil, "GameTooltipText"),
+        hiddenTooltip:CreateFontString("$parentTextRight1", nil, "GameTooltipText")
+      );
     end
     return hiddenTooltip;
   end
@@ -5608,7 +5612,7 @@ function WeakAuras.GetAuraTooltipInfo(unit, index, filter)
   local tooltip = WeakAuras.GetHiddenTooltip();
   tooltip:ClearLines();
   tooltip:SetUnitAura(unit, index, filter);
-  local tooltipTextLine = select(5, tooltip:GetRegions())
+  local tooltipTextLine = select(3, tooltip:GetRegions())
 
   local tooltipText = tooltipTextLine and tooltipTextLine:GetObjectType() == "FontString" and tooltipTextLine:GetText() or "";
   local debuffType = "none";

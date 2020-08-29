@@ -1913,6 +1913,8 @@ local function GetInstanceTypeAndSize()
     if Type == "raid" then
       if maxPlayers == 10 then
         size = "ten"
+      elseif maxPlayers == 20 then
+        size = "twenty"
       elseif maxPlayers == 25 then
         size = "twentyfive"
       elseif maxPlayers == 40 then

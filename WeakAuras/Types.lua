@@ -1728,6 +1728,7 @@ WeakAuras.instance_types = {
   none = L["No Instance"],
   party = L["5 Man Dungeon"],
   ten = L["10 Man Raid"],
+  twenty = L["20 Man Raid"],
   twentyfive = L["25 Man Raid"],
   fortyman = L["40 Man Raid"],
   pvp = L["Battleground"],

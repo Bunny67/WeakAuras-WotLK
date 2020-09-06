@@ -1085,6 +1085,16 @@ WeakAuras.event_prototypes = {
         conditionType = "select"
       },
       {
+        name = "ignoreSelf",
+        display = L["Ignore Self"],
+        type = "toggle",
+        width = WeakAuras.doubleWidth,
+        enable = function(trigger)
+          return trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party"
+        end,
+        init = "not UnitIsUnit(\"player\", unit)"
+      },
+      {
         name = "ignoreDead",
         display = L["Ignore Dead"],
         type = "toggle",
@@ -1283,6 +1293,16 @@ WeakAuras.event_prototypes = {
         values = "class_types",
         store = true,
         conditionType = "select"
+      },
+      {
+        name = "ignoreSelf",
+        display = L["Ignore Self"],
+        type = "toggle",
+        width = WeakAuras.doubleWidth,
+        enable = function(trigger)
+          return trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party"
+        end,
+        init = "not UnitIsUnit(\"player\", unit)"
       },
       {
         name = "ignoreDead",
@@ -1491,6 +1511,16 @@ WeakAuras.event_prototypes = {
         values = "class_types",
         store = true,
         conditionType = "select"
+      },
+      {
+        name = "ignoreSelf",
+        display = L["Ignore Self"],
+        type = "toggle",
+        width = WeakAuras.doubleWidth,
+        enable = function(trigger)
+          return trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party"
+        end,
+        init = "not UnitIsUnit(\"player\", unit)"
       },
       {
         name = "ignoreDead",
@@ -4932,6 +4962,16 @@ WeakAuras.event_prototypes = {
         enable = function(trigger)
           return not trigger.use_inverse
         end
+      },
+      {
+        name = "ignoreSelf",
+        display = L["Ignore Self"],
+        type = "toggle",
+        width = WeakAuras.doubleWidth,
+        enable = function(trigger)
+          return trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party"
+        end,
+        init = "not UnitIsUnit(\"player\", unit)"
       },
       {
         name = "sourceUnit",

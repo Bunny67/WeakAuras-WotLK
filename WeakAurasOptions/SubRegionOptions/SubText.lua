@@ -401,7 +401,7 @@ local function createOptions(parentData, data, index, subIndex)
     type = "description",
     name = "",
     order = 61,
-    hidden = hiddenFontExtra,
+    hidden = hiddenFunction,
     control = "WeakAurasExpandAnchor",
     arg = {
       expanderName = "subtext_anchor" .. index .. "#" .. subIndex

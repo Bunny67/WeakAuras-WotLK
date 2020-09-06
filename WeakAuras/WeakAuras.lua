@@ -6,7 +6,7 @@ local internalVersion = 33;
 local insert = table.insert
 
 -- WoW APIs
-local GetTalentInfo, IsAddOnLoaded, InCombatLockdown = GetTalentInfo, IsAddOnLoaded, InCombatLockdown
+local IsAddOnLoaded, InCombatLockdown = IsAddOnLoaded, InCombatLockdown
 local LoadAddOn, UnitName, GetRealmName, UnitFactionGroup, IsInRaid
   = LoadAddOn, UnitName, GetRealmName, UnitFactionGroup, IsInRaid
 local UnitClass, UnitExists, UnitGUID, UnitAffectingCombat, GetInstanceInfo, IsInInstance
@@ -18,7 +18,6 @@ local SendChatMessage, GetChannelName, UnitInBattleground, UnitInRaid, UnitInPar
 local CreateFrame, IsShiftKeyDown, GetScreenWidth, GetScreenHeight, GetCursorPosition, UpdateAddOnCPUUsage, GetFrameCPUUsage, debugprofilestop
   = CreateFrame, IsShiftKeyDown, GetScreenWidth, GetScreenHeight, GetCursorPosition, UpdateAddOnCPUUsage, GetFrameCPUUsage, debugprofilestop
 local debugstack, IsSpellKnown = debugstack, IsSpellKnown
-local GetNumTalentTabs, GetNumTalents = GetNumTalentTabs, GetNumTalents
 
 local ADDON_NAME = "WeakAuras"
 local WeakAuras = WeakAuras
@@ -713,25 +712,6 @@ local function LoadCustomActionFunctions(data)
   end
 end
 
-
-
-WeakAuras.talent_types_specific = {}
-function WeakAuras.CreateTalentCache()
-  local _, player_class = UnitClass("player")
-
-  WeakAuras.talent_types_specific[player_class] = WeakAuras.talent_types_specific[player_class] or {};
-
-  for tab = 1, GetNumTalentTabs() do
-    for num_talent = 1, GetNumTalents(tab) do
-      local talentName, talentIcon = GetTalentInfo(tab, num_talent);
-      local talentId = (tab - 1)*MAX_NUM_TALENTS+num_talent
-      if (talentName and talentIcon) then
-        WeakAuras.talent_types_specific[player_class][talentId] = "|T"..talentIcon..":0|t "..talentName
-      end
-    end
-  end
-end
-
 function WeakAuras.CountWagoUpdates()
   local WeakAurasSaved = WeakAurasSaved
   local updatedSlugs, updatedSlugsCount = {}, 0
@@ -991,8 +971,6 @@ WeakAuras.frames["Addon Initialization Handler"] = loadedFrame;
 loadedFrame:RegisterEvent("ADDON_LOADED");
 loadedFrame:RegisterEvent("PLAYER_LOGIN");
 loadedFrame:RegisterEvent("PLAYER_ENTERING_WORLD");
-loadedFrame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED");
-loadedFrame:RegisterEvent("SPELL_UPDATE_USABLE");
 loadedFrame:SetScript("OnEvent", function(self, event, addon)
   if(event == "ADDON_LOADED") then
     if(addon == ADDON_NAME) then
@@ -1058,11 +1036,6 @@ loadedFrame:SetScript("OnEvent", function(self, event, addon)
           timer:ScheduleTimer(function() squelch_actions = false; end, remainingSquelch);      -- No sounds while loading
         end
       end
-    elseif(event == "SPELL_UPDATE_USABLE") then
-      callback = WeakAuras.CreateTalentCache;
-      WeakAuras.frames["Addon Initialization Handler"]:UnregisterEvent("SPELL_UPDATE_USABLE")
-    elseif(event == "ACTIVE_TALENT_GROUP_CHANGED") then
-      callback = WeakAuras.CreateTalentCache;
     elseif(event == "PLAYER_REGEN_ENABLED") then
       callback = function()
         if (queueshowooc) then
@@ -3555,7 +3528,7 @@ local function startStopTimers(id, cloneId, triggernum, state)
           timer:CancelTimer(record.handle);
         end
 
-        record.handle = timer:ScheduleTimerFixed(
+        record.handle = timer:ScheduleTimer(
           function()
             if (state.show ~= false and state.show ~= nil) then
               state.show = false;

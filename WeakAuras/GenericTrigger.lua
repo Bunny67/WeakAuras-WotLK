@@ -1578,13 +1578,13 @@ do
           mainSwingOffset = 0;
           event = "SWING_TIMER_START";
           timer:CancelTimer(mainTimer);
-          mainTimer = timer:ScheduleTimerFixed(swingEnd, mainSpeed, "main");
+          mainTimer = timer:ScheduleTimer(swingEnd, mainSpeed, "main");
         elseif(OffhandHasWeapon() and not lastSwingOff) then
           lastSwingOff = currentTime;
           swingDurationOff = offSpeed;
           event = "SWING_TIMER_START";
           timer:CancelTimer(offTimer);
-          offTimer = timer:ScheduleTimerFixed(swingEnd, offSpeed, "off");
+          offTimer = timer:ScheduleTimer(swingEnd, offSpeed, "off");
         else
           -- A swing occurred while both weapons are supposed to be on cooldown
           -- Simply refresh the timer of the weapon swing which would have ended sooner
@@ -1610,12 +1610,12 @@ do
         local timeLeft = lastSwingMain + swingDurationMain - GetTime();
         if (timeLeft > 0.6 * swingDurationMain) then
           timer:CancelTimer(mainTimer);
-          mainTimer = timer:ScheduleTimerFixed(swingEnd, timeLeft - 0.4 * swingDurationMain, "main");
+          mainTimer = timer:ScheduleTimer(swingEnd, timeLeft - 0.4 * swingDurationMain, "main");
           mainSwingOffset = 0.4 * swingDurationMain
           WeakAuras.ScanEvents("SWING_TIMER_CHANGE");
         elseif (timeLeft > 0.2 * swingDurationMain) then
           timer:CancelTimer(mainTimer);
-          mainTimer = timer:ScheduleTimerFixed(swingEnd, timeLeft - 0.2 * swingDurationMain, "main");
+          mainTimer = timer:ScheduleTimer(swingEnd, timeLeft - 0.2 * swingDurationMain, "main");
           mainSwingOffset = 0.2 * swingDurationMain
           WeakAuras.ScanEvents("SWING_TIMER_CHANGE");
         end
@@ -1636,7 +1636,7 @@ do
           local multiplier = mainSpeedNew / mainSpeed
           local timeLeft = (lastSwingMain + swingDurationMain - GetTime()) * multiplier
           swingDurationMain = mainSpeedNew
-          mainTimer = timer:ScheduleTimerFixed(swingEnd, timeLeft, "main")
+          mainTimer = timer:ScheduleTimer(swingEnd, timeLeft, "main")
           WeakAuras.ScanEvents("SWING_TIMER_CHANGE")
         end
       end
@@ -1646,7 +1646,7 @@ do
           local multiplier = offSpeedNew / mainSpeed
           local timeLeft = (lastSwingOff + swingDurationOff - GetTime()) * multiplier
           swingDurationOff = offSpeedNew
-          offTimer = timer:ScheduleTimerFixed(swingEnd, timeLeft, "off")
+          offTimer = timer:ScheduleTimer(swingEnd, timeLeft, "off")
           WeakAuras.ScanEvents("SWING_TIMER_CHANGE")
         end
       end
@@ -1669,7 +1669,7 @@ do
         else
           event = "SWING_TIMER_START";
         end
-        mainTimer = timer:ScheduleTimerFixed(swingEnd, mainSpeed, "main");
+        mainTimer = timer:ScheduleTimer(swingEnd, mainSpeed, "main");
         WeakAuras.ScanEvents(event);
       elseif WeakAuras.reset_ranged_swing_spells[spell] then
         local event;
@@ -1683,7 +1683,7 @@ do
         end
         lastSwingRange = currentTime;
         swingDurationRange = speed;
-        rangeTimer = timer:ScheduleTimerFixed(swingEnd, speed, "ranged");
+        rangeTimer = timer:ScheduleTimer(swingEnd, speed, "ranged");
         WeakAuras.ScanEvents(event);
       end
     elseif event == "UNIT_SPELLCAST_START" then
@@ -1783,7 +1783,7 @@ do
       local endCheck = startTime + duration + 0.1;
       if(gcdEndCheck ~= endCheck) then
         gcdEndCheck = endCheck;
-        timer:ScheduleTimerFixed(CheckGCD, duration + 0.1);
+        timer:ScheduleTimer(CheckGCD, duration + 0.1);
       end
     else
       if(gcdStart) then
@@ -1817,7 +1817,7 @@ do
 
         local duration = expirationTime - GetTime()
         if duration > 0 then
-          self.handles[id] = timer:ScheduleTimerFixed(self.Recheck, duration, self, id)
+          self.handles[id] = timer:ScheduleTimer(self.Recheck, duration, self, id)
           self.expirationTime[id] = expirationTime
         end
       end
@@ -2074,7 +2074,7 @@ do
           -- New cooldown
           runeCdDurs[id] = duration;
           runeCdExps[id] = endTime;
-          runeCdHandles[id] = timer:ScheduleTimerFixed(RuneCooldownFinished, endTime - time, id);
+          runeCdHandles[id] = timer:ScheduleTimer(RuneCooldownFinished, endTime - time, id);
           WeakAuras.ScanEvents("RUNE_COOLDOWN_STARTED", id);
         elseif(runeCdExps[id] ~= endTime) then
           -- Cooldown is now different
@@ -2083,7 +2083,7 @@ do
           end
           runeCdDurs[id] = duration;
           runeCdExps[id] = endTime;
-          runeCdHandles[id] = timer:ScheduleTimerFixed(RuneCooldownFinished, endTime - time, id);
+          runeCdHandles[id] = timer:ScheduleTimer(RuneCooldownFinished, endTime - time, id);
           WeakAuras.ScanEvents("RUNE_COOLDOWN_CHANGED", id);
         end
       elseif(startTime > 0 and duration > 0) then
@@ -2216,7 +2216,7 @@ do
           -- New cooldown
           itemCdDurs[id] = duration;
           itemCdExps[id] = endTime;
-          itemCdHandles[id] = timer:ScheduleTimerFixed(ItemCooldownFinished, endTime - time, id);
+          itemCdHandles[id] = timer:ScheduleTimer(ItemCooldownFinished, endTime - time, id);
           WeakAuras.ScanEvents("ITEM_COOLDOWN_STARTED", id);
           itemCdEnabledChanged = false;
         elseif(itemCdExps[id] ~= endTime) then
@@ -2226,7 +2226,7 @@ do
           end
           itemCdDurs[id] = duration;
           itemCdExps[id] = endTime;
-          itemCdHandles[id] = timer:ScheduleTimerFixed(ItemCooldownFinished, endTime - time, id);
+          itemCdHandles[id] = timer:ScheduleTimer(ItemCooldownFinished, endTime - time, id);
           WeakAuras.ScanEvents("ITEM_COOLDOWN_CHANGED", id);
           itemCdEnabledChanged = false;
         end
@@ -2267,7 +2267,7 @@ do
           -- New cooldown
           itemSlotsCdDurs[id] = duration;
           itemSlotsCdExps[id] = endTime;
-          itemSlotsCdHandles[id] = timer:ScheduleTimerFixed(ItemSlotCooldownFinished, endTime - time, id);
+          itemSlotsCdHandles[id] = timer:ScheduleTimer(ItemSlotCooldownFinished, endTime - time, id);
           WeakAuras.ScanEvents("ITEM_SLOT_COOLDOWN_STARTED", id);
         elseif(itemSlotsCdExps[id] ~= endTime) then
           -- Cooldown is now different
@@ -2276,7 +2276,7 @@ do
           end
           itemSlotsCdDurs[id] = duration;
           itemSlotsCdExps[id] = endTime;
-          itemSlotsCdHandles[id] = timer:ScheduleTimerFixed(ItemSlotCooldownFinished, endTime - time, id);
+          itemSlotsCdHandles[id] = timer:ScheduleTimer(ItemSlotCooldownFinished, endTime - time, id);
           WeakAuras.ScanEvents("ITEM_SLOT_COOLDOWN_CHANGED", id);
         end
       elseif(duration > 0) then
@@ -2336,7 +2336,7 @@ do
         runeCdDurs[id] = duration;
         runeCdExps[id] = endTime;
         if not(runeCdHandles[id]) then
-          runeCdHandles[id] = timer:ScheduleTimerFixed(RuneCooldownFinished, endTime - time, id);
+          runeCdHandles[id] = timer:ScheduleTimer(RuneCooldownFinished, endTime - time, id);
         end
       end
     end
@@ -2397,7 +2397,7 @@ do
         itemCdDurs[id] = duration;
         itemCdExps[id] = endTime;
         if not(itemCdHandles[id]) then
-          itemCdHandles[id] = timer:ScheduleTimerFixed(ItemCooldownFinished, endTime - time, id);
+          itemCdHandles[id] = timer:ScheduleTimer(ItemCooldownFinished, endTime - time, id);
         end
       end
     end
@@ -2420,7 +2420,7 @@ do
         itemSlotsCdDurs[id] = duration;
         itemSlotsCdExps[id] = endTime;
         if not(itemSlotsCdHandles[id]) then
-          itemSlotsCdHandles[id] = timer:ScheduleTimerFixed(ItemSlotCooldownFinished, endTime - time, id);
+          itemSlotsCdHandles[id] = timer:ScheduleTimer(ItemSlotCooldownFinished, endTime - time, id);
         end
       end
     end
@@ -2539,7 +2539,7 @@ do
     end
 
     if nextExpire then
-      recheckTimer = timer:ScheduleTimerFixed(dbmRecheckTimers, nextExpire - now)
+      recheckTimer = timer:ScheduleTimer(dbmRecheckTimers, nextExpire - now)
     end
   end
 
@@ -2582,11 +2582,11 @@ do
 
       WeakAuras.ScanEvents("DBM_TimerStart", id)
       if nextExpire == nil then
-        recheckTimer = timer:ScheduleTimerFixed(dbmRecheckTimers, expirationTime - now)
+        recheckTimer = timer:ScheduleTimer(dbmRecheckTimers, expirationTime - now)
         nextExpire = expirationTime
       elseif expirationTime < nextExpire then
         timer:CancelTimer(recheckTimer)
-        recheckTimer = timer:ScheduleTimerFixed(dbmRecheckTimers, expirationTime - now)
+        recheckTimer = timer:ScheduleTimer(dbmRecheckTimers, expirationTime - now)
         nextExpire = expirationTime
       end
     elseif event == "DBM_TimerStop" then
@@ -2607,7 +2607,7 @@ do
         bar.expirationTime = expirationTime
         if expirationTime < nextExpire then
           timer:CancelTimer(recheckTimer)
-          recheckTimer = timer:ScheduleTimerFixed(dbmRecheckTimers, duration - elapsed)
+          recheckTimer = timer:ScheduleTimer(dbmRecheckTimers, duration - elapsed)
           nextExpire = expirationTime
         end
       end
@@ -2721,7 +2721,7 @@ do
   end
   function WeakAuras.ScheduleDbmCheck(fireTime)
     if not scheduled_scans[fireTime] then
-      scheduled_scans[fireTime] = timer:ScheduleTimerFixed(doDbmScan, fireTime - GetTime() + 0.1, fireTime)
+      scheduled_scans[fireTime] = timer:ScheduleTimer(doDbmScan, fireTime - GetTime() + 0.1, fireTime)
       WeakAuras.debug("Scheduled dbm scan at "..fireTime)
     end
   end
@@ -2749,7 +2749,7 @@ do
     end
 
     if nextExpire then
-      recheckTimer = timer:ScheduleTimerFixed(recheckTimers, nextExpire - now)
+      recheckTimer = timer:ScheduleTimer(recheckTimers, nextExpire - now)
     end
   end
 
@@ -2781,11 +2781,11 @@ do
 
       WeakAuras.ScanEvents("BigWigs_StartBar", text)
       if nextExpire == nil then
-        recheckTimer = timer:ScheduleTimerFixed(recheckTimers, expirationTime - now)
+        recheckTimer = timer:ScheduleTimer(recheckTimers, expirationTime - now)
         nextExpire = expirationTime
       elseif expirationTime < nextExpire then
         timer:CancelTimer(recheckTimer)
-        recheckTimer = timer:ScheduleTimerFixed(recheckTimers, expirationTime - now)
+        recheckTimer = timer:ScheduleTimer(recheckTimers, expirationTime - now)
         nextExpire = expirationTime
       end
     elseif event == "BigWigs_StopBar" then
@@ -2920,7 +2920,7 @@ do
 
   function WeakAuras.ScheduleBigWigsCheck(fireTime)
     if not scheduled_scans[fireTime] then
-      scheduled_scans[fireTime] = timer:ScheduleTimerFixed(doBigWigsScan, fireTime - GetTime() + 0.1, fireTime)
+      scheduled_scans[fireTime] = timer:ScheduleTimer(doBigWigsScan, fireTime - GetTime() + 0.1, fireTime)
       WeakAuras.debug("Scheduled BigWigs scan at "..fireTime)
     end
   end
@@ -3268,7 +3268,7 @@ do
     scheduled_scans[event] = scheduled_scans[event] or {}
     if not(scheduled_scans[event][fireTime]) then
       WeakAuras.debug("Scheduled scan at " .. fireTime .. " for event " .. event);
-      scheduled_scans[event][fireTime] = timer:ScheduleTimerFixed(doScan, fireTime - GetTime() + 0.1, fireTime, event);
+      scheduled_scans[event][fireTime] = timer:ScheduleTimer(doScan, fireTime - GetTime() + 0.1, fireTime, event);
     end
   end
 end
@@ -3285,7 +3285,7 @@ do
     scheduled_scans[unit] = scheduled_scans[unit] or {}
     if not(scheduled_scans[unit][fireTime]) then
       WeakAuras.debug("Scheduled cast scan at "..fireTime);
-      scheduled_scans[unit][fireTime] = timer:ScheduleTimerFixed(doCastScan, fireTime - GetTime() + 0.1, fireTime, unit);
+      scheduled_scans[unit][fireTime] = timer:ScheduleTimer(doCastScan, fireTime - GetTime() + 0.1, fireTime, unit);
     end
   end
 end

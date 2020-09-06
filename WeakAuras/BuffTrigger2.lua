@@ -1128,7 +1128,7 @@ local function UpdateTriggerState(time, id, triggernum)
       if triggerInfo.nextScheduledCheckHandle then
         timer:CancelTimer(triggerInfo.nextScheduledCheckHandle)
       end
-      triggerInfo.nextScheduledCheckHandle = timer:ScheduleTimerFixed(recheckTriggerInfo, nextCheck - time, triggerInfo)
+      triggerInfo.nextScheduledCheckHandle = timer:ScheduleTimer(recheckTriggerInfo, nextCheck - time, triggerInfo)
       triggerInfo.nextScheduledCheck = nextCheck
     end
   elseif triggerInfo.nextScheduledCheckHandle then
@@ -2707,7 +2707,7 @@ local function CleanUpMulti(guid)
   if nextCheck then
     local timeUntilNext = nextCheck - GetTime()
     if timeUntilNext > 0 then
-     cleanupTimerMulti[guid].handle = timer:ScheduleTimerFixed(CleanUpMulti, timeUntilNext, guid)
+     cleanupTimerMulti[guid].handle = timer:ScheduleTimer(CleanUpMulti, timeUntilNext, guid)
      cleanupTimerMulti[guid].nextTime = nextCheck
    end
   end
@@ -2719,7 +2719,7 @@ local function ScheduleMultiCleanUp(guid, time)
     if cleanupTimerMulti[guid].handle then
       timer:CancelTimer(cleanupTimerMulti[guid].handle)
     end
-    cleanupTimerMulti[guid].handle = timer:ScheduleTimerFixed(CleanUpMulti, time - GetTime(), guid)
+    cleanupTimerMulti[guid].handle = timer:ScheduleTimer(CleanUpMulti, time - GetTime(), guid)
     cleanupTimerMulti[guid].nextTime = time
   end
 end

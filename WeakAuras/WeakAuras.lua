@@ -28,24 +28,7 @@ local prettyPrint = WeakAuras.prettyPrint
 WeakAurasTimers = setmetatable({}, {__tostring=function() return "WeakAuras" end})
 LibStub("AceTimer-3.0"):Embed(WeakAurasTimers)
 
-WeakAuras.maxTimerDuration = 604800; -- A week, in seconds
-WeakAuras.maxUpTime = 4294967; -- 2^32 / 1000
-
 Private.callbacks = LibStub("CallbackHandler-1.0"):New(Private)
-
-function WeakAuras:Mixin(object, ...)
-  for i = 1, select("#", ...) do
-    local mixin = select(i, ...);
-    for k, v in pairs(mixin) do
-      object[k] = v;
-    end
-  end
-  return object;
-end
-
-function WeakAurasTimers:ScheduleTimerFixed(func, delay, ...)
-  return self:ScheduleTimer(func, delay, ...);
-end
 
 local LDB = LibStub:GetLibrary("LibDataBroker-1.1")
 local LDBIcon = LibStub("LibDBIcon-1.0")

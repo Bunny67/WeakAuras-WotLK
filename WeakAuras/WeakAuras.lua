@@ -1930,7 +1930,7 @@ function WeakAuras.RepairDatabase(loginAfter)
     -- set db version to current code version
     db.dbVersion = WeakAuras.InternalVersion()
     -- reinstall snapshots from history
-    local newDB = WeakAuras:Mixin({}, db.displays)
+    local newDB = WeakAuras.Mixin({}, db.displays)
     coroutine.yield()
     for id, data in pairs(db.displays) do
       local snapshot = WeakAuras.GetMigrationSnapshot(data.uid)

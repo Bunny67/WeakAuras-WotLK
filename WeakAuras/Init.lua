@@ -75,3 +75,13 @@ function WeakAuras.CountWagoUpdates()
   -- XXX this is to work around the Companion app trying to use our stuff!
   return 0
 end
+
+function WeakAuras.Mixin(object, ...)
+  for i = 1, select("#", ...) do
+    local mixin = select(i, ...)
+    for k, v in pairs(mixin) do
+      object[k] = v
+    end
+  end
+  return object
+end

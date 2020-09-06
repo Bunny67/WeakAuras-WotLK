@@ -1113,12 +1113,13 @@ local function scamCheck(codes, data)
   end
 end
 
-local ignoredForDiffChecking = CreateFromMixins(WeakAuras.internal_fields, WeakAuras.non_transmissable_fields)
+local internalFields = WeakAuras.internal_fields
+local nonTransmissableFields = WeakAuras.non_transmissable_fields
 local deleted = {} -- magic value
 local function recurseDiff(ours, theirs)
   local diff, seen, same = {}, {}, true
   for key, ourVal in pairs(ours) do
-    if not ignoredForDiffChecking[key] then
+    if not (internalFields[key] or nonTransmissableFields[key]) then
       seen[key] = true
       local theirVal = theirs[key]
       if type(ourVal) == "table" and type(theirVal) == "table" then
@@ -1139,7 +1140,7 @@ local function recurseDiff(ours, theirs)
     end
   end
   for key, theirVal in pairs(theirs) do
-    if not seen[key] and not ignoredForDiffChecking[key] then
+    if not seen[key] and not (internalFields[key] or nonTransmissableFields[key]) then
       diff[key] = theirVal
       same = false
     end

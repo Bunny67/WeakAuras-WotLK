@@ -42,7 +42,6 @@ ignore = {
 globals = {
 	-- compat
 	"tInvert",
-	"CreateFromMixins",
 	"Round",
 	"tIndexOf",
 	"IsInGroup",

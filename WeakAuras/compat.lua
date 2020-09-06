@@ -1,6 +1,5 @@
 local ipairs = ipairs
 local pairs = pairs
-local select = select
 local ceil, floor = math.ceil, math.floor
 local format = string.format
 
@@ -25,21 +24,6 @@ function tInvert(tbl)
 		inverted[v] = k;
 	end
 	return inverted;
-end
-
-local function Mixin(object, ...)
-	for i = 1, select("#", ...) do
-		local mixin = select(i, ...);
-		for k, v in pairs(mixin) do
-			object[k] = v;
-		end
-	end
-
-	return object;
-end
-
-function CreateFromMixins(...)
-	return Mixin({}, ...)
 end
 
 function Round(value)

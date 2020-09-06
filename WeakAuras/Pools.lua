@@ -1,3 +1,27 @@
+local assert = assert
+local ipairs = ipairs
+local next = next
+local pairs = pairs
+local select = select
+
+local function Mixin(object, ...)
+	for i = 1, select("#", ...) do
+		local mixin = select(i, ...);
+		for k, v in pairs(mixin) do
+			object[k] = v;
+		end
+	end
+
+	return object;
+end
+
+local function CreateFromMixins(...)
+	return Mixin({}, ...)
+end
+
+local function nop()
+end
+
 ObjectPoolMixin = {};
 
 function ObjectPoolMixin:OnLoad(creationFunc, resetterFunc)

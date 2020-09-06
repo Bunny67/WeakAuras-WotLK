@@ -282,7 +282,7 @@ local function createOptions(parentData, data, index, subIndex)
     anchors = {}
     for index, childId in ipairs(parentData.controlledChildren) do
       local childData = WeakAuras.GetData(childId)
-      WeakAuras:Mixin(anchors, WeakAuras.GetAnchorsForData(childData, "point"))
+      WeakAuras.Mixin(anchors, WeakAuras.GetAnchorsForData(childData, "point"))
     end
   else
      anchors = WeakAuras.GetAnchorsForData(parentData, "point")

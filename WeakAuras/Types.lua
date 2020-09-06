@@ -263,7 +263,13 @@ WeakAuras.format_types = {
       if color == "class" then
         colorFunc = function(unit, text)
           if unit and UnitPlayerControlled(unit) then
-            return GetClassColoredTextForUnit(unit, text)
+            local _, class = UnitClass(unit)
+            local color = class and RAID_CLASS_COLORS[class]
+            if color and color.colorStr then
+              return string.format("|c%s%s|r", color.colorStr, text)
+            else
+              return text
+            end
           end
           return text
         end
@@ -384,8 +390,8 @@ WeakAuras.format_types = {
       if color == "class" then
         colorFunc = function(class, text)
           local color = class and RAID_CLASS_COLORS[class]
-          if color then
-            return string.format("|c%s%s|r", string.format("ff%.2x%.2x%.2x", color.r * 255, color.g * 255, color.b * 255), text)
+          if color and color.colorStr then
+            return string.format("|c%s%s|r", color.colorStr, text)
           else
             return text
           end

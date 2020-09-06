@@ -48,7 +48,6 @@ globals = {
 	"IsInRaid",
 	"GetNumSubgroupMembers",
 	"GetNumGroupMembers",
-	"GetClassColoredTextForUnit",
 
 	"nop",
 	"ActorPoolMixin",

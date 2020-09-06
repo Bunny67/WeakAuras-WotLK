@@ -1,22 +1,10 @@
 local ipairs = ipairs
 local pairs = pairs
 local ceil, floor = math.ceil, math.floor
-local format = string.format
 
 local GetInstanceInfo = GetInstanceInfo
 local GetNumPartyMembers = GetNumPartyMembers
 local GetNumRaidMembers = GetNumRaidMembers
-local UnitClass = UnitClass
-
-function GetClassColoredTextForUnit(unit, text)
-	local _, classFilename = UnitClass(unit)
-	local color = RAID_CLASS_COLORS[classFilename]
-	if color then
-		return format("|c%s%s|r", format("ff%.2x%.2x%.2x", color.r * 255, color.g * 255, color.b * 255), text)
-	else
-		return text
-	end
-end
 
 function tInvert(tbl)
 	local inverted = {};

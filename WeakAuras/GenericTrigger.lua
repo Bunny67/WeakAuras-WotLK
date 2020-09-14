@@ -1578,7 +1578,7 @@ do
     Private.StopProfileSystem("generictrigger swing");
   end
 
-  local function swingTimerCheck(event, unit, guid, spell)
+  local function swingTimerCheck(event, unit, spell)
     if unit ~= "player" then return end
     Private.StartProfileSystem("generictrigger swing");
     if event == "UNIT_ATTACK_SPEED" then

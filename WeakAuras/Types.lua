@@ -2506,15 +2506,19 @@ Private.weapon_enchant_types = {
   showOnMissing = L["Enchant Missing"],
   showAlways = L["Always"],
 }
-
-Private.reset_swing_spells = {}
+Private.reset_swing_spells = {
+  [GetSpellInfo(1464)] = true, -- Slam
+  [GetSpellInfo(78)] = true, -- Heroic Strike
+  [GetSpellInfo(845)] = true, -- Cleave
+  [GetSpellInfo(2973)] = true, -- Raptor Strike
+  [GetSpellInfo(6807)] = true, -- Maul
+  [GetSpellInfo(20549)] = true, -- War Stomp
+  [GetSpellInfo(56815)] = true, -- Rune Strike
+}
 Private.reset_ranged_swing_spells = {
-  [2480] = true, -- Shoot Bow
-  [7919] = true, -- Shoot Crossbow
-  [7918] = true, -- Shoot Gun
-  [2764] = true, -- Throw
-  [5019] = true, -- Shoot Wands
-  [75] = true, -- Auto Shot
+  [GetSpellInfo(2764)] = true, -- Throw
+  [GetSpellInfo(5019)] = true, -- Shoot Wands
+  [GetSpellInfo(75)] = true, -- Auto Shot
 }
 
 WeakAuras.StopMotion = {}
@@ -2540,20 +2544,6 @@ WeakAuras.StopMotion.animation_types = {
   once = L["Forward"],
   progress = L["Progress"]
 }
-
-if WeakAuras.IsClassic() then
-  local reset_swing_spell_list = {
-    1464, 8820, 11604, 11605, -- Slam
-    78, 284, 285, 1608, 11564, 11565, 11566, 11567, 25286, -- Heroic Strike
-    845, 7369, 11608, 11609, 20569, -- Cleave
-    2973, 14260, 14261, 14262, 14263, 14264, 14265, 14266, -- Raptor Strike
-    6807, 6808, 6809, 8972, 9745, 9880, 9881, -- Maul
-    20549, -- War Stomp
-  }
-  for i, spellid in ipairs(reset_swing_spell_list) do
-    Private.reset_swing_spells[spellid] = true
-  end
-end
 
 Private.talent_types_specific = {}
 Private.talents_ids = {

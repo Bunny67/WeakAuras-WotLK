@@ -1705,9 +1705,6 @@ do
   local gcdSpellIcon;
   local gcdEndCheck;
 
-  local shootStart
-  local shootDuration
-
   local function GetRuneDuration()
     local runeDuration = -100;
     for id, _ in pairs(runes) do
@@ -1720,13 +1717,7 @@ do
 
   local function CheckGCD()
     local event;
-    local startTime, duration
-    if WeakAuras.IsClassic() then
-      startTime, duration = GetSpellCooldown(29515);
-      shootStart, shootDuration = GetSpellCooldown(5019)
-    else
-      startTime, duration = GetSpellCooldown(61304);
-    end
+    local startTime, duration = GetSpellCooldown(61304);
     if(duration and duration > 0) then
       if not(gcdStart) then
         event = "GCD_START";
@@ -1803,9 +1794,7 @@ do
     end
 
     if duration > 0 then
-      if (startTime == gcdStart and duration == gcdDuration)
-          or (WeakAuras.IsClassic() and duration == shootDuration and startTime == shootStart)
-      then
+      if startTime == gcdStart and duration == gcdDuration then
         -- GCD cooldown, this could mean that the spell reset!
         if self.expirationTime[id] and self.expirationTime[id] > endTime and self.expirationTime[id] ~= 0 then
           self.duration[id] = 0

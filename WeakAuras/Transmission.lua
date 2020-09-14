@@ -1139,7 +1139,6 @@ end
 
 local internalFields = Private.internal_fields
 local nonTransmissableFields = Private.non_transmissable_fields
-local deleted = {} -- magic value
 local function recurseDiff(ours, theirs)
   local diff, seen, same = {}, {}, true
   for key, ourVal in pairs(ours) do
@@ -1578,7 +1577,6 @@ local function ShowDisplayTooltip(data, children, matchInfo, icon, icons, import
           if excessChildren <= 0 then
             tinsert(tooltip, {2, " ", child.id, 1, 1, 1, 1, 1, 1})
           end
-          tocversion = tocversion or child.tocversion
         end
         if excessChildren > 0 then
           tinsert(tooltip, {2, " ", "[...]", 1, 1, 1, 1, 1, 1})

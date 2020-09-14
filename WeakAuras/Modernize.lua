@@ -45,7 +45,7 @@ function Private.Modernize(data)
     end
   end
 
-  -- Version 5 was introduced July 2018 in BFA
+  -- Version 5 was introduced July 2018 in BfA
   if data.internalVersion < 5 then
     -- this is to fix hybrid sorting
     if data.sortHybridTable then
@@ -62,7 +62,7 @@ function Private.Modernize(data)
     end
   end
 
-  -- Version 6 was introduced July 30, 2018 in BFA
+  -- Version 6 was introduced July 30 2018 in BfA
   if data.internalVersion < 6 then
     if data.triggers then
       for triggernum, triggerData in ipairs(data.triggers) do
@@ -85,7 +85,7 @@ function Private.Modernize(data)
     end
   end
 
-  -- Version 7 was introduced September 1, 2018 in BFA
+  -- Version 7 was introduced September 1 2018 in BfA
   -- Triggers were cleaned up into a 1-indexed array
 
   if data.internalVersion < 7 then
@@ -102,8 +102,8 @@ function Private.Modernize(data)
     data.numTriggers = nil
     data.triggers.customTriggerLogic = data.customTriggerLogic
     data.customTriggerLogic = nil
-    local activeTriggerMode = data.activeTriggerMode or WeakAuras.trigger_modes.first_active
-    if activeTriggerMode ~= WeakAuras.trigger_modes.first_active then
+    local activeTriggerMode = data.activeTriggerMode or Private.trigger_modes.first_active
+    if activeTriggerMode ~= Private.trigger_modes.first_active then
       activeTriggerMode = activeTriggerMode + 1
     end
     data.triggers.activeTriggerMode = activeTriggerMode
@@ -175,7 +175,7 @@ function Private.Modernize(data)
     end
   end
 
-  -- Version 13 was introduced March 2019 in BFA
+  -- Version 13 was introduced March 2019 in BfA
   if data.internalVersion < 13 then
     if data.regionType == "dynamicgroup" then
       local selfPoints = {
@@ -245,7 +245,7 @@ function Private.Modernize(data)
     end
   end
 
-  -- Version 14 was introduced March 2019 in BFA
+  -- Version 14 was introduced March 2019 in BfA
   if data.internalVersion < 14 then
     if data.triggers then
       for triggerId, triggerData in pairs(data.triggers) do
@@ -262,7 +262,7 @@ function Private.Modernize(data)
     end
   end
 
-  -- Version 15 was introduced April 2019 in BFA
+  -- Version 15 was introduced April 2019 in BfA
   if data.internalVersion < 15 then
     if data.triggers then
       for triggerId, triggerData in ipairs(data.triggers) do
@@ -273,7 +273,7 @@ function Private.Modernize(data)
     end
   end
 
-  -- Version 16 was introduced May 2019 in BFA
+  -- Version 16 was introduced May 2019 in BfA
   if data.internalVersion < 16 then
     -- second conversion: migrate name/realm conditions to tristate
     if data.load.use_name == false then
@@ -286,7 +286,7 @@ function Private.Modernize(data)
 
   -- Version 18 was a migration for stance/form trigger, but deleted later because of migration issue
 
-  -- Version 20 was introduced July 2019 in BFA
+  -- Version 20 was introduced July 2019 in BfA
   if data.internalVersion < 20 then
     if data.regionType == "icon" then
       local convertPoint = function(containment, point)
@@ -377,7 +377,7 @@ function Private.Modernize(data)
     end
   end
 
-  -- Version 20 was introduced May 2019 in BFA
+  -- Version 20 was introduced May 2019 in BfA
   if data.internalVersion < 20 then
     if data.regionType == "aurabar" then
       local orientationToPostion = {
@@ -721,7 +721,7 @@ function Private.Modernize(data)
     local totalPrecision = data.totalPrecision
     if data.regionType == "text" then
       local seenSymbols = {}
-      WeakAuras.ParseTextStr(data.displayText, function(symbol)
+      Private.ParseTextStr(data.displayText, function(symbol)
         if not seenSymbols[symbol] then
           local triggerNum, sym = string.match(symbol, "(.+)%.(.+)")
           sym = sym or symbol
@@ -739,7 +739,7 @@ function Private.Modernize(data)
       for index, subRegionData in ipairs(data.subRegions) do
         if subRegionData.type == "subtext" then
           local seenSymbols = {}
-          WeakAuras.ParseTextStr(subRegionData.text_text, function(symbol)
+          Private.ParseTextStr(subRegionData.text_text, function(symbol)
             if not seenSymbols[symbol] then
               local triggerNum, sym = string.match(symbol, "(.+)%.(.+)")
               sym = sym or symbol
@@ -759,7 +759,7 @@ function Private.Modernize(data)
       for _, when in ipairs{ "start", "finish" } do
         if data.actions[when] then
           local seenSymbols = {}
-          WeakAuras.ParseTextStr(data.actions[when].message, function(symbol)
+          Private.ParseTextStr(data.actions[when].message, function(symbol)
             if not seenSymbols[symbol] then
               local triggerNum, sym = string.match(symbol, "(.+)%.(.+)")
               sym = sym or symbol
@@ -780,7 +780,7 @@ function Private.Modernize(data)
         for changeIndex, change in ipairs(condition.changes) do
           if change.property == "chat" and change.value then
             local seenSymbols = {}
-            WeakAuras.ParseTextStr(change.value.message, function(symbol)
+            Private.ParseTextStr(change.value.message, function(symbol)
               if not seenSymbols[symbol] then
                 local triggerNum, sym = string.match(symbol, "(.+)%.(.+)")
                 sym = sym or symbol
@@ -804,7 +804,7 @@ function Private.Modernize(data)
     data.totalPrecision = nil
   end
 
-  -- Introduced in June 2020 in Bfa
+  -- Introduced in June 2020 in BfA
   if data.internalVersion < 31 then
     local allowedNames
     local ignoredNames
@@ -836,7 +836,7 @@ function Private.Modernize(data)
     data.load.realm = nil
   end
 
--- Introduced in June 2020 in Bfa
+  -- Introduced in June 2020 in BfA
   if data.internalVersion < 32 then
     local replacements = {}
     local function repairCheck(replacements, check)
@@ -888,7 +888,7 @@ function Private.Modernize(data)
     end
   end
 
-  -- Introduced in July 2020 in Bfa
+  -- Introduced in July 2020 in BfA
   if data.internalVersion < 33 then
     data.load.use_ignoreNameRealm = data.load.use_namerealmblack
     data.load.ignoreNameRealm = data.load.namerealmblack
@@ -912,7 +912,7 @@ function Private.Modernize(data)
 
   end
 
-  -- Introduced in July 2020 in Shadolands
+  -- Introduced in July 2020 in Shadowlands
   if data.internalVersion < 34 then
     if data.regionType == 'dynamicgroup'
     and (data.grow == "CIRCLE" or data.grow == "COUNTERCIRCLE") then

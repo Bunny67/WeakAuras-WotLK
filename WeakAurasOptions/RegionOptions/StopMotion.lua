@@ -68,7 +68,7 @@ local function createOptions(id, data)
             name = L["Choose"],
             order = 12,
             func = function()
-                WeakAuras.OpenTexturePicker(data, data, "foregroundTexture", texture_types, setTextureFunc);
+                OptionsPrivate.OpenTexturePicker(data, data, "foregroundTexture", texture_types, setTextureFunc);
             end
         },
         sameTexture = {
@@ -203,7 +203,7 @@ local function createOptions(id, data)
             width = WeakAuras.normalWidth,
             name = L["Blend Mode"],
             order = 20,
-            values = WeakAuras.blend_types
+            values = OptionsPrivate.Private.blend_types
         },
         animationType = {
             type = "select",
@@ -283,10 +283,10 @@ local function createOptions(id, data)
         },
     };
 
-    if WeakAuras.commonOptions then
+    if OptionsPrivate.commonOptions then
       return {
         stopmotion = options,
-        position = WeakAuras.commonOptions.PositionOptions(id, data, 2),
+        position = OptionsPrivate.commonOptions.PositionOptions(id, data, 2),
       };
     else
       return {

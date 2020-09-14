@@ -3,14 +3,6 @@ local AddonName, OptionsPrivate = ...
 
 local L = WeakAuras.L;
 
-local operator_types = WeakAuras.operator_types;
-local debuff_types = WeakAuras.debuff_types;
-local tooltip_count = WeakAuras.tooltip_count;
-local unit_types = WeakAuras.unit_types;
-local actual_unit_types_with_specific = WeakAuras.actual_unit_types_with_specific;
-local group_aura_name_info_types = WeakAuras.group_aura_name_info_types;
-local group_aura_stack_info_types = WeakAuras.group_aura_stack_info_types;
-
 local function getAuraMatchesLabel(name)
   local ids = WeakAuras.spellCache.GetSpellsMatching(name)
   if(ids) then
@@ -58,6 +50,22 @@ end
 
 local noop = function() end
 
+local function CanShowNameInfo(data)
+  if(data.regionType == "aurabar" or data.regionType == "icon" or data.regionType == "text") then
+    return true;
+  else
+    return false;
+  end
+end
+
+local function CanShowStackInfo(data)
+  if(data.regionType == "aurabar" or data.regionType == "icon" or data.regionType == "text") then
+    return true;
+  else
+    return false;
+  end
+end
+
 local function GetBuffTriggerOptions(data, triggernum)
   local trigger = data.triggers[triggernum].trigger
   trigger.names = trigger.names or {}
@@ -82,10 +90,10 @@ local function GetBuffTriggerOptions(data, triggernum)
       width = WeakAuras.doubleWidth - 0.8,
       order = 8.2,
       name = function()
-        if (not WeakAuras.CanConvertBuffTrigger2) then
+        if (not OptionsPrivate.Private.CanConvertBuffTrigger2) then
           return "";
         end
-        local _, err = WeakAuras.CanConvertBuffTrigger2(trigger);
+        local _, err = OptionsPrivate.Private.CanConvertBuffTrigger2(trigger);
         return err or "";
       end,
     },
@@ -107,20 +115,20 @@ local function GetBuffTriggerOptions(data, triggernum)
       name = L["Convert to New Aura Trigger"],
       order = 8.5,
       disabled = function()
-        if (not WeakAuras.CanConvertBuffTrigger2) then
+        if (not OptionsPrivate.Private.CanConvertBuffTrigger2) then
           return true;
         end
-        if (not WeakAuras.CanConvertBuffTrigger2(trigger)) then
+        if (not OptionsPrivate.Private.CanConvertBuffTrigger2(trigger)) then
           return true;
         end
         return false;
       end,
       desc = function()
-        local _, err = WeakAuras.CanConvertBuffTrigger2(trigger);
+        local _, err = OptionsPrivate.Private.CanConvertBuffTrigger2(trigger);
         return err or ""
       end,
       func = function()
-        WeakAuras.ConvertBuffTrigger2(trigger);
+        OptionsPrivate.Private.ConvertBuffTrigger2(trigger);
         WeakAuras.Add(data);
         WeakAuras.UpdateDisplayButton(data)
         WeakAuras.ClearAndUpdateOptions(data.id);
@@ -173,7 +181,7 @@ local function GetBuffTriggerOptions(data, triggernum)
       order = 11,
       disabled = function() return not trigger.use_name end,
       hidden = function() return not (trigger.type == "aura" and trigger.fullscan); end,
-      values = WeakAuras.string_operator_types,
+      values = OptionsPrivate.Private.string_operator_types,
       set = noop
     },
     name = {
@@ -200,7 +208,7 @@ local function GetBuffTriggerOptions(data, triggernum)
       order = 14,
       disabled = function() return not trigger.use_tooltip end,
       hidden = function() return not (trigger.type == "aura" and trigger.fullscan and trigger.unit ~= "multi"); end,
-      values = WeakAuras.string_operator_types,
+      values = OptionsPrivate.Private.string_operator_types,
       set = noop
     },
     tooltip = {
@@ -263,7 +271,7 @@ local function GetBuffTriggerOptions(data, triggernum)
       order = 20,
       disabled = function() return not trigger.use_debuffClass end,
       hidden = function() return not (trigger.type == "aura" and trigger.fullscan); end,
-      values = WeakAuras.debuff_class_types,
+      values = OptionsPrivate.Private.debuff_class_types,
       set = noop
     },
     multiuse_name = {
@@ -579,9 +587,9 @@ local function GetBuffTriggerOptions(data, triggernum)
       order = 41,
       values = function()
         if(trigger.fullscan) then
-          return actual_unit_types_with_specific;
+          return OptionsPrivate.Private.actual_unit_types_with_specific;
         else
-          return unit_types;
+          return OptionsPrivate.Private.unit_types;
         end
       end,
       hidden = function() return not (trigger.type == "aura"); end,
@@ -627,7 +635,7 @@ local function GetBuffTriggerOptions(data, triggernum)
       name = L["Operator"],
       order = 46,
       width = WeakAuras.halfWidth,
-      values = operator_types,
+      values = OptionsPrivate.Private.operator_types,
       hidden = function() return not (trigger.type == "aura" and trigger.unit == "group"); end,
       get = function() return trigger.group_countOperator; end,
       set = noop
@@ -636,7 +644,7 @@ local function GetBuffTriggerOptions(data, triggernum)
       type = "input",
       name = L["Count"],
       desc = function()
-        local groupType = unit_types[trigger.unit or "group"] or "|cFFFF0000error|r";
+        local groupType = OptionsPrivate.Private.unit_types[trigger.unit or "group"] or "|cFFFF0000error|r";
         return L["Group aura count description"]:format(groupType, groupType, groupType, groupType, groupType, groupType, groupType);
       end,
       order = 47,
@@ -667,15 +675,15 @@ local function GetBuffTriggerOptions(data, triggernum)
       name = L["Name Info"],
       order = 47.5,
       hidden = function() return not (trigger.type == "aura" and trigger.unit == "group" and not trigger.groupclone); end,
-      disabled = function() return not WeakAuras.CanShowNameInfo(data); end,
+      disabled = function() return not CanShowNameInfo(data); end,
       get = function()
-        if(WeakAuras.CanShowNameInfo(data)) then
+        if(CanShowNameInfo(data)) then
           return trigger.name_info;
         else
           return nil;
         end
       end,
-      values = group_aura_name_info_types,
+      values = OptionsPrivate.Private.group_aura_name_info_types,
       set = noop
     },
     stack_info = {
@@ -684,15 +692,15 @@ local function GetBuffTriggerOptions(data, triggernum)
       name = L["Stack Info"],
       order = 47.6,
       hidden = function() return not (trigger.type == "aura" and trigger.unit == "group" and not trigger.groupclone); end,
-      disabled = function() return not WeakAuras.CanShowStackInfo(data); end,
+      disabled = function() return not CanShowStackInfo(data); end,
       get = function()
-        if(WeakAuras.CanShowStackInfo(data)) then
+        if(CanShowStackInfo(data)) then
           return trigger.stack_info;
         else
           return nil;
         end
       end,
-      values = group_aura_stack_info_types,
+      values = OptionsPrivate.Private.group_aura_stack_info_types,
       set = noop
     },
     hideAlone = {
@@ -718,7 +726,7 @@ local function GetBuffTriggerOptions(data, triggernum)
       width = WeakAuras.normalWidth,
       name = L["Aura Type"],
       order = 51,
-      values = debuff_types,
+      values = OptionsPrivate.Private.debuff_types,
       hidden = function() return not (trigger.type == "aura"); end,
       set = noop
     },
@@ -732,7 +740,7 @@ local function GetBuffTriggerOptions(data, triggernum)
     },
     subcountCount = {
       type = "select",
-      values = tooltip_count,
+      values = OptionsPrivate.Private.tooltip_count,
       width = WeakAuras.doubleWidth,
       name = L["Use nth value from tooltip:"],
       hidden = function() return not (trigger.type == "aura" and trigger.fullscan and trigger.subcount) end,
@@ -752,7 +760,7 @@ local function GetBuffTriggerOptions(data, triggernum)
       name = L["Operator"],
       order = 57,
       width = WeakAuras.halfWidth,
-      values = operator_types,
+      values = OptionsPrivate.Private.operator_types,
       disabled = function() return not trigger.useRem; end,
       hidden = function() return not (trigger.type == "aura" and trigger.unit ~= "multi"); end,
       get = function() return trigger.useRem and trigger.remOperator or nil end,
@@ -782,7 +790,7 @@ local function GetBuffTriggerOptions(data, triggernum)
       name = L["Operator"],
       order = 62,
       width = WeakAuras.halfWidth,
-      values = operator_types,
+      values = OptionsPrivate.Private.operator_types,
       disabled = function() return not trigger.useCount; end,
       hidden = function() return not (trigger.type == "aura" and trigger.unit ~= "multi"); end,
       get = function() return trigger.useCount and trigger.countOperator or nil end,
@@ -840,7 +848,7 @@ local function GetBuffTriggerOptions(data, triggernum)
       type = "select",
       width = WeakAuras.normalWidth,
       name = "",
-      values = WeakAuras.bufftrigger_progress_behavior_types,
+      values = OptionsPrivate.Private.bufftrigger_progress_behavior_types,
       order = 71.1,
       get = function() return trigger.buffShowOn end,
       hidden = function()
@@ -869,15 +877,15 @@ local function GetBuffTriggerOptions(data, triggernum)
       name = "",
       hidden = function()
         -- For those that update without restarting
-        return not WeakAuras.CanConvertBuffTrigger2
+        return not OptionsPrivate.Private.CanConvertBuffTrigger2
       end,
     },
 
   };
 
-  WeakAuras.commonOptions.AddCommonTriggerOptions(aura_options, data, triggernum)
-  WeakAuras.commonOptions.AddTriggerGetterSetter(aura_options, data, triggernum)
-  WeakAuras.AddTriggerMetaFunctions(aura_options, data, triggernum)
+  OptionsPrivate.commonOptions.AddCommonTriggerOptions(aura_options, data, triggernum)
+  OptionsPrivate.commonOptions.AddTriggerGetterSetter(aura_options, data, triggernum)
+  OptionsPrivate.AddTriggerMetaFunctions(aura_options, data, triggernum)
 
   return {
     ["trigger." .. triggernum .. ".legacy_aura_options"] = aura_options

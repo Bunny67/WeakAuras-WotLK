@@ -3,10 +3,10 @@ local AddonName, OptionsPrivate = ...
 
 local L = WeakAuras.L
 local regionOptions = WeakAuras.regionOptions;
-local parsePrefix = WeakAuras.commonOptions.parsePrefix
-local flattenRegionOptions = WeakAuras.commonOptions.flattenRegionOptions
+local parsePrefix = OptionsPrivate.commonOptions.parsePrefix
+local flattenRegionOptions = OptionsPrivate.commonOptions.flattenRegionOptions
 
-function WeakAuras.GetGroupOptions(data)
+function OptionsPrivate.GetGroupOptions(data)
   local regionOption;
   local id = data.id
   if (regionOptions[data.regionType]) then
@@ -54,7 +54,7 @@ function WeakAuras.GetGroupOptions(data)
       end
       WeakAuras.Add(data);
       WeakAuras.UpdateThumbnail(data);
-      WeakAuras.ResetMoverSizer();
+      OptionsPrivate.ResetMoverSizer();
     end,
     hidden = function() return false end,
     disabled = function() return false end,

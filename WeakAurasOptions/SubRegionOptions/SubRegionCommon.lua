@@ -1,4 +1,5 @@
 if not WeakAuras.IsCorrectVersion() then return end
+local AddonName, OptionsPrivate = ...
 
 -- Magic constant
 local deleteCondition = {}
@@ -44,7 +45,7 @@ function WeakAuras.DeleteSubRegion(data, index, regionType)
   end
 end
 
-function WeakAuras.MoveSubRegionUp(data, index, regionType)
+function OptionsPrivate.MoveSubRegionUp(data, index, regionType)
   if not data.subRegions or index <= 1 then
     return
   end
@@ -63,7 +64,7 @@ function WeakAuras.MoveSubRegionUp(data, index, regionType)
   end
 end
 
-function WeakAuras.MoveSubRegionDown(data, index, regionType)
+function OptionsPrivate.MoveSubRegionDown(data, index, regionType)
   if not data.subRegions then
     return
   end
@@ -82,7 +83,7 @@ function WeakAuras.MoveSubRegionDown(data, index, regionType)
   end
 end
 
-function WeakAuras.DuplicateSubRegion(data, index, regionType)
+function OptionsPrivate.DuplicateSubRegion(data, index, regionType)
   if not data.subRegions then
     return
   end

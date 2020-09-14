@@ -80,14 +80,14 @@ local function createOptions(id, data)
       width = WeakAuras.normalWidth,
       name = L["Choose"],
       order = 0.51,
-      func = function() WeakAuras.OpenIconPicker(data, "groupIcon", true) end
+      func = function() OptionsPrivate.OpenIconPicker(data, "groupIcon", true) end
     },
     align_h = {
       type = "select",
       width = WeakAuras.normalWidth,
       name = L["Horizontal Align"],
       order = 10,
-      values = WeakAuras.align_types,
+      values = OptionsPrivate.Private.align_types,
       get = function()
         if(#data.controlledChildren < 1) then
           return nil;
@@ -145,7 +145,7 @@ local function createOptions(id, data)
           end
         end
         WeakAuras.Add(data);
-        WeakAuras.ResetMoverSizer();
+        OptionsPrivate.ResetMoverSizer();
       end
     },
     align_v = {
@@ -153,7 +153,7 @@ local function createOptions(id, data)
       width = WeakAuras.normalWidth,
       name = L["Vertical Align"],
       order = 15,
-      values = WeakAuras.rotated_align_types,
+      values = OptionsPrivate.Private.rotated_align_types,
       get = function()
         if(#data.controlledChildren < 1) then
           return nil;
@@ -211,7 +211,7 @@ local function createOptions(id, data)
           end
         end
         WeakAuras.Add(data);
-        WeakAuras.ResetMoverSizer();
+        OptionsPrivate.ResetMoverSizer();
       end
     },
     distribute_h = {
@@ -294,7 +294,7 @@ local function createOptions(id, data)
         end
 
         WeakAuras.Add(data);
-        WeakAuras.ResetMoverSizer();
+        OptionsPrivate.ResetMoverSizer();
       end
     },
     distribute_v = {
@@ -377,7 +377,7 @@ local function createOptions(id, data)
         end
 
         WeakAuras.Add(data);
-        WeakAuras.ResetMoverSizer();
+        OptionsPrivate.ResetMoverSizer();
       end
     },
     space_h = {
@@ -460,7 +460,7 @@ local function createOptions(id, data)
         end
 
         WeakAuras.Add(data);
-        WeakAuras.ResetMoverSizer();
+        OptionsPrivate.ResetMoverSizer();
       end
     },
     space_v = {
@@ -543,7 +543,7 @@ local function createOptions(id, data)
         end
 
         WeakAuras.Add(data);
-        WeakAuras.ResetMoverSizer();
+        OptionsPrivate.ResetMoverSizer();
       end
     },
     scale = {
@@ -564,7 +564,7 @@ local function createOptions(id, data)
         data.yOffset = data.yOffset/(1-change)
         data.scale = v
         WeakAuras.Add(data);
-        WeakAuras.ResetMoverSizer();
+        OptionsPrivate.ResetMoverSizer();
       end
     },
     endHeader = {
@@ -574,13 +574,13 @@ local function createOptions(id, data)
     },
   };
 
-  for k, v in pairs(WeakAuras.commonOptions.BorderOptions(id, data, nil, nil, 70)) do
+  for k, v in pairs(OptionsPrivate.commonOptions.BorderOptions(id, data, nil, nil, 70)) do
     options[k] = v
   end
 
   return {
     group = options,
-    position = WeakAuras.commonOptions.PositionOptions(id, data, nil, true, true),
+    position = OptionsPrivate.commonOptions.PositionOptions(id, data, nil, true, true),
   };
 end
 

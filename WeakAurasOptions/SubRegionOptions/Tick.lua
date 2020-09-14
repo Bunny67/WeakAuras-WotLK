@@ -1,4 +1,5 @@
 if not WeakAuras.IsCorrectVersion() then return end
+local AddonName, OptionsPrivate = ...
 
 local SharedMedia = LibStub("LibSharedMedia-3.0");
 local L = WeakAuras.L;
@@ -7,29 +8,29 @@ local indentWidth = WeakAuras.normalWidth * 0.06
 
 local function createOptions(parentData, data, index, subIndex)
   local hiddentickextras = function()
-    return WeakAuras.IsCollapsed("subtext", "subtext", "tickextras" .. index, true)
+    return OptionsPrivate.IsCollapsed("subtext", "subtext", "tickextras" .. index, true)
   end
   local options = {
     __title = L["Tick %s"]:format(subIndex),
     __order = 1,
     __up = function()
-      if (WeakAuras.ApplyToDataOrChildData(parentData, WeakAuras.MoveSubRegionUp, index, "subtick")) then
-        WeakAuras.ReloadOptions2(parentData.id, parentData)
+      if (OptionsPrivate.Private.ApplyToDataOrChildData(parentData, OptionsPrivate.MoveSubRegionUp, index, "subtick")) then
+        WeakAuras.ClearAndUpdateOptions(parentData.id)
       end
     end,
     __down = function()
-      if (WeakAuras.ApplyToDataOrChildData(parentData, WeakAuras.MoveSubRegionDown, index, "subtick")) then
-        WeakAuras.ReloadOptions2(parentData.id, parentData)
+      if (OptionsPrivate.Private.ApplyToDataOrChildData(parentData, OptionsPrivate.MoveSubRegionDown, index, "subtick")) then
+        WeakAuras.ClearAndUpdateOptions(parentData.id)
       end
     end,
     __duplicate = function()
-      if (WeakAuras.ApplyToDataOrChildData(parentData, WeakAuras.DuplicateSubRegion, index, "subtick")) then
-        WeakAuras.ReloadOptions2(parentData.id, parentData)
+      if (OptionsPrivate.Private.ApplyToDataOrChildData(parentData, OptionsPrivate.DuplicateSubRegion, index, "subtick")) then
+        WeakAuras.ClearAndUpdateOptions(parentData.id)
       end
     end,
     __delete = function()
-      if (WeakAuras.ApplyToDataOrChildData(parentData, WeakAuras.DeleteSubRegion, index, "subtick")) then
-        WeakAuras.ReloadOptions2(parentData.id, parentData)
+      if (OptionsPrivate.Private.ApplyToDataOrChildData(parentData, WeakAuras.DeleteSubRegion, index, "subtick")) then
+        WeakAuras.ClearAndUpdateOptions(parentData.id)
       end
     end,
     tick_visible = {
@@ -50,7 +51,7 @@ local function createOptions(parentData, data, index, subIndex)
       width = WeakAuras.normalWidth,
       name = L["Tick Mode"],
       order = 3,
-      values = WeakAuras.tick_placement_modes,
+      values = OptionsPrivate.Private.tick_placement_modes,
     },
     tick_placement = {
       type = "input",
@@ -83,7 +84,7 @@ local function createOptions(parentData, data, index, subIndex)
         local texturetext = ""
         if data.use_texture then
           local desaturatetext = data.tick_desaturate and L["|cFFFF0000desaturated|r "] or ""
-          local blendtext = WeakAuras.blend_types[data.tick_blend_mode]
+          local blendtext = OptionsPrivate.Private.blend_types[data.tick_blend_mode]
           local rotationtext = data.tick_rotation ~= 0 and L[" rotated |cFFFF0000%s|r degrees"]:format(data.tick_rotation) or ""
           local mirrortext = data.tick_mirror and L[" and |cFFFF0000mirrored|r"] or ""
           texturetext = L["%s|cFFFF0000custom|r texture with |cFFFF0000%s|r blend mode%s%s"]:format(desaturatetext, blendtext, rotationtext, mirrortext)
@@ -103,11 +104,11 @@ local function createOptions(parentData, data, index, subIndex)
       width = WeakAuras.doubleWidth,
       order = 6,
       func = function(info, button)
-        local collapsed = WeakAuras.IsCollapsed("subtext", "subtext", "tickextras" .. index, true)
-        WeakAuras.SetCollapsed("subtext", "subtext", "tickextras" .. index, not collapsed)
+        local collapsed = OptionsPrivate.IsCollapsed("subtext", "subtext", "tickextras" .. index, true)
+        OptionsPrivate.SetCollapsed("subtext", "subtext", "tickextras" .. index, not collapsed)
       end,
       image = function()
-        local collapsed = WeakAuras.IsCollapsed("subtext", "subtext", "tickextras" .. index, true)
+        local collapsed = OptionsPrivate.IsCollapsed("subtext", "subtext", "tickextras" .. index, true)
         return collapsed and "collapsed" or "expanded"
       end,
       imageWidth = 15,
@@ -147,7 +148,7 @@ local function createOptions(parentData, data, index, subIndex)
       width = WeakAuras.normalWidth,
       name = L["Blend Mode"],
       order = 10,
-      values = WeakAuras.blend_types,
+      values = OptionsPrivate.Private.blend_types,
       disabled = function() return not data.use_texture end,
       hidden = hiddentickextras,
     },
@@ -172,7 +173,7 @@ local function createOptions(parentData, data, index, subIndex)
       width = WeakAuras.normalWidth,
       order = 13,
       func = function()
-        WeakAuras.OpenTexturePicker(data, "tick_texture", WeakAuras.texture_types);
+        OptionsPrivate.OpenTexturePicker(data, "tick_texture", OptionsPrivate.Private.texture_types);
       end,
       disabled = function() return not data.use_texture end,
       hidden = hiddentickextras,

@@ -1,3 +1,4 @@
+local AddonName, Private = ...
 WeakAuras = {}
 WeakAuras.L = {}
 WeakAuras.frames = {}
@@ -12,7 +13,6 @@ local buildTime = "20200802154726"
 
 WeakAuras.versionString = versionStringFromToc
 WeakAuras.buildTime = buildTime
-WeakAuras.printPrefix = "|cff9900ffWeakAuras:|r "
 WeakAuras.newFeatureString = "|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0|t"
 WeakAuras.BuildInfo = select(4, GetBuildInfo())
 
@@ -29,36 +29,36 @@ WeakAuras.prettyPrint = function(msg)
 end
 
 if versionString ~= versionStringFromToc and versionStringFromToc ~= "Dev" then
-  WeakAuras.prettyPrint("You need to restart your game client to complete the WeakAuras update!")
+  Private.prettyPrint("You need to restart your game client to complete the WeakAuras update!")
 end
 
 -- Force enable WeakAurasCompanion and Archive because some addon managers interfere with it
 EnableAddOn("WeakAurasCompanion")
 EnableAddOn("WeakAurasArchive")
 
---These function stubs are defined here to reduce the number of errors that occur if WeakAuras.lua fails to compile
+-- These function stubs are defined here to reduce the number of errors that occur if WeakAuras.lua fails to compile
 function WeakAuras.RegisterRegionType()
 end
 
 function WeakAuras.RegisterRegionOptions()
 end
 
-function WeakAuras.StartProfileSystem()
+function Private.StartProfileSystem()
 end
 
-function WeakAuras.StartProfileAura()
+function Private.StartProfileAura()
 end
 
-function WeakAuras.StopProfileSystem()
+function Private.StopProfileSystem()
 end
 
-function WeakAuras.StopProfileAura()
+function Private.StopProfileAura()
 end
 
-function WeakAuras.StartProfileUID()
+function Private.StartProfileUID()
 end
 
-function WeakAuras.StopProfileUID()
+function Private.StopProfileUID()
 end
 
 -- If WeakAuras shuts down due to being installed on the wrong target, keep the bindings from erroring

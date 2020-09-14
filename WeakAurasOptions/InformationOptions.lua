@@ -3,7 +3,7 @@ local AddonName, OptionsPrivate = ...
 
 local L = WeakAuras.L
 
-function WeakAuras.GetInformationOptions(data)
+function OptionsPrivate.GetInformationOptions(data)
   local isGroup = data.controlledChildren
   local isTmpGroup = type(data.id) == "table"
 
@@ -35,7 +35,7 @@ function WeakAuras.GetInformationOptions(data)
         if data.id ~= newid and not WeakAuras.GetData(newid) then
           local oldid = data.id
           WeakAuras.Rename(data, newid);
-          WeakAuras.HandleRename(data, oldid, newid)
+          OptionsPrivate.HandleRename(data, oldid, newid)
         end
       end
     }
@@ -85,7 +85,7 @@ function WeakAuras.GetInformationOptions(data)
           local childData = WeakAuras.GetData(childId)
           childData.url = v
           WeakAuras.Add(childData)
-          WeakAuras.ClearOptions(childData.id)
+          OptionsPrivate.ClearOptions(childData.id)
         end
       end
 

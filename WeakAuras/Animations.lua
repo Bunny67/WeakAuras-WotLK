@@ -4,8 +4,7 @@ local AddonName, Private = ...
 -- Animations
 local animations = {}
 local pending_controls = {}
-local anim_presets = WeakAuras.anim_presets;
-local anim_function_strings = WeakAuras.anim_function_strings;
+local anim_function_strings = Private.anim_function_strings;
 
 local function noopErrorHandler() end
 
@@ -14,7 +13,7 @@ local frame = WeakAuras.frames["WeakAuras Main Frame"]
 local updatingAnimations;
 local last_update = GetTime();
 local function UpdateAnimations()
-  WeakAuras.StartProfileSystem("animations");
+  Private.StartProfileSystem("animations");
   local errorHandler = WeakAuras.IsOptionsOpen() and noopErrorHandler or geterrorhandler()
   for groupUid, groupRegion in pairs(pending_controls) do
     pending_controls[groupUid] = nil;
@@ -26,7 +25,7 @@ local function UpdateAnimations()
   last_update = time;
   local num = 0;
   for key, anim in pairs(animations) do
-    WeakAuras.StartProfileUID(anim.auraUID);
+    Private.StartProfileUID(anim.auraUID);
     num = num + 1;
     local finished = false;
     if(anim.duration_type == "seconds") then
@@ -168,15 +167,15 @@ local function UpdateAnimations()
       end
 
       if(anim.loop) then
-        WeakAuras.Animate(anim.namespace, anim.auraUID, anim.type, anim.anim, anim.region, anim.inverse, anim.onFinished, anim.loop, anim.region.cloneId);
+        Private.Animate(anim.namespace, anim.auraUID, anim.type, anim.anim, anim.region, anim.inverse, anim.onFinished, anim.loop, anim.region.cloneId);
       elseif(anim.onFinished) then
         anim.onFinished();
       end
     end
-    WeakAuras.StopProfileUID(anim.auraUID);
+    Private.StopProfileUID(anim.auraUID);
   end
 
-  WeakAuras.StopProfileSystem("animations");
+  Private.StopProfileSystem("animations");
 end
 
 function Private.RegisterGroupForPositioning(uid, region)
@@ -185,14 +184,14 @@ function Private.RegisterGroupForPositioning(uid, region)
   frame:SetScript("OnUpdate", UpdateAnimations)
 end
 
-function WeakAuras.Animate(namespace, uid, type, anim, region, inverse, onFinished, loop, cloneId)
-  local auraDisplayName = WeakAuras.UIDtoID(uid)
+function Private.Animate(namespace, uid, type, anim, region, inverse, onFinished, loop, cloneId)
+  local auraDisplayName = Private.UIDtoID(uid)
   local key = tostring(region);
   local valid;
   if(anim and anim.type == "custom" and (anim.use_translate or anim.use_alpha or (anim.use_scale and region.Scale) or (anim.use_rotate and region.Rotate) or (anim.use_color and region.Color))) then
     valid = true;
-  elseif(anim and anim.type == "preset" and anim.preset and anim_presets[anim.preset]) then
-    anim = anim_presets[anim.preset];
+  elseif(anim and anim.type == "preset" and anim.preset and Private.anim_presets[anim.preset]) then
+    anim = Private.anim_presets[anim.preset];
     valid = true;
   end
   if(valid) then
@@ -316,9 +315,9 @@ function WeakAuras.Animate(namespace, uid, type, anim, region, inverse, onFinish
     elseif(region.ColorAnim) then
       region:ColorAnim(nil);
     end
-    easeFunc = WeakAuras.anim_ease_functions[anim.easeType or "none"]
+    easeFunc = Private.anim_ease_functions[anim.easeType or "none"]
 
-    duration = WeakAuras.ParseNumber(anim.duration) or 0;
+    duration = Private.ParseNumber(anim.duration) or 0;
     progress = 0;
     if(namespace == "display" and type == "main" and not onFinished and not anim.duration_type == "relative") then
       local data = Private.GetDataByUID(uid);
@@ -387,14 +386,14 @@ function WeakAuras.Animate(namespace, uid, type, anim, region, inverse, onFinish
   else
     if(animations[key]) then
       if(animations[key].type ~= type or loop) then
-        WeakAuras.CancelAnimation(region, true, true, true, true, true);
+        Private.CancelAnimation(region, true, true, true, true, true);
       end
     end
     return false;
   end
 end
 
-function WeakAuras.CancelAnimation(region, resetPos, resetAlpha, resetScale, resetRotation, resetColor, doOnFinished)
+function Private.CancelAnimation(region, resetPos, resetAlpha, resetScale, resetRotation, resetColor, doOnFinished)
   local key = tostring(region);
   local anim = animations[key];
 

@@ -95,7 +95,7 @@ local function releaseControlPoint(self, controlPoint)
   local regionData = controlPoint.regionData
   if regionData then
     if self.parent.anchorPerUnit == "UNITFRAME" then
-      WeakAuras.dyngroup_unitframe_monitor[regionData] = nil
+      Private.dyngroup_unitframe_monitor[regionData] = nil
     end
     controlPoint.regionData = nil
     regionData.controlPoint = nil
@@ -760,7 +760,7 @@ local function SafeGetPos(region, func)
 end
 
 local function modify(parent, region, data)
-  WeakAuras.FixGroupChildrenOrderForGroup(data)
+  Private.FixGroupChildrenOrderForGroup(data)
   -- Scale
   region:SetScale(data.scale and data.scale > 0 and data.scale or 1)
   WeakAuras.regionPrototype.modify(parent, region, data)
@@ -854,7 +854,7 @@ local function modify(parent, region, data)
       local frameStrata = region:GetFrameStrata()
       childRegion:SetFrameStrata(frameStrata ~= "UNKNOWN" and frameStrata or "BACKGROUND");
     else
-      childRegion:SetFrameStrata(WeakAuras.frame_strata_types[childData.frameStrata]);
+      childRegion:SetFrameStrata(Private.frame_strata_types[childData.frameStrata]);
     end
     return regionData
   end
@@ -877,8 +877,8 @@ local function modify(parent, region, data)
   function region:ReloadControlledChildren()
     -- 'forgets' about regions it controls and starts from scratch. Mostly useful when Add()ing the group
     if not self:IsSuspended() then
-      WeakAuras.StartProfileSystem("dynamicgroup")
-      WeakAuras.StartProfileAura(data.id)
+      Private.StartProfileSystem("dynamicgroup")
+      Private.StartProfileAura(data.id)
       self.needToReload = false
       self.sortedChildren = {}
       self.controlledChildren = {}
@@ -903,8 +903,8 @@ local function modify(parent, region, data)
           end
         end
       end
-      WeakAuras.StopProfileSystem("dynamicgroup")
-      WeakAuras.StopProfileAura(data.id)
+      Private.StopProfileSystem("dynamicgroup")
+      Private.StopProfileAura(data.id)
       self:SortUpdatedChildren()
     else
       self.needToReload = true
@@ -976,8 +976,8 @@ local function modify(parent, region, data)
     -- Called when the Group is Resume()d
     -- uses sort data to determine the correct spot
     if not self:IsSuspended() then
-      WeakAuras.StartProfileSystem("dynamicgroup")
-      WeakAuras.StartProfileAura(data.id)
+      Private.StartProfileSystem("dynamicgroup")
+      Private.StartProfileAura(data.id)
       self.needToSort = false
       local i = 1
       while self.sortedChildren[i] do
@@ -1006,8 +1006,8 @@ local function modify(parent, region, data)
         end
       end
       self.updatedChildren = {}
-      WeakAuras.StopProfileSystem("dynamicgroup")
-      WeakAuras.StopProfileAura(data.id)
+      Private.StopProfileSystem("dynamicgroup")
+      Private.StopProfileAura(data.id)
       self:PositionChildren()
     else
       self.needToSort = true
@@ -1063,10 +1063,10 @@ local function modify(parent, region, data)
       controlPoint:SetWidth(regionData.dimensions.width)
       controlPoint:SetHeight(regionData.dimensions.height)
       if self.anchorPerUnit == "UNITFRAME" then
-        WeakAuras.dyngroup_unitframe_monitor[regionData] = frame
+        Private.dyngroup_unitframe_monitor[regionData] = frame
       end
       if animate then
-        WeakAuras.CancelAnimation(regionData.controlPoint, true)
+        Private.CancelAnimation(regionData.controlPoint, true)
         local xPrev = regionData.xOffset or x
         local yPrev = regionData.yOffset or y
         local xDelta = xPrev - x
@@ -1137,7 +1137,7 @@ local function modify(parent, region, data)
             }
           end
           -- update animated expand & collapse for this child
-          WeakAuras.Animate("controlPoint", data.uid, "controlPoint", anim, regionData.controlPoint, true)
+          Private.Animate("controlPoint", data.uid, "controlPoint", anim, regionData.controlPoint, true)
         end
       end
       regionData.xOffset = x
@@ -1147,8 +1147,8 @@ local function modify(parent, region, data)
   end
 
   function region:DoPositionChildren()
-    WeakAuras.StartProfileSystem("dynamicgroup")
-    WeakAuras.StartProfileAura(data.id)
+    Private.StartProfileSystem("dynamicgroup")
+    Private.StartProfileAura(data.id)
 
     local handledRegionData = {}
 
@@ -1179,8 +1179,8 @@ local function modify(parent, region, data)
       end
     end
 
-    WeakAuras.StopProfileSystem("dynamicgroup")
-    WeakAuras.StopProfileAura(data.id)
+    Private.StopProfileSystem("dynamicgroup")
+    Private.StopProfileAura(data.id)
     self:Resize()
   end
 
@@ -1190,8 +1190,8 @@ local function modify(parent, region, data)
     if not self:IsSuspended() then
       self.needToResize = false
       -- if self.dynamicAnchor then self:UpdateBorder(); return end
-      WeakAuras.StartProfileSystem("dynamicgroup")
-      WeakAuras.StartProfileAura(data.id)
+      Private.StartProfileSystem("dynamicgroup")
+      Private.StartProfileAura(data.id)
       local numVisible, minX, maxX, maxY, minY, minLevel = 0
       for active, regionData in ipairs(self.sortedChildren) do
         if regionData.shown then
@@ -1231,8 +1231,8 @@ local function modify(parent, region, data)
       if WeakAuras.IsOptionsOpen() then
         WeakAuras.OptionsFrame().moversizer:ReAnchor()
       end
-      WeakAuras.StopProfileSystem("dynamicgroup")
-      WeakAuras.StopProfileAura(data.id)
+      Private.StopProfileSystem("dynamicgroup")
+      Private.StopProfileAura(data.id)
     else
       self.needToResize = true
     end

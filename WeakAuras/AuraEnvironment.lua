@@ -3,7 +3,6 @@ local AddonName, Private = ...
 
 local WeakAuras = WeakAuras
 local L = WeakAuras.L
-local prettyPrint = WeakAuras.prettyPrint
 
 local UnitAura = UnitAura
 -- Unit Aura functions that return info about the first Aura matching the spellName or spellID given on the unit.
@@ -55,7 +54,7 @@ local WA_ClassColorName = function(unit)
     if not class then
       return name
     else
-      local classData = RAID_CLASS_COLORS[class]
+      local classData = (CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS)[class]
       local coloredName = ("|c%s%s|r"):format(classData.colorStr, name)
       return coloredName
     end
@@ -268,9 +267,9 @@ function Private.ActivateAuraEnvironment(id, cloneId, state, states, onlyConfig)
   end
 end
 
-local function blocked()
+local function blocked(key)
   Private.AuraWarnings.UpdateWarning(current_uid, "SandboxForbidden", "error",
-          L["Forbidden function or table."])
+          string.format(L["Forbidden function or table: %s"], key))
 end
 
 local function MakeReadOnly(input, options)
@@ -278,9 +277,11 @@ local function MakeReadOnly(input, options)
   {
     __index = function(t, k)
        if options.blockedFunctions[k] then
-         return options.blocked
+         options.blocked(k)
+         return function() end
        elseif options.blockedTables[k] then
-         return options.blocked()
+         options.blocked(k)
+         return {}
        elseif options.override[k] then
          return options.override[k]
        else
@@ -294,12 +295,79 @@ end
 
 local FakeWeakAurasMixin = {
   blockedFunctions = {
+    -- Other addons might use these, so before moving them to the Private space, we need
+    -- to discuss these. But Auras have no purpose for calling these
     Add = true,
+    AddMany = true,
+    AddManyFromAddons = true,
+    Delete = true,
+    DeleteOption = true,
+    GetData = true,
+    HideOptions = true,
     Rename = true,
-    Delete = true
+    NewAura = true,
+    OptionsFrame = true,
+    RegisterAddon = true,
+    RegisterDisplay = true,
+    RegisterRegionOptions = true,
+    RegisterSubRegionOptions = true,
+    RegisterSubRegionType = true,
+    RegisterRegionType = true,
+    RegisterTriggerSystem = true,
+    RegisterTriggerSystemOptions = true,
+    ShowOptions = true,
+    -- Note these shouldn't exist in the WeakAuras namespace, but moving them takes a bit of effort,
+    -- so for now just block them and clean them up later
+    CollisionResolved = true,
+    ClearAndUpdateOptions = true,
+    CloseCodeReview = true,
+    CloseImportExport = true,
+    CreateTemplateView = true,
+    DeleteOption = true,
+    DeleteCollapsedData = true,
+    DisplayToString = true,
+    FillOptions = true,
+    FindUnusedId = true,
+    GetMoverSizerId = true,
+    GetDisplayButton = true,
+    Import = true,
+    NewDisplayButton = true,
+    NewAura = true,
+    OpenTriggerTemplate = true,
+    OpenCodeReview = true,
+    PickDisplay = true,
+    RenameCollapsedData = true,
+    SetMoverSizer = true,
+    SetImporting = true,
+    SortDisplayButtons = true,
+    ShowOptions = true,
+    ToggleOptions = true,
+    UpdateDisplayButton = true,
+    UpdateGroupOrders = true,
+    UpdateThumbnail = true,
+    validate = true,
+    getDefaultGlow = true,
+    -- Note, I'm too lazy to move these to private because the code needs to deleted...
+    IsDefinedByAddon = true,
+
   },
   blockedTables = {
-    AuraWarnings = true
+    AuraWarnings = true,
+    ModelPaths = true,
+    regionPrototype = true,
+    -- Note these shouldn't exist in the WeakAuras namespace, but moving them takes a bit of effort,
+    -- so for now just block them and clean them up later
+    data_stub = true,
+    displayButtons = true,
+    regionTypes = true,
+    regionOptions = true,
+    spellCache = true,
+    triggerTemplates = true,
+    frames = true,
+    loadFrame = true,
+    unitLoadFrame = true,
+    importDisplayButtons = true
+
   },
   override = {
     me = UnitName("player"),

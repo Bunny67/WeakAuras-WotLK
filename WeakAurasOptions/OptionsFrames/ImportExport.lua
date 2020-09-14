@@ -52,7 +52,7 @@ local function ConstructImportExport(frame)
         if(mode == "export") then
           displayStr = WeakAuras.DisplayToString(id, true);
         elseif(mode == "table") then
-          displayStr = WeakAuras.DataToString(id);
+          displayStr = OptionsPrivate.Private.DataToString(id);
         end
         input.editBox:SetScript("OnEscapePressed", function() group:Close(); end);
         input.editBox:SetScript("OnChar", function() input:SetText(displayStr); input.editBox:HighlightText(); end);
@@ -92,7 +92,7 @@ local function ConstructImportExport(frame)
   return group
 end
 
-function WeakAuras.ImportExport(frame)
+function OptionsPrivate.ImportExport(frame)
   importexport = importexport or ConstructImportExport(frame)
   return importexport
 end

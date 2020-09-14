@@ -376,7 +376,7 @@ local function CreateActivateCondition(ret, id, condition, conditionNumber, prop
   return ret;
 end
 
-function WeakAuras.GetProperties(data)
+function Private.GetProperties(data)
   local properties;
   local propertiesFunction = WeakAuras.regionTypes[data.regionType] and WeakAuras.regionTypes[data.regionType].properties;
   if (type(propertiesFunction) == "function") then
@@ -390,7 +390,7 @@ function WeakAuras.GetProperties(data)
   if data.subRegions then
     local subIndex = {}
     for index, subRegion in ipairs(data.subRegions) do
-      local subRegionTypeData = WeakAuras.subRegionTypes[subRegion.type];
+      local subRegionTypeData = Private.subRegionTypes[subRegion.type];
       local propertiesFunction = subRegionTypeData and subRegionTypeData.properties
       local subProperties;
       if (type(propertiesFunction) == "function") then
@@ -442,7 +442,7 @@ function Private.LoadConditionPropertyFunctions(data)
               end
               return change.value[fullKey]
             end
-            local formatters = change.value and WeakAuras.CreateFormatters(change.value.message, getter)
+            local formatters = change.value and Private.CreateFormatters(change.value.message, getter)
             WeakAuras.conditionTextFormatters[id] = WeakAuras.conditionTextFormatters[id] or {}
             WeakAuras.conditionTextFormatters[id][conditionNumber] = WeakAuras.conditionTextFormatters[id][conditionNumber] or {};
             WeakAuras.conditionTextFormatters[id][conditionNumber].changes = WeakAuras.conditionTextFormatters[id][conditionNumber].changes or {};
@@ -490,7 +490,7 @@ local globalConditions =
   }
 }
 
-function WeakAuras.GetGlobalConditions()
+function Private.GetGlobalConditions()
   return globalConditions;
 end
 
@@ -502,8 +502,8 @@ local function ConstructConditionFunction(data)
 
   local usedProperties = {};
 
-  local allConditionsTemplate = WeakAuras.GetTriggerConditions(data);
-  allConditionsTemplate[-1] = WeakAuras.GetGlobalConditions();
+  local allConditionsTemplate = Private.GetTriggerConditions(data);
+  allConditionsTemplate[-1] = Private.GetGlobalConditions();
 
   local ret = "";
   ret = ret .. "local newActiveConditions = {};\n"
@@ -535,7 +535,7 @@ local function ConstructConditionFunction(data)
   ret = ret .. "    WeakAuras.scheduleConditionCheck(recheckTime, id, cloneId);\n"
   ret = ret .. "  end\n"
 
-  local properties = WeakAuras.GetProperties(data);
+  local properties = Private.GetProperties(data);
 
   -- Now build a property + change list
   -- Second Loop deals with conditions that are no longer active
@@ -605,7 +605,7 @@ local globalConditionAllState = {
 
 local globalConditionState = globalConditionAllState[""];
 
-function WeakAuras.GetGlobalConditionState()
+function Private.GetGlobalConditionState()
   return globalConditionAllState;
 end
 
@@ -694,8 +694,8 @@ function Private.RegisterForGlobalConditions(id)
 
   local register = {};
   if (data.conditions) then
-    local allConditionsTemplate = WeakAuras.GetTriggerConditions(data);
-    allConditionsTemplate[-1] = WeakAuras.GetGlobalConditions();
+    local allConditionsTemplate = Private.GetTriggerConditions(data);
+    allConditionsTemplate[-1] = Private.GetGlobalConditions();
 
     for conditionNumber, condition in ipairs(data.conditions) do
       EvaluateCheckForRegisterForGlobalConditions(id, condition.check, allConditionsTemplate, register);

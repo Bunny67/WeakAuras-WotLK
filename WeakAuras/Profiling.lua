@@ -24,9 +24,8 @@ RealTimeProfilingWindow:SetMovable(true)
 RealTimeProfilingWindow:Hide()
 WeakAuras.RealTimeProfilingWindow = RealTimeProfilingWindow
 
-WeakAuras.profileData = profileData
-
-WeakAuras.table_to_string = function(tbl, depth)
+local table_to_string
+table_to_string = function(tbl, depth)
   if depth and depth >= 3 then
     return "{ ... }"
   end
@@ -34,7 +33,7 @@ WeakAuras.table_to_string = function(tbl, depth)
   for k, v in pairs(tbl) do
     if type(v) ~= "userdata" then
       if type(v) == "table" then
-        v = WeakAuras.table_to_string(v, (depth and depth + 1 or 1))
+        v = table_to_string(v, (depth and depth + 1 or 1))
       elseif type(v) == "function" then
         v = "function"
       elseif type(v) == "string" then
@@ -129,7 +128,7 @@ local function CreateProfilePopup()
       m = m .. "|n"
     end
     if type(v) == "table" then
-      v = WeakAuras.table_to_string(v)
+      v = table_to_string(v)
     end
     popupFrame.originalText = m .. v
     popupFrame:SetText(popupFrame.originalText)
@@ -273,14 +272,14 @@ local function StopProfileAura(id)
 end
 
 local function StartProfileUID(uid)
-  StartProfiling(profileData.auras, WeakAuras.UIDtoID(uid))
+  StartProfiling(profileData.auras, Private.UIDtoID(uid))
 end
 
 local function StopProfileUID(uid)
-  StopProfiling(profileData.auras, WeakAuras.UIDtoID(uid))
+  StopProfiling(profileData.auras, Private.UIDtoID(uid))
 end
 
-function WeakAuras.ProfileRenameAura(oldid, id)
+function Private.ProfileRenameAura(oldid, id)
   profileData.auras[id] = profileData.auras[id]
   profileData.auras[oldid] = nil
 end
@@ -330,12 +329,12 @@ function WeakAuras.StartProfile(startType)
   profileData.systems.time.start = debugprofilestop()
   profileData.systems.time.count = 1
 
-  WeakAuras.StartProfileSystem = StartProfileSystem
-  WeakAuras.StartProfileAura = StartProfileAura
-  WeakAuras.StartProfileUID = StartProfileUID
-  WeakAuras.StopProfileSystem = StopProfileSystem
-  WeakAuras.StopProfileAura = StopProfileAura
-  WeakAuras.StopProfileUID = StopProfileUID
+  Private.StartProfileSystem = StartProfileSystem
+  Private.StartProfileAura = StartProfileAura
+  Private.StartProfileUID = StartProfileUID
+  Private.StopProfileSystem = StopProfileSystem
+  Private.StopProfileAura = StopProfileAura
+  Private.StopProfileUID = StopProfileUID
 end
 
 local function doNothing()
@@ -352,12 +351,12 @@ function WeakAuras.StopProfile()
   profileData.systems.time.elapsed = debugprofilestop() - profileData.systems.time.start
   profileData.systems.time.count = 0
 
-  WeakAuras.StartProfileSystem = doNothing
-  WeakAuras.StartProfileAura = doNothing
-  WeakAuras.StartProfileUID = doNothing
-  WeakAuras.StopProfileSystem = doNothing
-  WeakAuras.StopProfileAura = doNothing
-  WeakAuras.StopProfileUID = doNothing
+  Private.StartProfileSystem = doNothing
+  Private.StartProfileAura = doNothing
+  Private.StartProfileUID = doNothing
+  Private.StopProfileSystem = doNothing
+  Private.StopProfileAura = doNothing
+  Private.StopProfileUID = doNothing
 
   currentProfileState = nil
   RealTimeProfilingWindow:UnregisterAllEvents()

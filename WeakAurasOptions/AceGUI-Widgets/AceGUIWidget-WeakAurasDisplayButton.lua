@@ -50,32 +50,25 @@ local function copyAuraPart(source, destination, part)
     end
   end
   if (part == "trigger" or all) and not IsRegionAGroup(source) then
-    destination.triggers = {};
-    WeakAuras.DeepCopy(source.triggers, destination.triggers);
+    destination.triggers = CopyTable(source.triggers);
   end
   if (part == "condition" or all) and not IsRegionAGroup(source) then
-    destination.conditions = {};
-    WeakAuras.DeepCopy(source.conditions, destination.conditions);
+    destination.conditions = CopyTable(source.conditions);
   end
   if (part == "load" or all) and not IsRegionAGroup(source) then
-    destination.load = {};
-    WeakAuras.DeepCopy(source.load, destination.load);
+    destination.load = CopyTable(source.load);
   end
   if (part == "action" or all) and not IsRegionAGroup(source) then
-    destination.actions = {};
-    WeakAuras.DeepCopy(source.actions, destination.actions);
+    destination.actions = CopyTable(source.actions);
   end
   if (part == "animation" or all) and not IsRegionAGroup(source) then
-    destination.animation = {};
-    WeakAuras.DeepCopy(source.animation, destination.animation);
+    destination.animation = CopyTable(source.animation);
   end
   if (part == "authorOptions" or all) and not IsRegionAGroup(source) then
-    destination.authorOptions = {};
-    WeakAuras.DeepCopy(source.authorOptions, destination.authorOptions);
+    destination.authorOptions = CopyTable(source.authorOptions);
   end
   if (part == "config" or all) and not IsRegionAGroup(source) then
-    destination.config = {};
-    WeakAuras.DeepCopy(source.config, destination.config);
+    destination.config = CopyTable(source.config);
   end
 
 end
@@ -83,8 +76,7 @@ end
 local function CopyToClipboard(part, description)
   clipboard.part = part;
   clipboard.pasteText = description;
-  clipboard.source = {};
-  WeakAuras.DeepCopy(clipboard.current, clipboard.source);
+  clipboard.source = CopyTable(clipboard.current);
 end
 
 clipboard.pasteMenuEntry = {
@@ -106,7 +98,7 @@ clipboard.pasteMenuEntry = {
     end
 
     WeakAuras.FillOptions()
-    WeakAuras.ScanForLoads({[clipboard.current.id] = true});
+    OptionsPrivate.Private.ScanForLoads({[clipboard.current.id] = true});
     WeakAuras.SortDisplayButtons();
     WeakAuras.PickDisplay(clipboard.current.id);
     WeakAuras.UpdateDisplayButton(clipboard.current.id);
@@ -466,7 +458,7 @@ local function GetDropTarget()
 end
 
 local function Show_DropIndicator(id)
-  local indicator = WeakAuras.DropIndicator()
+  local indicator = OptionsPrivate.DropIndicator()
   local source = WeakAuras.GetDisplayButton(id)
   local target, pos
   if source then
@@ -517,10 +509,10 @@ local methods = {
 
     function self.callbacks.OnClickNormal(_, mouseButton)
       if(IsControlKeyDown() and not data.controlledChildren) then
-        if (WeakAuras.IsDisplayPicked(data.id)) then
-          WeakAuras.ClearPick(data.id);
+        if (OptionsPrivate.IsDisplayPicked(data.id)) then
+          OptionsPrivate.ClearPick(data.id);
         else
-          WeakAuras.PickDisplayMultiple(data.id);
+          OptionsPrivate.PickDisplayMultiple(data.id);
         end
         self:ReloadTooltip();
       elseif(IsShiftKeyDown()) then
@@ -537,23 +529,23 @@ local methods = {
           editbox:Insert("[WeakAuras: "..fullName.." - "..data.id.."]");
         elseif not data.controlledChildren then
           -- select all buttons between 1st select and current
-          WeakAuras.PickDisplayMultipleShift(data.id)
+          OptionsPrivate.PickDisplayMultipleShift(data.id)
         end
       else
         if(mouseButton == "RightButton") then
           Hide_Tooltip();
-          if(WeakAuras.IsDisplayPicked(data.id) and WeakAuras.IsPickedMultiple()) then
-            EasyMenu(WeakAuras.MultipleDisplayTooltipMenu(), WeakAuras_DropDownMenu, self.frame, 0, 0, "MENU");
+          if(OptionsPrivate.IsDisplayPicked(data.id) and OptionsPrivate.IsPickedMultiple()) then
+            EasyMenu(OptionsPrivate.MultipleDisplayTooltipMenu(), WeakAuras_DropDownMenu, self.frame, 0, 0, "MENU");
           else
             UpdateClipboardMenuEntry(data);
             EasyMenu(self.menu, WeakAuras_DropDownMenu, self.frame, 0, 0, "MENU");
-            if not(WeakAuras.IsDisplayPicked(data.id)) then
+            if not(OptionsPrivate.IsDisplayPicked(data.id)) then
               WeakAuras.PickDisplay(data.id);
             end
           end
         else
-          if (WeakAuras.IsDisplayPicked(data.id)) then
-            WeakAuras.ClearPicks();
+          if (OptionsPrivate.IsDisplayPicked(data.id)) then
+            OptionsPrivate.ClearPicks();
           else
             WeakAuras.PickDisplay(data.id);
           end
@@ -602,46 +594,46 @@ local methods = {
       WeakAuras.Add(data);
       WeakAuras.ClearAndUpdateOptions(data.id)
       self.callbacks.UpdateExpandButton();
-      WeakAuras.SetGrouping();
+      OptionsPrivate.SetGrouping();
       WeakAuras.UpdateDisplayButton(data);
       WeakAuras.ClearAndUpdateOptions(data.id);
       WeakAuras.FillOptions();
       WeakAuras.UpdateGroupOrders(data);
       WeakAuras.SortDisplayButtons();
       self:ReloadTooltip();
-      WeakAuras.ResetMoverSizer();
+      OptionsPrivate.ResetMoverSizer();
     end
 
     function self.callbacks.OnClickGroupingSelf()
-      WeakAuras.SetGrouping();
+      OptionsPrivate.SetGrouping();
       self:ReloadTooltip();
     end
 
     function self.callbacks.OnGroupClick()
-      WeakAuras.SetGrouping(data);
+      OptionsPrivate.SetGrouping(data);
     end
 
     function self.callbacks.OnDeleteClick()
       if (WeakAuras.IsImporting()) then return end;
       local toDelete = {data}
       local parents = data.parent and {[data.parent] = true}
-      WeakAuras.ConfirmDelete(toDelete, parents)
+      OptionsPrivate.ConfirmDelete(toDelete, parents)
     end
 
     function self.callbacks.OnDuplicateClick()
       if (WeakAuras.IsImporting()) then return end;
       if data.controlledChildren then
-        local new_idGroup = WeakAuras.DuplicateAura(data)
+        local new_idGroup = OptionsPrivate.DuplicateAura(data)
         for index, childId in pairs(data.controlledChildren) do
           local childData = WeakAuras.GetData(childId)
-          WeakAuras.DuplicateAura(childData, new_idGroup)
+          OptionsPrivate.DuplicateAura(childData, new_idGroup)
         end
         WeakAuras.SortDisplayButtons()
-        WeakAuras.PickAndEditDisplay(new_idGroup)
+        OptionsPrivate.PickAndEditDisplay(new_idGroup)
       else
-        local new_id = WeakAuras.DuplicateAura(data)
+        local new_id = OptionsPrivate.DuplicateAura(data)
         WeakAuras.SortDisplayButtons()
-        WeakAuras.PickAndEditDisplay(new_id)
+        OptionsPrivate.PickAndEditDisplay(new_id)
       end
     end
 
@@ -660,11 +652,11 @@ local methods = {
         end
       end
       tinsert(toDelete, data)
-      WeakAuras.ConfirmDelete(toDelete);
+      OptionsPrivate.ConfirmDelete(toDelete);
     end
 
     function self.callbacks.OnUngroupClick()
-      WeakAuras.Ungroup(data);
+      OptionsPrivate.Ungroup(data);
     end
 
     function self.callbacks.OnUpGroupClick()
@@ -693,8 +685,8 @@ local methods = {
             WeakAuras.SortDisplayButtons();
             local updata = {duration = 0.15, type = "custom", use_translate = true, x = 0, y = -32};
             local downdata = {duration = 0.15, type = "custom", use_translate = true, x = 0, y = 32};
-            WeakAuras.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index-1]).uid, "main", updata, self.frame, true, function() WeakAuras.SortDisplayButtons() end);
-            WeakAuras.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index]).uid, "main", downdata, otherbutton.frame, true, function() WeakAuras.SortDisplayButtons() end);
+            OptionsPrivate.Private.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index-1]).uid, "main", updata, self.frame, true, function() WeakAuras.SortDisplayButtons() end);
+            OptionsPrivate.Private.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index]).uid, "main", downdata, otherbutton.frame, true, function() WeakAuras.SortDisplayButtons() end);
             WeakAuras.UpdateDisplayButton(parentData);
             WeakAuras.FillOptions()
           end
@@ -732,8 +724,8 @@ local methods = {
             WeakAuras.SortDisplayButtons()
             local updata = {duration = 0.15, type = "custom", use_translate = true, x = 0, y = -32};
             local downdata = {duration = 0.15, type = "custom", use_translate = true, x = 0, y = 32};
-            WeakAuras.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index+1]).uid, "main", downdata, self.frame, true, function() WeakAuras.SortDisplayButtons() end);
-            WeakAuras.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index]).uid, "main", updata, otherbutton.frame, true, function() WeakAuras.SortDisplayButtons() end);
+            OptionsPrivate.Private.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index+1]).uid, "main", downdata, self.frame, true, function() WeakAuras.SortDisplayButtons() end);
+            OptionsPrivate.Private.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index]).uid, "main", updata, otherbutton.frame, true, function() WeakAuras.SortDisplayButtons() end);
             WeakAuras.UpdateDisplayButton(parentData);
             WeakAuras.FillOptions()
           end
@@ -746,7 +738,7 @@ local methods = {
     end
 
     function self.callbacks.OnViewClick()
-      WeakAuras.PauseAllDynamicGroups();
+      OptionsPrivate.Private.PauseAllDynamicGroups();
 
       if(self.view.func() == 2) then
         for index, childId in ipairs(data.controlledChildren) do
@@ -758,7 +750,7 @@ local methods = {
         end
       end
 
-      WeakAuras.ResumeAllDynamicGroups();
+      OptionsPrivate.Private.ResumeAllDynamicGroups();
     end
 
     function self.callbacks.ViewTest()
@@ -807,26 +799,26 @@ local methods = {
       local oldid = data.id;
       if not(newid == oldid) then
         WeakAuras.Rename(data, newid);
-        WeakAuras.HandleRename(data, oldid, newid)
+        OptionsPrivate.HandleRename(data, oldid, newid)
       end
     end
 
     function self.callbacks.OnDragStart()
       if WeakAuras.IsImporting() or self:IsGroup() then return end;
-      if #WeakAuras.tempGroup.controlledChildren == 0 then
+      if #OptionsPrivate.tempGroup.controlledChildren == 0 then
         WeakAuras.PickDisplay(data.id);
       end
-      WeakAuras.SetDragging(data);
+      OptionsPrivate.SetDragging(data);
     end
 
     function self.callbacks.OnDragStop()
       if not self.dragging then return end
-      WeakAuras.SetDragging(data, true)
+      OptionsPrivate.SetDragging(data, true)
     end
 
     function self.callbacks.OnKeyDown(self, key)
       if (key == "ESCAPE") then
-        WeakAuras.SetDragging();
+        OptionsPrivate.SetDragging();
       end
     end
 
@@ -906,7 +898,7 @@ local methods = {
             text = regionData.displayName,
             notCheckable = true,
             func = function()
-              WeakAuras.ConvertDisplay(data, regionType);
+              OptionsPrivate.ConvertDisplay(data, regionType);
               WeakAuras_DropDownMenu:Hide();
             end
           });
@@ -929,12 +921,12 @@ local methods = {
     tinsert(self.menu, {
       text = L["Export to string..."],
       notCheckable = true,
-      func = function() WeakAuras.ExportToString(data.id) end
+      func = function() OptionsPrivate.ExportToString(data.id) end
     });
     tinsert(self.menu, {
       text = L["Export to Lua table..."],
       notCheckable = true,
-      func = function() WeakAuras.ExportToTable(data.id) end
+      func = function() OptionsPrivate.ExportToTable(data.id) end
     });
 
     if WeakAurasCompanion then
@@ -1060,14 +1052,14 @@ local methods = {
         namestable[1] = L["No Children"];
       end
     else
-      WeakAuras.GetTriggerDescription(data, -1, namestable)
+      OptionsPrivate.Private.GetTriggerDescription(data, -1, namestable)
     end
-    if(WeakAuras.CanHaveClones(data)) then
+    if(OptionsPrivate.Private.CanHaveClones(data)) then
       tinsert(namestable, {" ", "|cFF00FF00"..L["Auto-cloning enabled"]})
     end
-    if(WeakAuras.IsDefinedByAddon(data.id)) then
+    if(OptionsPrivate.Private.IsDefinedByAddon(data.id)) then
       tinsert(namestable, " ");
-      tinsert(namestable, {" ", "|cFF00FFFF"..L["Addon"]..": "..WeakAuras.IsDefinedByAddon(data.id)});
+      tinsert(namestable, {" ", "|cFF00FFFF"..L["Addon"]..": "..OptionsPrivate.Private.IsDefinedByAddon(data.id)});
     end
 
     local hasDescription = data.desc and data.desc ~= "";
@@ -1102,8 +1094,8 @@ local methods = {
     self:SetDescription({data.id, displayName}, unpack(namestable));
   end,
   ["ReloadTooltip"] = function(self)if(
-    WeakAuras.IsPickedMultiple() and WeakAuras.IsDisplayPicked(self.data.id)) then
-    Show_Long_Tooltip(self.frame, WeakAuras.MultipleDisplayTooltipDesc());
+    OptionsPrivate.IsPickedMultiple() and OptionsPrivate.IsDisplayPicked(self.data.id)) then
+    Show_Long_Tooltip(self.frame, OptionsPrivate.MultipleDisplayTooltipDesc());
   else
     Show_Long_Tooltip(self.frame, self.frame.description);
   end
@@ -1250,7 +1242,7 @@ local methods = {
       end)
       Show_DropIndicator(id)
     end
-    WeakAuras.UpdateButtonsScroll()
+    OptionsPrivate.UpdateButtonsScroll()
   end,
   ["Drop"] = function(self, reset)
     Show_DropIndicator()
@@ -1281,7 +1273,7 @@ local methods = {
     -- exit if we have no target or only want to reset
     self.multi = nil
     if reset or not target then
-      return WeakAuras.UpdateButtonsScroll()
+      return OptionsPrivate.UpdateButtonsScroll()
     end
     local action = GetAction(target, area, self)
     if action then
@@ -1370,7 +1362,7 @@ local methods = {
   end,
   ["Expand"] = function(self, reloadTooltip)
     self.expand:Enable();
-    WeakAuras.SetCollapsed(self.data.id, "displayButton", "", false)
+    OptionsPrivate.SetCollapsed(self.data.id, "displayButton", "", false)
     self.expand:SetNormalTexture("Interface\\BUTTONS\\UI-MinusButton-Up.blp");
     self.expand:SetPushedTexture("Interface\\BUTTONS\\UI-MinusButton-Down.blp");
     self.expand.title = L["Collapse"];
@@ -1384,7 +1376,7 @@ local methods = {
   end,
   ["Collapse"] = function(self, reloadTooltip)
     self.expand:Enable();
-    WeakAuras.SetCollapsed(self.data.id, "displayButton", "", true)
+    OptionsPrivate.SetCollapsed(self.data.id, "displayButton", "", true)
     self.expand:SetNormalTexture("Interface\\BUTTONS\\UI-PlusButton-Up.blp");
     self.expand:SetPushedTexture("Interface\\BUTTONS\\UI-PlusButton-Down.blp");
     self.expand.title = L["Expand"];
@@ -1400,7 +1392,7 @@ local methods = {
     self.expand.func = func;
   end,
   ["GetExpanded"] = function(self)
-    return not WeakAuras.IsCollapsed(self.data.id, "displayButton", "", true)
+    return not OptionsPrivate.IsCollapsed(self.data.id, "displayButton", "", true)
   end,
   ["DisableExpand"] = function(self)
     self.expand:Disable();
@@ -1798,8 +1790,8 @@ local function Constructor()
   button.description = {};
 
   button:SetScript("OnEnter", function()
-    if(WeakAuras.IsPickedMultiple() and WeakAuras.IsDisplayPicked(button.id)) then
-      Show_Long_Tooltip(button, WeakAuras.MultipleDisplayTooltipDesc());
+    if(OptionsPrivate.IsPickedMultiple() and OptionsPrivate.IsDisplayPicked(button.id)) then
+      Show_Long_Tooltip(button, OptionsPrivate.MultipleDisplayTooltipDesc());
     else
       if not(button.terribleCodeOrganizationHackTable.IsGroupingOrCopying()) then
         button.terribleCodeOrganizationHackTable.SetNormalTooltip();
@@ -1831,9 +1823,9 @@ local function Constructor()
     if(priority >= self.visibility) then
       self.visibility = priority;
       if(self.region and self.region.Expand) then
-        WeakAuras.FakeStatesFor(self.region.id, true)
-        if (WeakAuras.mouseFrame) then
-          WeakAuras.mouseFrame:expand(self.region.id);
+        OptionsPrivate.Private.FakeStatesFor(self.region.id, true)
+        if (OptionsPrivate.Private.mouseFrame) then
+          OptionsPrivate.Private.mouseFrame:expand(self.region.id);
         end
       end
     end
@@ -1848,9 +1840,9 @@ local function Constructor()
     if(priority >= self.visibility) then
       self.visibility = 0;
       if(self.region and self.region.Collapse) then
-        WeakAuras.FakeStatesFor(self.region.id, false)
-        if (WeakAuras.mouseFrame) then
-          WeakAuras.mouseFrame:collapse(self.region.id);
+        OptionsPrivate.Private.FakeStatesFor(self.region.id, false)
+        if (OptionsPrivate.Private.mouseFrame) then
+          OptionsPrivate.Private.mouseFrame:collapse(self.region.id);
         end
       end
     end

@@ -34,7 +34,7 @@ local function createOptions(id, data)
       width = WeakAuras.halfWidth,
       order = 12,
       func = function()
-        WeakAuras.OpenTexturePicker(data, data, "foregroundTexture", WeakAuras.texture_types);
+        OptionsPrivate.OpenTexturePicker(data, data, "foregroundTexture", OptionsPrivate.Private.texture_types);
       end
     },
     sameTexture = {
@@ -49,7 +49,7 @@ local function createOptions(id, data)
       width = WeakAuras.halfWidth,
       order = 17,
       func = function()
-        WeakAuras.OpenTexturePicker(data, data, "backgroundTexture", WeakAuras.texture_types);
+        OptionsPrivate.OpenTexturePicker(data, data, "backgroundTexture", OptionsPrivate.Private.texture_types);
       end,
       disabled = function() return data.sameTexture; end
     },
@@ -70,7 +70,7 @@ local function createOptions(id, data)
       width = WeakAuras.normalWidth,
       name = L["Blend Mode"],
       order = 20,
-      values = WeakAuras.blend_types
+      values = OptionsPrivate.Private.blend_types
     },
     backgroundOffset = {
       type = "range",
@@ -86,7 +86,7 @@ local function createOptions(id, data)
       width = WeakAuras.normalWidth,
       name = L["Orientation"],
       order = 35,
-      values = WeakAuras.orientation_with_circle_types
+      values = OptionsPrivate.Private.orientation_with_circle_types
     },
     compress = {
       type = "toggle",
@@ -175,7 +175,7 @@ local function createOptions(id, data)
             WeakAuras.Add(parentData);
           end
         end
-        WeakAuras.ResetMoverSizer();
+        OptionsPrivate.ResetMoverSizer();
       end,
     },
     crop_y = {
@@ -198,7 +198,7 @@ local function createOptions(id, data)
             WeakAuras.Add(parentData);
           end
         end
-        WeakAuras.ResetMoverSizer();
+        OptionsPrivate.ResetMoverSizer();
       end,
     },
     rotation = {
@@ -250,7 +250,7 @@ local function createOptions(id, data)
       name = L["Slant Mode"],
       order = 55.5,
       hidden = function() return not data.slanted or data.orientation == "CLOCKWISE" or data.orientation == "ANTICLOCKWISE" end,
-      values = WeakAuras.slant_mode
+      values = OptionsPrivate.Private.slant_mode
     },
     spacer = {
       type = "header",
@@ -265,7 +265,7 @@ local function createOptions(id, data)
   };
   options = WeakAuras.regionPrototype.AddAdjustedDurationOptions(options, data, 57);
 
-  local overlayInfo = WeakAuras.GetOverlayInfo(data);
+  local overlayInfo = OptionsPrivate.Private.GetOverlayInfo(data);
   if (overlayInfo and next(overlayInfo)) then
     options["overlayheader"] = {
       type = "header",
@@ -307,7 +307,7 @@ local function createOptions(id, data)
 
   return {
     progresstexture = options,
-    position = WeakAuras.commonOptions.PositionOptions(id, data),
+    position = OptionsPrivate.commonOptions.PositionOptions(id, data),
   };
 end
 
@@ -773,7 +773,7 @@ local templates = {
 }
 
 local function GetAnchors(data)
-  return WeakAuras.default_types_for_anchor
+  return OptionsPrivate.Private.default_types_for_anchor
 end
 
 WeakAuras.RegisterRegionOptions("progresstexture", createOptions, createIcon, L["Progress Texture"], createThumbnail, modifyThumbnail, L["Shows a texture that changes based on duration"], templates, GetAnchors);

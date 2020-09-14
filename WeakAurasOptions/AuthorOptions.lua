@@ -68,8 +68,6 @@ local tinsert, tremove, tconcat = table.insert, table.remove, table.concat
 local conflictBlue = "|cFF4080FF"
 local conflict = {} -- magic value
 
-local optionClasses = WeakAuras.author_option_classes
-
 local function atLeastOneSet(references, key)
   for id, optionData in pairs(references) do
     local childOption = optionData.options[optionData.index]
@@ -539,7 +537,7 @@ typeControlAdders = {
       name = name(option, "default", L["Default"]),
       desc = desc(option, "default"),
       order = order(),
-      values = WeakAuras.bool_types,
+      values = OptionsPrivate.Private.bool_types,
       get = function()
         if option.default == nil then
           return
@@ -740,7 +738,7 @@ typeControlAdders = {
       name = name(option, "fontSize", L["Font Size"]),
       desc = desc(option, "fontSize"),
       order = order(),
-      values = WeakAuras.font_sizes,
+      values = OptionsPrivate.Private.font_sizes,
       get = get(option, "fontSize"),
       set = set(data, option, "fontSize")
     }
@@ -1111,7 +1109,7 @@ typeControlAdders = {
       name = name(option, "groupType", L["Group Type"]),
       order = order(),
       width = WeakAuras.doubleWidth,
-      values = WeakAuras.group_option_types,
+      values = OptionsPrivate.Private.group_option_types,
       get = get(option, "groupType"),
       set = function(_, value)
         for id, optionData in pairs(option.references) do
@@ -1144,7 +1142,7 @@ typeControlAdders = {
           local childOption = optionData.options[optionData.index]
           local childData = optionData.data
           childOption.collapse = value
-          WeakAuras.SetCollapsed(id, "config", optionData.path, value)
+          OptionsPrivate.SetCollapsed(id, "config", optionData.path, value)
           WeakAuras.Add(childData)
         end
         WeakAuras.ClearAndUpdateOptions(data.id, true)
@@ -1158,7 +1156,7 @@ typeControlAdders = {
         desc = desc(option, "limitType", L["Determines how many entries can be in the table."]),
         order = order(),
         width = WeakAuras.normalWidth,
-        values = WeakAuras.group_limit_types,
+        values = OptionsPrivate.Private.group_limit_types,
         get = get(option, "limitType"),
         set = function(_, value)
           for id, optionData in pairs(option.references) do
@@ -1220,8 +1218,8 @@ typeControlAdders = {
           return option.nameSource == -1
         end,
       }
-      local nameSources = CopyTable(WeakAuras.array_entry_name_types)
-      local validNameSourceTypes = WeakAuras.name_source_option_types
+      local nameSources = CopyTable(OptionsPrivate.Private.array_entry_name_types)
+      local validNameSourceTypes = OptionsPrivate.Private.name_source_option_types
       if option.limitType ~= "fixed" then
         nameSources[-1] = nil
       end
@@ -1320,7 +1318,7 @@ typeControlAdders = {
             width = 1,
             useDesc = false,
           }
-          WeakAuras.SetCollapsed(id, "author", path, false)
+          OptionsPrivate.SetCollapsed(id, "author", path, false)
           WeakAuras.Add(childData)
         end
         WeakAuras.ClearAndUpdateOptions(data.id, true)
@@ -1349,7 +1347,7 @@ local function up(data, options, index)
       local optionID = optionData.index
       local childData = optionData.data
       local childOptions = optionData.options
-      WeakAuras.MoveCollapseDataUp(id, "author", path)
+      OptionsPrivate.MoveCollapseDataUp(id, "author", path)
       childOptions[optionID], childOptions[optionID - 1] = childOptions[optionID - 1], childOptions[optionID]
       WeakAuras.Add(childData)
     end
@@ -1372,7 +1370,7 @@ local function down(data, options, index)
       local optionID = optionData.index
       local childData = optionData.data
       local childOptions = optionData.options
-      WeakAuras.MoveCollapseDataUp(id, "author", path)
+      OptionsPrivate.MoveCollapseDataDown(id, "author", path)
       childOptions[optionID], childOptions[optionID + 1] = childOptions[optionID + 1], childOptions[optionID]
       WeakAuras.Add(childData)
     end
@@ -1389,7 +1387,7 @@ local function duplicate(data, options, index)
       local childData = optionData.data
       local path = optionData.path
       path[#path] = path[#path] + 1 -- this data is being regenerated very soon
-      WeakAuras.InsertCollapsed(id, "author", optionData.path, false)
+      OptionsPrivate.InsertCollapsed(id, "author", optionData.path, false)
       local newOption = CopyTable(childOptions[optionID])
       if newOption.key then
         local existingKeys = {}
@@ -1436,7 +1434,7 @@ function addAuthorModeOption(options, args, data, order, prefix, i)
 
   local collapsed = false
   for id, optionData in pairs(option.references) do
-    if WeakAuras.IsCollapsed(id, "author", optionData.path, true) then
+    if OptionsPrivate.IsCollapsed(id, "author", optionData.path, true) then
       collapsed = true
       break
     end
@@ -1450,18 +1448,18 @@ function addAuthorModeOption(options, args, data, order, prefix, i)
   end
 
   local optionBelow = options[i + 1]
-  local isAboveGroup = optionBelow and optionClasses[optionBelow.type] == "group"
+  local isAboveGroup = optionBelow and OptionsPrivate.Private.author_option_classes[optionBelow.type] == "group"
   if isAboveGroup then
     buttonWidth = buttonWidth + 0.15
   end
 
   local optionAbove = options[i - 1]
-  local isBelowGroup = optionAbove and optionClasses[optionAbove.type] == "group"
+  local isBelowGroup = optionAbove and OptionsPrivate.Private.author_option_classes[optionAbove.type] == "group"
   if isBelowGroup then
     buttonWidth = buttonWidth + 0.15
   end
-  local optionClass = optionClasses[option.type]
-  local optionName = optionClass == "noninteractive" and WeakAuras.author_option_types[option.type]
+  local optionClass = OptionsPrivate.Private.author_option_classes[option.type]
+  local optionName = optionClass == "noninteractive" and OptionsPrivate.Private.author_option_types[option.type]
                      or option.name
 
   args[prefix .. "collapse"] = {
@@ -1471,7 +1469,7 @@ function addAuthorModeOption(options, args, data, order, prefix, i)
     width = WeakAuras.doubleWidth - buttonWidth,
     func = function()
       for id, optionData in pairs(option.references) do
-        WeakAuras.SetCollapsed(id, "author", optionData.path, not collapsed)
+        OptionsPrivate.SetCollapsed(id, "author", optionData.path, not collapsed)
       end
       WeakAuras.ClearAndUpdateOptions(data.id, true)
     end,
@@ -1493,11 +1491,11 @@ function addAuthorModeOption(options, args, data, order, prefix, i)
         local groupData = optionAbove.references[id]
         if groupData then
           local childGroup = groupData.options[groupData.index]
-          local childCollapsed = WeakAuras.IsCollapsed(id, "author", optionData.path, true)
-          WeakAuras.RemoveCollapsed(id, "author", optionData.path)
+          local childCollapsed = OptionsPrivate.IsCollapsed(id, "author", optionData.path, true)
+          OptionsPrivate.RemoveCollapsed(id, "author", optionData.path)
           local newPath = groupData.path
           tinsert(newPath, #childGroup.subOptions + 1)
-          WeakAuras.InsertCollapsed(id, "author", newPath, childCollapsed)
+          OptionsPrivate.InsertCollapsed(id, "author", newPath, childCollapsed)
           local childOption = tremove(optionData.options, optionData.index)
           local childData = optionData.data
           tinsert(childGroup.subOptions, childOption)
@@ -1522,11 +1520,11 @@ function addAuthorModeOption(options, args, data, order, prefix, i)
         local groupData = optionBelow.references[id]
         if groupData then
           local childGroup = groupData.options[groupData.index]
-          local childCollapsed = WeakAuras.IsCollapsed(id, "author", optionData.path, true)
-          WeakAuras.RemoveCollapsed(id, "author", optionData.path)
+          local childCollapsed = OptionsPrivate.IsCollapsed(id, "author", optionData.path, true)
+          OptionsPrivate.RemoveCollapsed(id, "author", optionData.path)
           local newPath = groupData.path
           tinsert(newPath, 1)
-          WeakAuras.InsertCollapsed(id, "author", newPath, childCollapsed)
+          OptionsPrivate.InsertCollapsed(id, "author", newPath, childCollapsed)
           local childOption = tremove(optionData.options, optionData.index)
           local childData = optionData.data
           tinsert(childGroup.subOptions, 1, childOption)
@@ -1553,11 +1551,11 @@ function addAuthorModeOption(options, args, data, order, prefix, i)
         local parent = optionData.parent
         local parentOptions = parent and parent.references[id].options or optionData.data.authorOptions
         local childOption = tremove(optionData.options, optionData.index)
-        local childCollapsed = WeakAuras.IsCollapsed(id, "author", optionData.path, true)
-        WeakAuras.RemoveCollapsed(id, "author", optionData.path)
+        local childCollapsed = OptionsPrivate.IsCollapsed(id, "author", optionData.path, true)
+        OptionsPrivate.RemoveCollapsed(id, "author", optionData.path)
         tinsert(parentOptions, path[#path - 1], childOption)
         path[#path] = nil
-        WeakAuras.InsertCollapsed(id, "author", path)
+        OptionsPrivate.InsertCollapsed(id, "author", path)
         WeakAuras.Add(optionData.data)
       end
       WeakAuras.ClearAndUpdateOptions(data.id, true)
@@ -1579,12 +1577,12 @@ function addAuthorModeOption(options, args, data, order, prefix, i)
         local parent = optionData.parent
         local parentOptions = parent and parent.references[id].options or optionData.data.authorOptions
         local childOption = tremove(optionData.options, optionData.index)
-        local childCollapsed = WeakAuras.IsCollapsed(id, "author", optionData.path, true)
-        WeakAuras.RemoveCollapsed(id, "author", optionData.path)
+        local childCollapsed = OptionsPrivate.IsCollapsed(id, "author", optionData.path, true)
+        OptionsPrivate.RemoveCollapsed(id, "author", optionData.path)
         tinsert(parentOptions, path[#path - 1] + 1, childOption)
         path[#path] = nil
         path[#path] = path[#path] + 1
-        WeakAuras.InsertCollapsed(id, "author", path)
+        OptionsPrivate.InsertCollapsed(id, "author", path)
         WeakAuras.Add(optionData.data)
       end
       WeakAuras.ClearAndUpdateOptions(data.id, true)
@@ -1645,7 +1643,7 @@ function addAuthorModeOption(options, args, data, order, prefix, i)
         local optionIndex = optionData.index
         local childData = optionData.data
         local parentOption = optionData.parent
-        WeakAuras.RemoveCollapsed(id, "author", optionData.path)
+        OptionsPrivate.RemoveCollapsed(id, "author", optionData.path)
         tremove(childOptions, optionIndex)
         if parentOption and parentOption.groupType == "array" then
           local dereferencedParent = parentOption.references[id]
@@ -1671,15 +1669,15 @@ function addAuthorModeOption(options, args, data, order, prefix, i)
     name = L["Option Type"],
     desc = descType(option),
     order = order(),
-    values = WeakAuras.author_option_types,
+    values = OptionsPrivate.Private.author_option_types,
     get = get(option, "type"),
     set = function(_, value)
       if value == option.type then
         return
       end
-      local author_option_fields = WeakAuras.author_option_fields
+      local author_option_fields = OptionsPrivate.Private.author_option_fields
       local commonFields, newFields = author_option_fields.common, author_option_fields[value]
-      local newClass = optionClasses[value]
+      local newClass = OptionsPrivate.Private.author_option_classes[value]
       for id, optionData in pairs(option.references) do
         local childOption = optionData.options[optionData.index]
         local childData = optionData.data
@@ -1723,7 +1721,7 @@ function addAuthorModeOption(options, args, data, order, prefix, i)
             childOption.key = newKey
           end
         end
-        if parentOption and parentOption.groupType == "array" and not WeakAuras.array_entry_name_types[value] then
+        if parentOption and parentOption.groupType == "array" and not OptionsPrivate.Private.array_entry_name_types[value] then
           local dereferencedParent = parentOption.references[id]
           if dereferencedParent.nameSource == optionData.index then
             dereferencedParent.nameSource = 0
@@ -1839,7 +1837,7 @@ end
 local function addUserModeOption(options, args, data, order, prefix, i)
   local option = options[i]
   local optionType = option.type
-  local optionClass = optionClasses[optionType]
+  local optionClass = OptionsPrivate.Private.author_option_classes[optionType]
   local userOption
 
   if optionClass == "simple" then
@@ -1867,7 +1865,7 @@ local function addUserModeOption(options, args, data, order, prefix, i)
         defaultCollapsed = option.collapse
       end
       for id, optionData in pairs(option.references) do
-        if WeakAuras.IsCollapsed(id, "config", optionData.path, defaultCollapsed) then
+        if OptionsPrivate.IsCollapsed(id, "config", optionData.path, defaultCollapsed) then
           collapsed = true
           break
         end
@@ -1879,7 +1877,7 @@ local function addUserModeOption(options, args, data, order, prefix, i)
         width = WeakAuras.doubleWidth,
         func = function()
           for id, optionData in pairs(option.references) do
-            WeakAuras.SetCollapsed(id, "config", optionData.path, not collapsed)
+            OptionsPrivate.SetCollapsed(id, "config", optionData.path, not collapsed)
           end
           WeakAuras.ClearAndUpdateOptions(data.id, true)
         end,
@@ -2405,7 +2403,7 @@ local function valuesAreEqual(t1, t2)
 end
 
 local function allChoicesAreDefault(option, config, id, path)
-  local optionClass = optionClasses[option.type]
+  local optionClass = OptionsPrivate.Private.author_option_classes[option.type]
   if optionClass == "simple" then
     return valuesAreEqual(option.default, config[option.key])
   elseif optionClass == "group" then
@@ -2432,7 +2430,7 @@ local function allChoicesAreDefault(option, config, id, path)
       path[#path] = nil
     end
     if option.useCollapse then
-      local isCollapsed = WeakAuras.IsCollapsed(id, "config", path, option.collapse)
+      local isCollapsed = OptionsPrivate.IsCollapsed(id, "config", path, option.collapse)
       if isCollapsed ~= option.collapse then
         return false
       end
@@ -2449,7 +2447,7 @@ local function createorder(startorder)
   end
 end
 
-function WeakAuras.GetAuthorOptions(data)
+function OptionsPrivate.GetAuthorOptions(data)
   -- initialize the process
   local authorOptions = {
     type = "group",
@@ -2519,7 +2517,7 @@ function WeakAuras.GetAuthorOptions(data)
               width = 1,
               useDesc = false,
             }
-            WeakAuras.SetCollapsed(childData.id, "author", i, false)
+            OptionsPrivate.SetCollapsed(childData.id, "author", i, false)
             WeakAuras.Add(childData)
           end
         else
@@ -2532,7 +2530,7 @@ function WeakAuras.GetAuthorOptions(data)
             width = 1,
             useDesc = false,
           }
-          WeakAuras.SetCollapsed(data.id, "author", i, false)
+          OptionsPrivate.SetCollapsed(data.id, "author", i, false)
           WeakAuras.Add(data)
         end
         WeakAuras.ClearAndUpdateOptions(data.id, true)
@@ -2557,13 +2555,13 @@ function WeakAuras.GetAuthorOptions(data)
         if data.controlledChildren then
           for _, id in pairs(data.controlledChildren) do
             local childData = WeakAuras.GetData(id)
-            WeakAuras.ResetCollapsed(id, "config")
+            OptionsPrivate.ResetCollapsed(id, "config")
             childData.config = {} -- config validation in Add() will set all the needed keys to their defaults
             WeakAuras.Add(childData)
           end
         else
           data.config = {}
-          WeakAuras.ResetCollapsed(data.id, "config")
+          OptionsPrivate.ResetCollapsed(data.id, "config")
           WeakAuras.Add(data)
         end
         WeakAuras.ClearAndUpdateOptions(data.id, true)

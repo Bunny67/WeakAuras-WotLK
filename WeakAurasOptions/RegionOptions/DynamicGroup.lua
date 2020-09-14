@@ -98,7 +98,7 @@ local function createOptions(id, data)
       width = WeakAuras.normalWidth,
       name = L["Choose"],
       order = 0.51,
-      func = function() WeakAuras.OpenIconPicker(data, "groupIcon", true) end
+      func = function() OptionsPrivate.OpenIconPicker(data, "groupIcon", true) end
     },
     -- grow options
     grow = {
@@ -106,7 +106,7 @@ local function createOptions(id, data)
       width = WeakAuras.doubleWidth,
       name = L["Grow"],
       order = 1,
-      values = WeakAuras.grow_types,
+      values = OptionsPrivate.Private.grow_types,
       set = function(info, v)
         data.grow = v
         local selfPoint = selfPoints[data.grow] or selfPoints.default
@@ -116,7 +116,7 @@ local function createOptions(id, data)
         data.selfPoint = selfPoint
         WeakAuras.Add(data)
         WeakAuras.ClearAndUpdateOptions(data.id)
-        WeakAuras.ResetMoverSizer()
+        OptionsPrivate.ResetMoverSizer()
       end,
     },
     useAnchorPerUnit = {
@@ -150,7 +150,7 @@ local function createOptions(id, data)
       width = WeakAuras.normalWidth,
       name = L["Align"],
       order = 2,
-      values = WeakAuras.align_types,
+      values = OptionsPrivate.Private.align_types,
       set = function(info, v)
         data.align = v
         local selfPoint = selfPoints[data.grow] or selfPoints.default
@@ -160,7 +160,7 @@ local function createOptions(id, data)
         data.selfPoint = selfPoint
         WeakAuras.Add(data)
         WeakAuras.ClearAndUpdateOptions(data.id)
-        WeakAuras.ResetMoverSizer()
+        OptionsPrivate.ResetMoverSizer()
       end,
       hidden = function() return (data.grow == "CUSTOM" or data.grow == "LEFT" or data.grow == "RIGHT" or data.grow == "HORIZONTAL" or data.grow == "CIRCLE" or data.grow == "COUNTERCIRCLE" or data.grow == "GRID") end,
       disabled = function() return data.grow == "CIRCLE" or data.grow == "COUNTERCIRCLE" end
@@ -170,7 +170,7 @@ local function createOptions(id, data)
       width = WeakAuras.normalWidth,
       name = L["Align"],
       order = 3,
-      values = WeakAuras.rotated_align_types,
+      values = OptionsPrivate.Private.rotated_align_types,
       hidden = function() return (data.grow == "CUSTOM" or data.grow == "UP" or data.grow == "DOWN" or data.grow == "VERTICAL" or data.grow == "CIRCLE" or data.grow == "COUNTERCIRCLE" or data.grow == "GRID") end,
       get = function() return data.align; end,
       set = function(info, v)
@@ -182,7 +182,7 @@ local function createOptions(id, data)
         data.selfPoint = selfPoint
         WeakAuras.Add(data)
         WeakAuras.ClearAndUpdateOptions(data.id)
-        WeakAuras.ResetMoverSizer()
+        OptionsPrivate.ResetMoverSizer()
       end,
     },
     -- circle grow options
@@ -191,7 +191,7 @@ local function createOptions(id, data)
       width = WeakAuras.normalWidth,
       name = L["Constant Factor"],
       order = 4,
-      values = WeakAuras.circular_group_constant_factor_types,
+      values = OptionsPrivate.Private.circular_group_constant_factor_types,
       hidden = function() return data.grow ~= "CIRCLE" and data.grow ~= "COUNTERCIRCLE" end
     },
     rotation = {
@@ -238,13 +238,13 @@ local function createOptions(id, data)
       width = WeakAuras.normalWidth,
       name = L["Grid direction"],
       order = 8,
-      values = WeakAuras.grid_types,
+      values = OptionsPrivate.Private.grid_types,
       hidden = function() return data.grow ~= "GRID" end,
       set = function(info, value)
         data.selfPoint = gridSelfPoints[value]
         data.gridType = value
         WeakAuras.Add(data)
-        WeakAuras.ResetMoverSizer()
+        OptionsPrivate.ResetMoverSizer()
       end,
     },
     gridWidth = {
@@ -321,7 +321,7 @@ local function createOptions(id, data)
       width = WeakAuras.doubleWidth,
       name = L["Sort"],
       order = 20,
-      values = WeakAuras.group_sort_types
+      values = OptionsPrivate.Private.group_sort_types
     },
     -- custom sort option added below
     hybridPosition = {
@@ -329,7 +329,7 @@ local function createOptions(id, data)
       width = WeakAuras.normalWidth,
       name = L["Hybrid Position"],
       order = 21,
-      values = WeakAuras.group_hybrid_position_types,
+      values = OptionsPrivate.Private.group_hybrid_position_types,
       hidden = function() return not(data.sort == "hybrid") end,
     },
     hybridSortMode = {
@@ -337,7 +337,7 @@ local function createOptions(id, data)
       width = WeakAuras.normalWidth,
       name = L["Hybrid Sort Mode"],
       order = 22,
-      values = WeakAuras.group_hybrid_sort_types,
+      values = OptionsPrivate.Private.group_hybrid_sort_types,
       hidden = function() return not(data.sort == "hybrid") end,
     },
     sortHybrid = {
@@ -409,7 +409,7 @@ local function createOptions(id, data)
         data.yOffset = data.yOffset/(1-change)
         data.scale = v
         WeakAuras.Add(data);
-        WeakAuras.ResetMoverSizer();
+        OptionsPrivate.ResetMoverSizer();
       end
     },
     endHeader = {
@@ -419,23 +419,23 @@ local function createOptions(id, data)
     },
   };
 
-  WeakAuras.commonOptions.AddCodeOption(options, data, L["Custom Grow"], "custom_grow", "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#grow",
+  OptionsPrivate.commonOptions.AddCodeOption(options, data, L["Custom Grow"], "custom_grow", "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#grow",
                           2, function() return data.grow ~= "CUSTOM" end, {"customGrow"}, nil, nil, nil, nil, nil, true)
-  WeakAuras.commonOptions.AddCodeOption(options, data, L["Custom Sort"], "custom_sort", "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#custom-sort",
+  OptionsPrivate.commonOptions.AddCodeOption(options, data, L["Custom Sort"], "custom_sort", "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#custom-sort",
                           21, function() return data.sort ~= "custom" end, {"customSort"}, nil, nil, nil, nil, nil, true)
-  WeakAuras.commonOptions.AddCodeOption(options, data, L["Custom Anchor"], "custom_anchor_per_unit", "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#group-by-frame",
+  OptionsPrivate.commonOptions.AddCodeOption(options, data, L["Custom Anchor"], "custom_anchor_per_unit", "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#group-by-frame",
                           1.7, function() return not(data.grow ~= "CUSTOM" and data.useAnchorPerUnit and data.anchorPerUnit == "CUSTOM") end, {"customAnchorPerUnit"}, nil, nil, nil, nil, nil, true)
 
   local borderHideFunc = function() return data.useAnchorPerUnit or data.grow == "CUSTOM" end
   local disableSelfPoint = function() return data.grow ~= "CUSTOM" and data.grow ~= "GRID" and not data.useAnchorPerUnit end
 
-  for k, v in pairs(WeakAuras.commonOptions.BorderOptions(id, data, nil, borderHideFunc, 70)) do
+  for k, v in pairs(OptionsPrivate.commonOptions.BorderOptions(id, data, nil, borderHideFunc, 70)) do
     options[k] = v
   end
 
   return {
     dynamicgroup = options,
-    position = WeakAuras.commonOptions.PositionOptions(id, data, nil, true, disableSelfPoint),
+    position = OptionsPrivate.commonOptions.PositionOptions(id, data, nil, true, disableSelfPoint),
   };
 end
 

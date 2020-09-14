@@ -9,22 +9,31 @@ local LSM = LibStub("LibSharedMedia-3.0");
 local wipe, tinsert = wipe, tinsert
 local GetNumShapeshiftForms, GetShapeshiftFormInfo = GetNumShapeshiftForms, GetShapeshiftFormInfo
 
-WeakAuras.glow_action_types = {
+local function WA_GetClassColor(classFilename)
+  local color = (CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS)[classFilename]
+  if color and color.colorStr then
+    return color.colorStr
+  end
+
+  return "ffffffff"
+end
+
+Private.glow_action_types = {
   show = L["Show"],
   hide = L["Hide"]
 }
 
-WeakAuras.glow_frame_types = {
+Private.glow_frame_types = {
   UNITFRAME = L["Unit Frame"],
   FRAMESELECTOR = L["Frame Selector"]
 }
 
-WeakAuras.circular_group_constant_factor_types = {
+Private.circular_group_constant_factor_types = {
   RADIUS = L["Radius"],
   SPACING = L["Spacing"]
 }
 
-WeakAuras.frame_strata_types = {
+Private.frame_strata_types = {
   [1] = L["Inherited"],
   [2] = "BACKGROUND",
   [3] = "LOW",
@@ -36,17 +45,17 @@ WeakAuras.frame_strata_types = {
   [9] = "TOOLTIP"
 }
 
-WeakAuras.hostility_types = {
+Private.hostility_types = {
   hostile = L["Hostile"],
   friendly = L["Friendly"]
 }
 
-WeakAuras.character_types = {
+Private.character_types = {
   player = L["Player Character"],
   npc = L["Non-player Character"]
 }
 
-WeakAuras.group_sort_types = {
+Private.group_sort_types = {
   ascending = L["Ascending"],
   descending = L["Descending"],
   hybrid = L["Hybrid"],
@@ -54,40 +63,40 @@ WeakAuras.group_sort_types = {
   custom = L["Custom"]
 }
 
-WeakAuras.group_hybrid_position_types = {
+Private.group_hybrid_position_types = {
   hybridFirst = L["Marked First"],
   hybridLast = L["Marked Last"]
 }
 
-WeakAuras.group_hybrid_sort_types = {
+Private.group_hybrid_sort_types = {
   ascending = L["Ascending"],
   descending = L["Descending"]
 }
 
-WeakAuras.precision_types = {
+Private.precision_types = {
   [0] = "12",
   [1] = "12.3",
   [2] = "12.34",
   [3] = "12.345",
 }
 
-WeakAuras.big_number_types = {
+Private.big_number_types = {
   ["AbbreviateNumbers"] = L["AbbreviateNumbers (Blizzard)"],
   ["AbbreviateLargeNumbers"] = L["AbbreviateLargeNumbers (Blizzard)"]
 }
 
-WeakAuras.round_types = {
+Private.round_types = {
   floor = L["Floor"],
   ceil = L["Ceil"],
   round = L["Round"]
 }
 
-WeakAuras.unit_color_types = {
+Private.unit_color_types = {
   none = L["None"],
   class = L["Class"]
 }
 
-WeakAuras.unit_realm_name_types = {
+Private.unit_realm_name_types = {
   never = L["Never"],
   star = L["* Suffix"],
   differentServer = L["Only if on a different realm"],
@@ -114,7 +123,7 @@ local simpleFormatters = {
   end
 }
 
-WeakAuras.format_types = {
+Private.format_types = {
   none = {
     display = L["None"],
     AddOptions = function() end,
@@ -160,7 +169,7 @@ WeakAuras.format_types = {
         type = "select",
         name = L["Precision"],
         width = WeakAuras.normalWidth,
-        values = WeakAuras.precision_types,
+        values = Private.precision_types,
         hidden = hidden
       })
       addOption(symbol .. "_time_dynamic", {
@@ -183,7 +192,7 @@ WeakAuras.format_types = {
       end
 
       return function(value, state)
-        return WeakAuras.dynamic_texts.p.func(value, state, precision)
+        return Private.dynamic_texts.p.func(value, state, precision)
       end
     end
   },
@@ -195,7 +204,7 @@ WeakAuras.format_types = {
         type = "select",
         name = L["Format"],
         width = WeakAuras.normalWidth,
-        values = WeakAuras.big_number_types,
+        values = Private.big_number_types,
         hidden = hidden
       })
     end,
@@ -221,14 +230,14 @@ WeakAuras.format_types = {
         type = "select",
         name = L["Precision"],
         width = WeakAuras.normalWidth,
-        values = WeakAuras.precision_types,
+        values = Private.precision_types,
         hidden = hidden
       })
       addOption(symbol .. "_round_type", {
         type = "select",
         name = L["Round Mode"],
         width = WeakAuras.normalWidth,
-        values = WeakAuras.round_types,
+        values = Private.round_types,
         hidden = hidden,
         disabled = function()
           return get(symbol .. "_decimal_precision") ~= 0
@@ -255,14 +264,14 @@ WeakAuras.format_types = {
         type = "select",
         name = L["Color"],
         width = WeakAuras.normalWidth,
-        values = WeakAuras.unit_color_types,
+        values = Private.unit_color_types,
         hidden = hidden,
       })
       addOption(symbol .. "_realm_name", {
         type = "select",
         name = L["Realm Name"],
         width = WeakAuras.normalWidth,
-        values = WeakAuras.unit_realm_name_types,
+        values = Private.unit_realm_name_types,
         hidden = hidden,
       })
       addOption(symbol .. "_abbreviate", {
@@ -383,14 +392,14 @@ WeakAuras.format_types = {
         type = "select",
         name = L["Color"],
         width = WeakAuras.normalWidth,
-        values = WeakAuras.unit_color_types,
+        values = Private.unit_color_types,
         hidden = hidden,
       })
       addOption(symbol .. "_realm_name", {
         type = "select",
         name = L["Realm Name"],
         width = WeakAuras.normalWidth,
-        values = WeakAuras.unit_realm_name_types,
+        values = Private.unit_realm_name_types,
         hidden = hidden,
       })
       addOption(symbol .. "_abbreviate", {
@@ -534,14 +543,14 @@ WeakAuras.format_types = {
         type = "select",
         name = L["Precision"],
         width = WeakAuras.normalWidth,
-        values = WeakAuras.precision_types,
+        values = Private.precision_types,
         hidden = hidden
       })
       addOption(symbol .. "_round_type", {
         type = "select",
         name = L["Round Mode"],
         width = WeakAuras.normalWidth,
-        values = WeakAuras.round_types,
+        values = Private.round_types,
         hidden = hidden,
         disabled = function()
           return get(symbol .. "_decimal_precision") ~= 0
@@ -606,11 +615,11 @@ WeakAuras.format_types = {
   }
 }
 
-WeakAuras.format_types_display = {}
-for k, v in pairs(WeakAuras.format_types) do WeakAuras.format_types_display[k] = v.display end
+Private.format_types_display = {}
+for k, v in pairs(Private.format_types) do Private.format_types_display[k] = v.display end
 
 
-WeakAuras.sound_channel_types = {
+Private.sound_channel_types = {
   Master = L["Master"],
   SFX = ENABLE_SOUNDFX,
   Ambience = ENABLE_AMBIENCE,
@@ -618,44 +627,44 @@ WeakAuras.sound_channel_types = {
   Dialog = ENABLE_DIALOG
 }
 
-WeakAuras.sound_condition_types = {
+Private.sound_condition_types = {
   Play = L["Play"],
   Loop = L["Loop"],
   Stop = L["Stop"]
 }
 
-WeakAuras.trigger_require_types = {
+Private.trigger_require_types = {
   any = L["Any Triggers"],
   all = L["All Triggers"],
   custom = L["Custom Function"]
 }
 
-WeakAuras.trigger_require_types_one = {
+Private.trigger_require_types_one = {
   any = L["Trigger 1"],
   custom = L["Custom Function"]
 }
 
-WeakAuras.trigger_modes = {
+Private.trigger_modes = {
   ["first_active"] = -10,
 }
 
-WeakAuras.debuff_types = {
+Private.debuff_types = {
   HELPFUL = L["Buff"],
   HARMFUL = L["Debuff"]
 }
 
-WeakAuras.tooltip_count = {
+Private.tooltip_count = {
   [1] = L["First"],
   [2] = L["Second"],
   [3] = L["Third"]
 }
 
-WeakAuras.aura_types = {
+Private.aura_types = {
   BUFF = L["Buff"],
   DEBUFF = L["Debuff"]
 }
 
-WeakAuras.debuff_class_types = {
+Private.debuff_class_types = {
   magic = L["Magic"],
   curse = L["Curse"],
   disease = L["Disease"],
@@ -664,7 +673,7 @@ WeakAuras.debuff_class_types = {
   none = L["None"]
 }
 
-WeakAuras.unit_types = {
+Private.unit_types = {
   player = L["Player"],
   target = L["Target"],
   focus = L["Focus"],
@@ -674,7 +683,7 @@ WeakAuras.unit_types = {
   multi = L["Multi-target"]
 }
 
-WeakAuras.unit_types_bufftrigger_2 = {
+Private.unit_types_bufftrigger_2 = {
   player = L["Player"],
   target = L["Target"],
   focus = L["Focus"],
@@ -688,7 +697,7 @@ WeakAuras.unit_types_bufftrigger_2 = {
   multi = L["Multi-target"]
 }
 
-WeakAuras.actual_unit_types_with_specific = {
+Private.actual_unit_types_with_specific = {
   player = L["Player"],
   target = L["Target"],
   focus = L["Focus"],
@@ -696,7 +705,7 @@ WeakAuras.actual_unit_types_with_specific = {
   member = L["Specific Unit"]
 }
 
-WeakAuras.actual_unit_types_cast = {
+Private.actual_unit_types_cast = {
   player = L["Player"],
   target = L["Target"],
   focus = L["Focus"],
@@ -709,28 +718,28 @@ WeakAuras.actual_unit_types_cast = {
   member = L["Specific Unit"],
 }
 
-WeakAuras.actual_unit_types = {
+Private.actual_unit_types = { -- TODO
   player = L["Player"],
   target = L["Target"],
   focus = L["Focus"],
   pet = L["Pet"]
 }
 
-WeakAuras.threat_unit_types = {
+Private.threat_unit_types = {
   target = L["Target"],
   focus = L["Focus"],
   member = L["Specific Unit"],
   none = L["At Least One Enemy"]
 }
 
-WeakAuras.unit_types_range_check = {
+Private.unit_types_range_check = {
   target = L["Target"],
   focus = L["Focus"],
   pet = L["Pet"],
   member = L["Specific Unit"]
 }
 
-WeakAuras.unit_threat_situation_types = {
+Private.unit_threat_situation_types = {
   [-1] = L["Not On Threat Table"],
   [0] = "|cFFB0B0B0"..L["Lower Than Tank"],
   [1] = "|cFFFFFF77"..L["Higher Than Tank"],
@@ -739,29 +748,24 @@ WeakAuras.unit_threat_situation_types = {
 }
 
 WeakAuras.class_types = {}
-WeakAuras.class_color_types = {}
-local C_S_O, R_C_C, L_C_N_M, F_C_C_C =  _G.CLASS_SORT_ORDER, RAID_CLASS_COLORS--[[_G.RAID_CLASS_COLORS]], _G.LOCALIZED_CLASS_NAMES_MALE, _G.FONT_COLOR_CODE_CLOSE
-do
-  for i,eClass in ipairs(C_S_O) do
-  WeakAuras.class_color_types[eClass] = "|c"..R_C_C[eClass].colorStr
-  WeakAuras.class_types[eClass] = WeakAuras.class_color_types[eClass]..L_C_N_M[eClass]..F_C_C_C
-  end
+for i, class in ipairs(CLASS_SORT_ORDER) do
+  WeakAuras.class_types[class] = string.format("|c%s%s|r", WA_GetClassColor(class), LOCALIZED_CLASS_NAMES_MALE[class])
 end
 
-WeakAuras.faction_group = {
+Private.faction_group = {
   Alliance = L["Alliance"],
   Horde = L["Horde"],
   Neutral = L["Neutral"]
 }
 
-WeakAuras.form_types = {};
+Private.form_types = {};
 local function update_forms()
-  wipe(WeakAuras.form_types);
-  WeakAuras.form_types[0] = "0 - "..L["Humanoid"]
+  wipe(Private.form_types);
+  Private.form_types[0] = "0 - "..L["Humanoid"]
   for i = 1, GetNumShapeshiftForms() do
     local _, name = GetShapeshiftFormInfo(i);
     if(name) then
-      WeakAuras.form_types[i] = i.." - "..name
+      Private.form_types[i] = i.." - "..name
     end
   end
 end
@@ -770,27 +774,27 @@ form_frame:RegisterEvent("UPDATE_SHAPESHIFT_FORMS")
 form_frame:RegisterEvent("PLAYER_LOGIN")
 form_frame:SetScript("OnEvent", update_forms);
 
-WeakAuras.blend_types = {
+Private.blend_types = {
   ADD = L["Glow"],
   BLEND = L["Opaque"]
 }
 
-WeakAuras.slant_mode = {
+Private.slant_mode = {
   INSIDE = L["Keep Inside"],
   EXTEND = L["Extend Outside"]
 }
 
-WeakAuras.text_check_types = {
+Private.text_check_types = {
   update = L["Every Frame"],
   event = L["Trigger Update"]
 }
 
-WeakAuras.check_types = {
+Private.check_types = {
   update = L["Every Frame"],
   event = L["Event(s)"]
 }
 
-WeakAuras.point_types = {
+Private.point_types = {
   BOTTOMLEFT = L["Bottom Left"],
   BOTTOM = L["Bottom"],
   BOTTOMRIGHT = L["Bottom Right"],
@@ -802,27 +806,27 @@ WeakAuras.point_types = {
   CENTER = L["Center"]
 }
 
-WeakAuras.default_types_for_anchor = {}
-for k, v in pairs(WeakAuras.point_types) do
-  WeakAuras.default_types_for_anchor[k] = {
+Private.default_types_for_anchor = {}
+for k, v in pairs(Private.point_types) do
+  Private.default_types_for_anchor[k] = {
     display = v,
     type = "point"
   }
 end
 
-WeakAuras.default_types_for_anchor["ALL"] = {
+Private.default_types_for_anchor["ALL"] = {
   display = L["Whole Area"],
   type = "area"
 }
 
-WeakAuras.aurabar_anchor_areas = {
+Private.aurabar_anchor_areas = {
   icon = L["Icon"],
   fg = L["Foreground"],
   bg = L["Background"],
   bar = L["Bar"],
 }
 
-WeakAuras.inverse_point_types = {
+Private.inverse_point_types = {
   BOTTOMLEFT = "TOPRIGHT",
   BOTTOM = "TOP",
   BOTTOMRIGHT = "TOPLEFT",
@@ -834,7 +838,7 @@ WeakAuras.inverse_point_types = {
   CENTER = "CENTER"
 }
 
-WeakAuras.anchor_frame_types = {
+Private.anchor_frame_types = {
   SCREEN = L["Screen/Parent Group"],
   MOUSE = L["Mouse Cursor"],
   SELECTFRAME = L["Select Frame"],
@@ -842,38 +846,38 @@ WeakAuras.anchor_frame_types = {
   CUSTOM = L["Custom"]
 }
 
-WeakAuras.anchor_frame_types_group = {
+Private.anchor_frame_types_group = {
   SCREEN = L["Screen/Parent Group"],
   MOUSE = L["Mouse Cursor"],
   SELECTFRAME = L["Select Frame"],
   CUSTOM = L["Custom"]
 }
 
-WeakAuras.spark_rotation_types = {
+Private.spark_rotation_types = {
   AUTO = L["Automatic Rotation"],
   MANUAL = L["Manual Rotation"]
 }
 
-WeakAuras.spark_hide_types = {
+Private.spark_hide_types = {
   NEVER = L["Never"],
   FULL  = L["Full"],
   EMPTY = L["Empty"],
   BOTH  = L["Full/Empty"]
 }
 
-WeakAuras.tick_placement_modes = {
+Private.tick_placement_modes = {
   AtValue = L["At Value"],
   AtMissingValue = L["At missing Value"],
   AtPercent = L["At Percent"],
   ValueOffset = L["Offset from progress"]
 }
 
-WeakAuras.containment_types = {
+Private.containment_types = { -- TODO
   OUTSIDE = L["Outside"],
   INSIDE = L["Inside"]
 }
 
-WeakAuras.font_flags = {
+Private.font_flags = {
   None = L["None"],
   MONOCHROME = L["Monochrome"],
   OUTLINE = L["Outline"],
@@ -882,31 +886,31 @@ WeakAuras.font_flags = {
   ["MONOCHROME|THICKOUTLINE"] = L["Monochrome Thick Outline"]
 }
 
-WeakAuras.text_automatic_width = {
+Private.text_automatic_width = {
   Auto = L["Automatic"],
   Fixed = L["Fixed"]
 }
 
-WeakAuras.text_word_wrap = {
+Private.text_word_wrap = {
   WordWrap = L["Wrap"],
   Elide = L["Elide"]
 }
 
-WeakAuras.event_types = {};
-for name, prototype in pairs(WeakAuras.event_prototypes) do
+Private.event_types = {};
+for name, prototype in pairs(Private.event_prototypes) do
   if(prototype.type == "event") then
-    WeakAuras.event_types[name] = prototype.name;
+    Private.event_types[name] = prototype.name;
   end
 end
 
-WeakAuras.status_types = {};
-for name, prototype in pairs(WeakAuras.event_prototypes) do
+Private.status_types = {};
+for name, prototype in pairs(Private.event_prototypes) do
   if(prototype.type == "status") then
-    WeakAuras.status_types[name] = prototype.name;
+    Private.status_types[name] = prototype.name;
   end
 end
 
-WeakAuras.subevent_prefix_types = {
+Private.subevent_prefix_types = {
   SWING = L["Swing"],
   RANGE = L["Range"],
   SPELL = L["Spell"],
@@ -924,7 +928,7 @@ WeakAuras.subevent_prefix_types = {
   ENCHANT_REMOVED = L["Enchant Removed"]
 }
 
-WeakAuras.subevent_actual_prefix_types = {
+Private.subevent_actual_prefix_types = {
   SWING = L["Swing"],
   RANGE = L["Range"],
   SPELL = L["Spell"],
@@ -933,7 +937,7 @@ WeakAuras.subevent_actual_prefix_types = {
   ENVIRONMENTAL = L["Environmental"]
 }
 
-WeakAuras.subevent_suffix_types = {
+Private.subevent_suffix_types = {
   _DAMAGE = L["Damage"],
   _MISSED = L["Missed"],
   _HEAL = L["Heal"],
@@ -963,7 +967,7 @@ WeakAuras.subevent_suffix_types = {
   _RESURRECT = L["Resurrect"]
 }
 
-WeakAuras.power_types = {
+Private.power_types = {
   [0] = MANA,
   [1] = RAGE,
   [2] = FOCUS,
@@ -972,7 +976,7 @@ WeakAuras.power_types = {
   [6] = RUNIC_POWER,
 }
 
-WeakAuras.miss_types = {
+Private.miss_types = {
   ABSORB = L["Absorb"],
   BLOCK = L["Block"],
   DEFLECT = L["Deflect"],
@@ -985,7 +989,7 @@ WeakAuras.miss_types = {
   RESIST = L["Resist"]
 }
 
-WeakAuras.environmental_types = {
+Private.environmental_types = {
   Drowning = STRING_ENVIRONMENTAL_DAMAGE_DROWNING,
   Falling = STRING_ENVIRONMENTAL_DAMAGE_FALLING,
   Fatigue = STRING_ENVIRONMENTAL_DAMAGE_FATIGUE,
@@ -994,18 +998,18 @@ WeakAuras.environmental_types = {
   Slime = STRING_ENVIRONMENTAL_DAMAGE_SLIME
 }
 
-WeakAuras.combatlog_flags_check_type = {
+Private.combatlog_flags_check_type = {
   InGroup = L["In Group"],
   NotInGroup = L["Not in Group"]
 }
 
-WeakAuras.combatlog_flags_check_reaction = {
+Private.combatlog_flags_check_reaction = {
   Hostile = L["Hostile"],
   Neutral = L["Neutral"],
   Friendly = L["Friendly"]
 }
 
-WeakAuras.combatlog_flags_check_object_type = {
+Private.combatlog_flags_check_object_type = {
   Object = L["Object"],
   Guardian = L["Guardian"],
   Pet = L["Pet"],
@@ -1013,7 +1017,7 @@ WeakAuras.combatlog_flags_check_object_type = {
   Player = L["Player"]
 }
 
-WeakAuras.combatlog_raid_mark_check_type = {
+Private.combatlog_raid_mark_check_type = {
   [0] = RAID_TARGET_NONE,
   "|TInterface\\TARGETINGFRAME\\UI-RaidTargetingIcon_1:14|t " .. RAID_TARGET_1, -- Star
   "|TInterface\\TARGETINGFRAME\\UI-RaidTargetingIcon_2:14|t " .. RAID_TARGET_2, -- Circle
@@ -1026,14 +1030,14 @@ WeakAuras.combatlog_raid_mark_check_type = {
   L["Any"]
 }
 
-WeakAuras.orientation_types = {
+Private.orientation_types = {
   HORIZONTAL_INVERSE = L["Left to Right"],
   HORIZONTAL = L["Right to Left"],
   VERTICAL = L["Bottom to Top"],
   VERTICAL_INVERSE = L["Top to Bottom"]
 }
 
-WeakAuras.orientation_with_circle_types = {
+Private.orientation_with_circle_types = {
   HORIZONTAL_INVERSE = L["Left to Right"],
   HORIZONTAL = L["Right to Left"],
   VERTICAL = L["Bottom to Top"],
@@ -1042,22 +1046,22 @@ WeakAuras.orientation_with_circle_types = {
   ANTICLOCKWISE = L["Anticlockwise"]
 }
 
-WeakAuras.talent_types = {}
+Private.talent_types = {}
 for tab = 1, 5 do
   for num_talent = 1, MAX_NUM_TALENTS do
     local talentId = (tab - 1)*MAX_NUM_TALENTS+num_talent
-    WeakAuras.talent_types[talentId] = L["Tab "]..tab.." - "..num_talent
+    Private.talent_types[talentId] = L["Tab "]..tab.." - "..num_talent
   end
 end
 
-WeakAuras.totem_types = {
+Private.totem_types = {
   [1] = L["Fire"],
   [2] = L["Earth"],
   [3] = L["Water"],
   [4] = L["Air"]
 }
 
-WeakAuras.texture_types = {
+Private.texture_types = {
   ["Blizzard Alerts"] = {
     ["Interface\\AddOns\\WeakAuras\\Media\\SpellActivationOverlays\\arcane_missiles"] = "Arcane Missiles",
     ["Interface\\AddOns\\WeakAuras\\Media\\SpellActivationOverlays\\arcane_missiles_1"] = "Arcane Missiles 1",
@@ -1404,7 +1408,7 @@ WeakAuras.texture_types = {
 }
 
 local PowerAurasPath = "Interface\\Addons\\WeakAuras\\PowerAurasMedia\\Auras\\"
-WeakAuras.texture_types["PowerAuras Heads-Up"] = {
+Private.texture_types["PowerAuras Heads-Up"] = {
   [PowerAurasPath.."Aura1"] = "Runed Text",
   [PowerAurasPath.."Aura2"] = "Runed Text On Ring",
   [PowerAurasPath.."Aura3"] = "Power Waves",
@@ -1421,7 +1425,7 @@ WeakAuras.texture_types["PowerAuras Heads-Up"] = {
   [PowerAurasPath.."Aura28"] = "Flourished Text",
   [PowerAurasPath.."Aura33"] = "Droplet Highlights"
 }
-WeakAuras.texture_types["PowerAuras Icons"] = {
+Private.texture_types["PowerAuras Icons"] = {
   [PowerAurasPath.."Aura8"] = "Rune",
   [PowerAurasPath.."Aura9"] = "Stylized Ghost",
   [PowerAurasPath.."Aura10"] = "Skull and Crossbones",
@@ -1497,7 +1501,7 @@ WeakAuras.texture_types["PowerAuras Icons"] = {
   [PowerAurasPath.."Aura142"] = "Ornate Ring",
   [PowerAurasPath.."Aura143"] = "Ghostly Skull"
 }
-WeakAuras.texture_types["PowerAuras Separated"] = {
+Private.texture_types["PowerAuras Separated"] = {
   [PowerAurasPath.."Aura46"] = "8-Part Ring 1",
   [PowerAurasPath.."Aura47"] = "8-Part Ring 2",
   [PowerAurasPath.."Aura55"] = "Skull on Gear 1",
@@ -1546,7 +1550,8 @@ WeakAuras.texture_types["PowerAuras Separated"] = {
   [PowerAurasPath.."Aura144"] = "Taijitu Bottom",
   [PowerAurasPath.."Aura145"] = "Taijitu Top"
 }
-WeakAuras.texture_types["PowerAuras Words"] = {
+
+Private.texture_types["PowerAuras Words"] = {
   [PowerAurasPath.."Aura20"] = "Power",
   [PowerAurasPath.."Aura37"] = "Slow",
   [PowerAurasPath.."Aura38"] = "Stun",
@@ -1560,7 +1565,7 @@ WeakAuras.texture_types["PowerAuras Words"] = {
   ["Interface\\AddOns\\WeakAuras\\Media\\Textures\\interrupt"] = "Interrupt"
 }
 
-WeakAuras.operator_types = {
+Private.operator_types = {
   ["=="] = "=",
   ["~="] = "!=",
   [">"] = ">",
@@ -1569,69 +1574,69 @@ WeakAuras.operator_types = {
   ["<="] = "<="
 }
 
-WeakAuras.equality_operator_types = {
+Private.equality_operator_types = {
   ["=="] = "=",
   ["~="] = "!="
 }
 
-WeakAuras.operator_types_without_equal = {
+Private.operator_types_without_equal = {
   [">="] = ">=",
   ["<="] = "<="
 }
 
-WeakAuras.string_operator_types = {
+Private.string_operator_types = {
   ["=="] = L["Is Exactly"],
   ["find('%s')"] = L["Contains"],
   ["match('%s')"] = L["Matches (Pattern)"]
 }
 
-WeakAuras.weapon_types = {
+Private.weapon_types = {
   ["main"] = MAINHANDSLOT,
   ["off"] = SECONDARYHANDSLOT
 }
 
-WeakAuras.swing_types = {
+Private.swing_types = {
   ["main"] = MAINHANDSLOT,
   ["off"] = SECONDARYHANDSLOT,
   ["ranged"] = RANGEDSLOT
 }
 
-WeakAuras.rune_specific_types = {
+Private.rune_specific_types = {
   [1] = L["Blood Rune #1"],
   [2] = L["Blood Rune #2"],
   [3] = L["Unholy Rune #1"],
   [4] = L["Unholy Rune #2"],
   [5] = L["Frost Rune #1"],
   [6] = L["Frost Rune #2"]
-};
+}
 
-WeakAuras.custom_trigger_types = {
+Private.custom_trigger_types = {
   ["event"] = L["Event"],
   ["status"] = L["Status"],
   ["stateupdate"] = L["Trigger State Updater (Advanced)"]
 }
 
-WeakAuras.eventend_types = {
+Private.eventend_types = {
   ["timed"] = L["Timed"],
   ["custom"] = L["Custom"]
 }
 
-WeakAuras.autoeventend_types = {
+Private.autoeventend_types = {
   ["auto"] = L["Automatic"],
   ["custom"] = L["Custom"]
 }
 
-WeakAuras.timedeventend_types = {
+Private.timedeventend_types = {
   ["timed"] = L["Timed"],
 }
 
-WeakAuras.justify_types = {
+Private.justify_types = {
   ["LEFT"] = L["Left"],
   ["CENTER"] = L["Center"],
   ["RIGHT"] = L["Right"]
 }
 
-WeakAuras.grow_types = {
+Private.grow_types = {
   ["LEFT"] = L["Left"],
   ["RIGHT"] = L["Right"],
   ["UP"] = L["Up"],
@@ -1646,7 +1651,7 @@ WeakAuras.grow_types = {
 
 -- horizontal types: R (right), L (left)
 -- vertical types: U (up), D (down)
-WeakAuras.grid_types = {
+Private.grid_types = {
   RU = L["Right, then Up"],
   UR = L["Up, then Right"],
   LU = L["Left, then Up"],
@@ -1657,48 +1662,48 @@ WeakAuras.grid_types = {
   DL = L["Down, then Left"],
 }
 
-WeakAuras.text_rotate_types = {
+Private.text_rotate_types = {
   ["LEFT"] = L["Left"],
   ["NONE"] = L["None"],
   ["RIGHT"] = L["Right"]
 }
 
-WeakAuras.align_types = {
+Private.align_types = {
   ["LEFT"] = L["Left"],
   ["CENTER"] = L["Center"],
   ["RIGHT"] = L["Right"]
 }
 
-WeakAuras.rotated_align_types = {
+Private.rotated_align_types = {
   ["LEFT"] = L["Top"],
   ["CENTER"] = L["Center"],
   ["RIGHT"] = L["Bottom"]
 }
 
-WeakAuras.icon_side_types = {
+Private.icon_side_types = {
   ["LEFT"] = L["Left"],
   ["RIGHT"] = L["Right"]
 }
 
-WeakAuras.rotated_icon_side_types = {
+Private.rotated_icon_side_types = {
   ["LEFT"] = L["Top"],
   ["RIGHT"] = L["Bottom"]
 }
 
-WeakAuras.anim_types = {
+Private.anim_types = {
   none = L["None"],
   preset = L["Preset"],
   custom = L["Custom"]
 }
 
-WeakAuras.anim_ease_types = {
+Private.anim_ease_types = {
   none = L["None"],
   easeIn = L["Ease In"],
   easeOut = L["Ease Out"],
   easeOutIn = L["Ease In and Out"]
 }
 
-WeakAuras.anim_ease_functions = {
+Private.anim_ease_functions = {
   none = function(percent) return percent end,
   easeIn = function(percent, power)
     return percent ^ power;
@@ -1714,7 +1719,7 @@ WeakAuras.anim_ease_functions = {
   end
 }
 
-WeakAuras.anim_translate_types = {
+Private.anim_translate_types = {
   straightTranslate = L["Normal"],
   circle = L["Circle"],
   spiral = L["Spiral"],
@@ -1725,7 +1730,7 @@ WeakAuras.anim_translate_types = {
   custom = L["Custom Function"]
 }
 
-WeakAuras.anim_scale_types = {
+Private.anim_scale_types = {
   straightScale = L["Normal"],
   pulse = L["Pulse"],
   fauxspin = L["Spin"],
@@ -1733,21 +1738,21 @@ WeakAuras.anim_scale_types = {
   custom = L["Custom Function"]
 }
 
-WeakAuras.anim_alpha_types = {
+Private.anim_alpha_types = {
   straight = L["Normal"],
   alphaPulse = L["Pulse"],
   hide = L["Hide"],
   custom = L["Custom Function"]
 }
 
-WeakAuras.anim_rotate_types = {
+Private.anim_rotate_types = {
   straight = L["Normal"],
   backandforth = L["Back and Forth"],
   wobble = L["Wobble"],
   custom = L["Custom Function"]
 }
 
-WeakAuras.anim_color_types = {
+Private.anim_color_types = {
   straightColor = L["Legacy RGB Gradient"],
   straightHSV = L["Gradient"],
   pulseColor = L["Legacy RGB Gradient Pulse"],
@@ -1755,7 +1760,7 @@ WeakAuras.anim_color_types = {
   custom = L["Custom Function"]
 }
 
-WeakAuras.instance_types = {
+Private.instance_types = {
   none = L["No Instance"],
   party = L["5 Man Dungeon"],
   ten = L["10 Man Raid"],
@@ -1766,19 +1771,19 @@ WeakAuras.instance_types = {
   arena = L["Arena"]
 }
 
-WeakAuras.group_types = {
+Private.group_types = {
   solo = L["Not in Group"],
   group = L["In Group"],
   raid = L["In Raid"]
 }
 
-WeakAuras.difficulty_types = {
+Private.difficulty_types = {
   none = L["None"],
   normal = PLAYER_DIFFICULTY1,
   heroic = PLAYER_DIFFICULTY2
 }
 
-WeakAuras.classification_types = {
+Private.classification_types = {
   worldboss = L["World Boss"],
   rareelite = L["Rare Elite"],
   elite = L["Elite"],
@@ -1787,7 +1792,7 @@ WeakAuras.classification_types = {
   trivial = L["Trivial (Low Level)"]
 }
 
-WeakAuras.anim_start_preset_types = {
+Private.anim_start_preset_types = {
   slidetop = L["Slide from Top"],
   slideleft = L["Slide from Left"],
   slideright = L["Slide from Right"],
@@ -1800,7 +1805,7 @@ WeakAuras.anim_start_preset_types = {
   starShakeDecay = L["Star Shake"],
 }
 
-WeakAuras.anim_main_preset_types = {
+Private.anim_main_preset_types = {
   shake = L["Shake"],
   spin = L["Spin"],
   flip = L["Flip"],
@@ -1814,7 +1819,7 @@ WeakAuras.anim_main_preset_types = {
   bounce = L["Bounce"]
 }
 
-WeakAuras.anim_finish_preset_types = {
+Private.anim_finish_preset_types = {
   slidetop = L["Slide to Top"],
   slideleft = L["Slide to Left"],
   slideright = L["Slide to Right"],
@@ -1827,7 +1832,7 @@ WeakAuras.anim_finish_preset_types = {
   starShakeDecay = L["Star Shake"],
 };
 
-WeakAuras.chat_message_types = {
+Private.chat_message_types = {
   CHAT_MSG_BATTLEGROUND = L["Battleground"],
   CHAT_MSG_BG_SYSTEM_NEUTRAL = L["BG-System Neutral"],
   CHAT_MSG_BG_SYSTEM_ALLIANCE = L["BG-System Alliance"],
@@ -1853,7 +1858,7 @@ WeakAuras.chat_message_types = {
   CHAT_MSG_SYSTEM = L["System"]
 }
 
-WeakAuras.send_chat_message_types = {
+Private.send_chat_message_types = {
   WHISPER = L["Whisper"],
   CHANNEL = L["Channel"],
   SAY = L["Say"],
@@ -1870,18 +1875,18 @@ WeakAuras.send_chat_message_types = {
   PRINT = L["Chat Frame"]
 }
 
-WeakAuras.group_aura_name_info_types = {
+Private.group_aura_name_info_types = {
   aura = L["Aura Name"],
   players = L["Player(s) Affected"],
   nonplayers = L["Player(s) Not Affected"]
 }
 
-WeakAuras.group_aura_stack_info_types = {
+Private.group_aura_stack_info_types = {
   count = L["Number Affected"],
   stack = L["Aura Stack"]
 }
 
-WeakAuras.cast_types = {
+Private.cast_types = {
   cast = L["Cast"],
   channel = L["Channel (Spell)"]
 }
@@ -1984,20 +1989,20 @@ LSM:Register("sound", "Wicked Female Laugh", PowerAurasSoundPath.."wlaugh.ogg")
 LSM:Register("sound", "Wolf Howl", PowerAurasSoundPath.."wolf5.ogg")
 LSM:Register("sound", "Yeehaw", PowerAurasSoundPath.."yeehaw.ogg")
 
-WeakAuras.sound_types = {
+Private.sound_types = {
   [" custom"] = " " .. L["Custom"],
   [" KitID"] = " " .. L["Sound by Kit ID"]
 }
 
 for name, path in next, LSM:HashTable("sound") do
-  WeakAuras.sound_types[path] = name
+  Private.sound_types[path] = name
 end
 
 LSM.RegisterCallback(WeakAuras, "LibSharedMedia_Registered", function(_, mediatype, key)
   if mediatype == "sound" then
     local path = LSM:Fetch(mediatype, key)
     if path then
-      WeakAuras.sound_types[path] = key
+      Private.sound_types[path] = key
     end
   end
 end)
@@ -2008,66 +2013,65 @@ LSM:Register("font", "Fira Mono Medium", "Interface\\Addons\\WeakAuras\\Media\\F
 -- register plain white border
 LSM:Register("border", "Square Full White", [[Interface\AddOns\WeakAuras\Media\Textures\Square_FullWhite.tga]])
 
-WeakAuras.duration_types = {
+Private.duration_types = {
   seconds = L["Seconds"],
   relative = L["Relative"]
 }
 
-WeakAuras.duration_types_no_choice = {
+Private.duration_types_no_choice = {
   seconds = L["Seconds"]
 }
 
-WeakAuras.gtfo_types = {
+Private.gtfo_types = {
   [1] = L["High Damage"],
   [2] = L["Low Damage"],
   [3] = L["Fail Alert"],
   [4] = L["Friendly Fire"]
 }
 
-WeakAuras.pet_behavior_types = {
+Private.pet_behavior_types = {
   aggressive = PET_MODE_AGGRESSIVE,
   passive = PET_MODE_PASSIVE,
   defensive = PET_MODE_DEFENSIVE
 }
 
-WeakAuras.cooldown_progress_behavior_types = {
+Private.cooldown_progress_behavior_types = {
   showOnCooldown = L["On Cooldown"],
   showOnReady = L["Not on Cooldown"],
   showAlways = L["Always"]
 }
 
-WeakAuras.cooldown_types = {
+Private.cooldown_types = {
   auto = L["Auto"],
   charges = L["Charges"],
   cooldown = L["Cooldown"]
 }
 
-WeakAuras.bufftrigger_progress_behavior_types = {
+Private.bufftrigger_progress_behavior_types = {
   showOnActive = L["Buffed/Debuffed"],
   showOnMissing = L["Missing"],
   showAlways= L["Always"]
 }
 
-WeakAuras.bufftrigger_2_progress_behavior_types = {
+Private.bufftrigger_2_progress_behavior_types = {
   showOnActive = L["Aura(s) Found"],
   showOnMissing = L["Aura(s) Missing"],
   showAlways = L["Always"],
   showOnMatches = L["Match Count"]
 }
 
-WeakAuras.bufftrigger_2_preferred_match_types =
-{
+Private.bufftrigger_2_preferred_match_types = {
   showLowest = L["Least remaining time"],
   showHighest = L["Most remaining time"]
 }
 
-WeakAuras.bufftrigger_2_per_unit_mode = {
+Private.bufftrigger_2_per_unit_mode = {
   affected = L["Affected"],
   unaffected = L["Unaffected"],
   all = L["All"]
 }
 
-WeakAuras.item_slot_types = {
+Private.item_slot_types = {
   [0] = AMMOSLOT,
   [1]  = HEADSLOT,
   [2]  = NECKSLOT,
@@ -2089,28 +2093,28 @@ WeakAuras.item_slot_types = {
   [19] = TABARDSLOT
 }
 
-WeakAuras.charges_change_type = {
+Private.charges_change_type = {
   GAINED = L["Gained"],
   LOST = L["Lost"],
   CHANGED = L["Changed"]
 }
 
-WeakAuras.charges_change_condition_type = {
+Private.charges_change_condition_type = {
   GAINED = L["Gained"],
   LOST = L["Lost"]
 }
 
-WeakAuras.combat_event_type = {
+Private.combat_event_type = {
   PLAYER_REGEN_ENABLED = L["Leaving"],
   PLAYER_REGEN_DISABLED = L["Entering"]
 }
 
-WeakAuras.bool_types = {
+Private.bool_types = {
   [0] = L["False"],
   [1] = L["True"]
 }
 
-WeakAuras.update_categories = {
+Private.update_categories = {
   {
     name = "anchor",
     fields = {
@@ -2226,7 +2230,7 @@ WeakAuras.update_categories = {
 
 -- fields that are handled as special cases when importing
 -- mismatch of internal fields is not counted as a difference
-WeakAuras.internal_fields = {
+Private.internal_fields = {
   uid = true,
   internalVersion = true,
   sortHybridTable = true,
@@ -2235,7 +2239,7 @@ WeakAuras.internal_fields = {
 -- fields that are not included in exported data
 -- these represent information which is only meaningful inside the db,
 -- or are represented in other ways in exported
-WeakAuras.non_transmissable_fields = {
+Private.non_transmissable_fields = {
   controlledChildren = true,
   parent = true,
   authorMode = true,
@@ -2245,7 +2249,7 @@ WeakAuras.non_transmissable_fields = {
 }
 
 WeakAuras.data_stub = {
-  -- note: this is the minimal data stub which prevents false positives in WeakAuras.diff upon reimporting an aura.
+  -- note: this is the minimal data stub which prevents false positives in diff upon reimporting an aura.
   -- pending a refactor of other code which adds unnecessary fields, it is possible to shrink it
   triggers = {
     {
@@ -2303,7 +2307,7 @@ WeakAuras.data_stub = {
   authorOptions = {},
 }
 
-WeakAuras.author_option_classes = {
+Private.author_option_classes = {
   toggle = "simple",
   input = "simple",
   number = "simple",
@@ -2317,7 +2321,7 @@ WeakAuras.author_option_classes = {
   group = "group"
 }
 
-WeakAuras.author_option_types = {
+Private.author_option_types = {
   toggle = L["Toggle"],
   input = L["String"],
   number = L["Number"],
@@ -2331,7 +2335,7 @@ WeakAuras.author_option_types = {
   group = L["Option Group"],
 }
 
-WeakAuras.author_option_fields = {
+Private.author_option_fields = {
   common = {
     type = true,
     name = true,
@@ -2399,44 +2403,44 @@ WeakAuras.author_option_fields = {
   }
 }
 
-WeakAuras.array_entry_name_types = {
+Private.array_entry_name_types = {
   [-1] = L["Fixed Names"],
   [0] = L["Entry Order"],
   -- the rest is auto-populated with indices which are valid entry name sources
 }
 
-WeakAuras.name_source_option_types = {
+Private.name_source_option_types = {
   -- option types which can be used to generate entry names on arrays
   input = true,
   number = true,
   range = true,
 }
 
-WeakAuras.group_limit_types = {
+Private.group_limit_types = {
   none = L["Unlimited"],
   max = L["Limited"],
   fixed = L["Fixed Size"],
 }
 
-WeakAuras.group_option_types = {
+Private.group_option_types = {
   simple = L["Simple"],
   array = L["Array"],
 }
 
-WeakAuras.glow_types = {
+Private.glow_types = {
   ACShine = L["Autocast Shine"],
   Pixel = L["Pixel Glow"],
   buttonOverlay = L["Action Button Glow"],
 }
 
-WeakAuras.font_sizes = {
+Private.font_sizes = {
   small = L["Small"],
   medium = L["Medium"],
   large = L["Large"],
 }
 
 -- unitIds registerable with RegisterUnitEvent
-WeakAuras.baseUnitId = {
+Private.baseUnitId = {
   ["player"] = true,
   ["target"] = true,
   ["pet"] = true,
@@ -2444,7 +2448,7 @@ WeakAuras.baseUnitId = {
   ["vehicle"] = true
 }
 
-WeakAuras.multiUnitId = {
+Private.multiUnitId = {
   ["boss"] = true,
   ["arena"] = true,
   ["group"] = true,
@@ -2452,7 +2456,7 @@ WeakAuras.multiUnitId = {
   ["raid"] = true,
 }
 
-WeakAuras.multiUnitUnits = {
+Private.multiUnitUnits = {
   ["boss"] = {},
   ["arena"] = {},
   ["group"] = {},
@@ -2460,34 +2464,34 @@ WeakAuras.multiUnitUnits = {
   ["raid"] = {}
 }
 
-WeakAuras.multiUnitUnits.group["player"] = true
-WeakAuras.multiUnitUnits.party["player"] = true
+Private.multiUnitUnits.group["player"] = true
+Private.multiUnitUnits.party["player"] = true
 
 for i = 1, 4 do
-  WeakAuras.baseUnitId["party"..i] = true
-  WeakAuras.baseUnitId["partypet"..i] = true
-  WeakAuras.multiUnitUnits.group["party"..i] = true
-  WeakAuras.multiUnitUnits.party["party"..i] = true
+  Private.baseUnitId["party"..i] = true
+  Private.baseUnitId["partypet"..i] = true
+  Private.multiUnitUnits.group["party"..i] = true
+  Private.multiUnitUnits.party["party"..i] = true
 end
 
 for i = 1, MAX_BOSS_FRAMES do
-  WeakAuras.baseUnitId["boss"..i] = true
-  WeakAuras.multiUnitUnits.boss["boss"..i] = true
+  Private.baseUnitId["boss"..i] = true
+  Private.multiUnitUnits.boss["boss"..i] = true
 end
 
 for i = 1, 5 do
-  WeakAuras.baseUnitId["arena"..i] = true
-  WeakAuras.multiUnitUnits.arena["arena"..i] = true
+  Private.baseUnitId["arena"..i] = true
+  Private.multiUnitUnits.arena["arena"..i] = true
 end
 
 for i = 1, 40 do
-  WeakAuras.baseUnitId["raid"..i] = true
-  WeakAuras.baseUnitId["raidpet"..i] = true
-  WeakAuras.multiUnitUnits.group["raid"..i] = true
-  WeakAuras.multiUnitUnits.raid["raid"..i] = true
+  Private.baseUnitId["raid"..i] = true
+  Private.baseUnitId["raidpet"..i] = true
+  Private.multiUnitUnits.group["raid"..i] = true
+  Private.multiUnitUnits.raid["raid"..i] = true
 end
 
-WeakAuras.dbm_types = {
+Private.dbm_types = {
   [1] = L["Add"],
   [2] = L["AOE"],
   [3] = L["Targeted"],
@@ -2497,14 +2501,14 @@ WeakAuras.dbm_types = {
   [7] = L["Important"]
 }
 
-WeakAuras.weapon_enchant_types = {
+Private.weapon_enchant_types = {
   showOnActive = L["Enchant Found"],
   showOnMissing = L["Enchant Missing"],
   showAlways = L["Always"],
 }
 
-WeakAuras.reset_swing_spells = {}
-WeakAuras.reset_ranged_swing_spells = {
+Private.reset_swing_spells = {}
+Private.reset_ranged_swing_spells = {
   [2480] = true, -- Shoot Bow
   [7919] = true, -- Shoot Crossbow
   [7918] = true, -- Shoot Gun
@@ -2547,6 +2551,20 @@ if WeakAuras.IsClassic() then
     20549, -- War Stomp
   }
   for i, spellid in ipairs(reset_swing_spell_list) do
-    WeakAuras.reset_swing_spells[spellid] = true
+    Private.reset_swing_spells[spellid] = true
   end
 end
+
+Private.talent_types_specific = {}
+Private.talents_ids = {
+  DEATHKNIGHT = {{48979,48997,49182,48978,49004,55107,48982,48987,49467,48985,49145,49015,48977,49006,49005,48988,53137,49027,49016,50365,62905,49018,55233,49189,55050,49023,61154,49028}, {49175,49455,49042,55061,49140,49226,50880,49039,51468,51123,49149,49137,49186,49471,49796,55610,49024,49188,50040,49203,50384,65661,54639,51271,49200,49143,50187,49202,49184}, {51745,48962,55129,49036,48963,49588,48965,49013,51459,49158,49146,49219,55620,49194,49220,49223,55666,49224,49208,52143,66799,51052,50391,63560,49032,49222,49217,51099,55090,50117,49206}},
+  DRUID = {{16814,57810,16845,35363,16821,16836,16880,57865,16819,16909,16850,33589,5570,57849,33597,16896,33592,24858,48384,33600,48389,33603,48516,50516,33831,48488,48506,48505}, {16934,16858,16947,16998,16929,17002,61336,16942,16966,16972,37116,48409,16940,49377,33872,57878,17003,33853,17007,34297,33851,57873,33859,48483,48492,33917,48532,48432,63503,50334}, {17050,17063,17056,17069,17118,16833,17106,16864,48411,24968,17111,17116,17104,17123,33879,17074,34151,18562,33881,33886,48496,48539,65139,48535,63410,51179,48438}},
+  HUNTER = {{19552,19583,35029,19549,19609,24443,19559,53265,19616,19572,19598,19578,19577,19590,34453,19621,34455,19574,34462,53252,34466,53262,34692,53256,56314,53270}, {19407,53620,19426,34482,19421,19485,34950,19454,19434,34948,19464,19416,35100,23989,19461,34475,19507,53234,19506,35104,34485,53228,53215,34490,53221,53241,53209}, {52783,19498,19159,19290,19184,19376,34494,19255,19503,19295,19286,56333,56342,56339,19370,19306,19168,34491,34500,19386,34497,34506,53295,53298,3674,53302,53290,53301}},
+  MAGE = {{11210,11222,11237,28574,29441,11213,11247,11242,44397,54646,11252,11255,18462,29447,31569,12043,11232,31574,15058,31571,31579,12042,44394,44378,31584,31589,44404,44400,35578,44425}, {11078,18459,11069,11119,54747,11108,11100,11103,11366,11083,11095,11094,29074,31638,11115,11113,31641,11124,34293,11129,31679,64353,31656,44442,31661,44445,44449,44457}, {11071,11070,31670,11207,11189,29438,11175,11151,12472,11185,16757,11160,11170,11958,11190,31667,55091,11180,44745,11426,31674,31682,44543,44546,31687,44557,44566,44572}},
+  PALADIN = {{20205,20224,20237,20257,9453,31821,20210,20234,20254,20244,53660,31822,20216,20359,31825,5923,31833,20473,31828,53551,31837,31842,53671,53569,53556,53563}, {63646,20262,31844,20174,20096,64205,20468,20143,53527,20487,20138,20911,20177,31848,20196,31785,20925,31850,20127,31858,53590,31935,53583,53709,53695,53595}, {20060,20101,25956,20335,20042,9452,20117,20375,26022,9799,32043,31866,20111,31869,20049,31871,53486,20066,31876,31879,53375,53379,35395,53501,53380,53385}},
+  PRIEST = {{14522,47586,14523,14747,14749,14531,14521,14751,14748,33167,14520,14750,33201,18551,63574,33186,34908,45234,10060,63504,57470,47535,47507,47509,33206,47516,52795,47540}, {14913,14908,14889,27900,18530,19236,27811,14892,27789,14912,14909,14911,20711,14901,33150,14898,34753,724,33142,64127,33158,63730,63534,34861,47558,47562,47788}, {15270,15337,15259,15318,15275,15260,15392,15273,15407,15274,17322,15257,15487,15286,27839,33213,14910,63625,15473,33221,47569,33191,64044,34914,47580,47573,47585}},
+  ROGUE = {{14162,14144,14138,14156,51632,13733,14983,14168,14128,16513,14113,31208,14177,14174,31244,14186,14158,51625,58426,31380,51634,31234,31226,1329,51627,51664,51662}, {13741,13732,13715,14165,13713,13705,13742,14251,13706,13754,13743,13712,18427,13709,13877,13960,30919,31124,31122,13750,31130,5952,35541,51672,32601,51682,51685,51690}, {14179,13958,14057,30892,14076,13975,13981,14278,14171,13983,13976,14079,30894,14185,14082,16511,31221,30902,31211,14183,31228,31216,51692,51698,36554,58414,51708,51713}},
+  SHAMAN = {{16039,16035,16038,28996,30160,16040,16164,16089,16086,29062,28999,16041,30664,30672,16578,16166,51483,63370,51466,30675,51474,30706,51480,62097,51490}, {16259,16043,17485,16258,16255,16262,16261,16266,43338,16254,16256,16252,29192,16268,51883,30802,29082,63373,30816,30798,17364,51525,60103,51521,30812,30823,51523,51528,51533}, {16182,16173,16184,29187,16179,16180,16181,55198,16176,16187,16194,29206,16188,30864,16178,30881,16190,51886,51554,30872,30867,51556,974,51560,51562,61295}},
+  WARLOCK = {{18827,18174,17810,18179,18213,18182,17804,53754,17783,18288,18218,18094,32381,32385,63108,18223,54037,18271,47195,30060,18220,30054,32477,47198,30108,58435,47201,48181}, {18692,18694,18697,47230,18703,18705,18731,18754,19028,18708,30143,18769,18709,30326,18767,23785,47245,30319,47193,35691,30242,63156,54347,30146,63117,47236,59672}, {17793,17788,18119,63349,17778,18126,17877,17959,18135,17917,17927,34935,17815,18130,30299,17954,17962,30293,18096,30288,54117,47258,30283,47220,47266,50796}},
+  WARRIOR = {{12282,16462,12286,12285,12300,12295,12290,12296,16493,12834,12163,56636,12700,12328,12284,12281,20504,12289,46854,29834,12294,46865,12862,64976,35446,46859,29723,29623,29836,46867,46924}, {61216,12321,12320,12324,12322,12329,12323,16487,12318,23584,20502,12317,29590,12292,29888,20500,12319,46908,23881,29721,46910,29759,60970,29801,46913,56927,46917}, {12301,12298,12287,50685,12297,12975,12797,29598,12299,59088,12313,12308,12312,12809,12311,16538,29593,50720,29787,29140,46945,57499,20243,47294,46951,58872,46968}}
+}

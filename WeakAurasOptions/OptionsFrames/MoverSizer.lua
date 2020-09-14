@@ -14,8 +14,6 @@ local WeakAuras = WeakAuras
 local moversizer
 local mover
 
-local savedVars = WeakAuras.savedVars
-
 local function EnsureTexture(self, texture)
   if texture then
     return texture
@@ -45,7 +43,7 @@ local function moveOnePxl(direction)
       end
       WeakAuras.Add(data, nil, true)
       WeakAuras.UpdateThumbnail(data)
-      WeakAuras.ResetMoverSizer()
+      OptionsPrivate.ResetMoverSizer()
       if data.parent then
         local parentData = WeakAuras.GetData(data.parent)
         if parentData then
@@ -494,14 +492,14 @@ local function ConstructMoverSizer(parent)
     frame:ScaleCorners(region:GetWidth(), region:GetHeight())
     local regionStrata = region:GetFrameStrata()
     if regionStrata then
-      local strata = math.min(tIndexOf(WeakAuras.frame_strata_types, regionStrata) + 1, 9)
-      frame:SetFrameStrata(WeakAuras.frame_strata_types[strata])
-      mover:SetFrameStrata(WeakAuras.frame_strata_types[strata])
+      local strata = math.min(tIndexOf(OptionsPrivate.Private.frame_strata_types, regionStrata) + 1, 9)
+      frame:SetFrameStrata(OptionsPrivate.Private.frame_strata_types[strata])
+      mover:SetFrameStrata(OptionsPrivate.Private.frame_strata_types[strata])
     end
 
-    local db = savedVars.db
+    local db = OptionsPrivate.savedVars.db
     mover.startMoving = function()
-      WeakAuras.CancelAnimation(region, true, true, true, true, true)
+      OptionsPrivate.Private.CancelAnimation(region, true, true, true, true, true)
       mover:ClearAllPoints()
       if data.regionType == "group" then
         mover:SetPoint(mover.selfPoint, region, mover.anchorPoint, region.blx * scale, region.bly * scale)
@@ -617,7 +615,7 @@ local function ConstructMoverSizer(parent)
         end
       end
       WeakAuras.FillOptions()
-      WeakAuras.Animate("display", data.uid, "main", data.animation.main, WeakAuras.regions[data.id].region, false, nil, true)
+      OptionsPrivate.Private.Animate("display", data.uid, "main", data.animation.main, WeakAuras.regions[data.id].region, false, nil, true)
       -- hide alignment lines
       frame.lineY:Hide()
       frame.lineX:Hide()
@@ -639,7 +637,7 @@ local function ConstructMoverSizer(parent)
     if region:IsResizable() then
       frame.startSizing = function(point)
         mover.isMoving = true
-        WeakAuras.CancelAnimation(region, true, true, true, true, true)
+        OptionsPrivate.Private.CancelAnimation(region, true, true, true, true, true)
         local rSelfPoint, rAnchor, rAnchorPoint, rXOffset, rYOffset = region:GetPoint(1)
         region:StartSizing(point)
         frame.text:ClearAllPoints()
@@ -737,7 +735,7 @@ local function ConstructMoverSizer(parent)
         frame.text:Hide()
         frame:SetScript("OnUpdate", nil)
         WeakAuras.FillOptions()
-        WeakAuras.Animate("display", data.uid, "main", data.animation.main, WeakAuras.regions[data.id].region, false, nil, true)
+        OptionsPrivate.Private.Animate("display", data.uid, "main", data.animation.main, WeakAuras.regions[data.id].region, false, nil, true)
         -- hide alignment lines
         frame.lineY:Hide()
         frame.lineX:Hide()
@@ -835,7 +833,7 @@ local function ConstructMoverSizer(parent)
       self.alignCurrentAlpha = newAlpha
     end
 
-    local db = savedVars.db
+    local db = OptionsPrivate.savedVars.db
     local region = self.moving.region
     local data = self.moving.data
     if not self.isMoving then
@@ -974,7 +972,7 @@ local function ConstructMoverSizer(parent)
   return frame, mover
 end
 
-function WeakAuras.MoverSizer(parent)
+function OptionsPrivate.MoverSizer(parent)
   if not moversizer or not mover then
     moversizer, mover = ConstructMoverSizer(parent)
   end

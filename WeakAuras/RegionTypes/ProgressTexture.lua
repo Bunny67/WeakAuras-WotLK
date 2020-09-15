@@ -445,7 +445,7 @@ local function modify(parent, region, data)
   backgroundSpinner:SetHeight((data.height + data.backgroundOffset * 2) * scaleWedge);
 
   region:ClearAllPoints();
-  WeakAuras.AnchorFrame(data, region, parent)
+  Private.AnchorFrame(data, region, parent)
   region:SetAlpha(data.alpha);
 
   background:SetTexture(data.sameTexture and data.foregroundTexture or data.backgroundTexture);

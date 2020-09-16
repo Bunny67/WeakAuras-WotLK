@@ -4702,6 +4702,9 @@ do
   local function frame_monitor_callback(event, frame, unit)
     local new_frame
     local update_frame = event == "FRAME_UNIT_UPDATE"
+
+    local dynamicGroupsToUpdate = {}
+
     if type(glow_frame_monitor) == "table" then
       for region, data in pairs(glow_frame_monitor) do
         if region.state and region.state.unit == unit
@@ -4749,15 +4752,13 @@ do
           new_frame = WeakAuras.GetUnitFrame(unit) or WeakAuras.HiddenFrames
         end
         if new_frame and new_frame ~= data_frame then
-          regionData.controlPoint:ReAnchor(new_frame)
-          if regionData.shown and new_frame ~= WeakAuras.HiddenFrames then
-            regionData.controlPoint:Show()
-          else
-            regionData.controlPoint:Hide()
-          end
-          WeakAuras.dyngroup_unitframe_monitor[regionData] = new_frame
+          dynamicGroupsToUpdate[regionData.parent] = true
         end
       end
+    end
+
+    for frame in pairs(dynamicGroupsToUpdate) do
+      frame:DoPositionChildren()
     end
   end
 
@@ -6901,7 +6902,18 @@ function WeakAuras.AnchorFrame(data, region, parent)
       region:SetParent(frame);
     end
 
-    region:SetAnchor(data.selfPoint, anchorParent, data.anchorPoint);
+    local anchorPoint = data.anchorPoint
+    if data.parent then
+      if data.anchorFrameType == "SCREEN" or data.anchorFrameType == "MOUSE" then
+        anchorPoint = "CENTER"
+      end
+    else
+      if data.anchorFrameType == "MOUSE" then
+        anchorPoint = "CENTER"
+      end
+    end
+
+    region:SetAnchor(data.selfPoint, anchorParent, anchorPoint);
 
     if(data.frameStrata == 1) then
       local frameStrata = region:GetParent():GetFrameStrata()

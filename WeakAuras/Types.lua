@@ -305,13 +305,7 @@ Private.format_types = {
       if color == "class" then
         colorFunc = function(unit, text)
           if unit and UnitPlayerControlled(unit) then
-            local _, class = UnitClass(unit)
-            local color = class and RAID_CLASS_COLORS[class]
-            if color and color.colorStr then
-              return string.format("|c%s%s|r", color.colorStr, text)
-            else
-              return text
-            end
+            return string.format("|c%s%s|r", WA_GetClassColor(select(2, UnitClass(unit))), text)
           end
           return text
         end
@@ -431,12 +425,7 @@ Private.format_types = {
       local abbreviateFunc
       if color == "class" then
         colorFunc = function(class, text)
-          local color = class and RAID_CLASS_COLORS[class]
-          if color and color.colorStr then
-            return string.format("|c%s%s|r", color.colorStr, text)
-          else
-            return text
-          end
+          return string.format("|c%s%s|r", WA_GetClassColor(class), text)
         end
       end
 

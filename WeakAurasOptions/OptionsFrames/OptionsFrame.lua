@@ -289,9 +289,6 @@ function OptionsPrivate.CreateFrame()
       self.bottomLeftResizer:Hide()
       self.bottomRightResizer:Hide()
     else
-      if self.tipFrameIsVisible then
-        self.tipFrame.frame:Show()
-      end
       self.bottomLeftResizer:Show()
       self.bottomRightResizer:Show()
       if self.window == "default" then
@@ -979,6 +976,9 @@ function OptionsPrivate.CreateFrame()
     tremove(tempGroup.controlledChildren, index)
     displayButtons[id]:ClearPick()
 
+    -- Clear trigger expand state
+    OptionsPrivate.ClearTriggerExpandState()
+
     self:ClearOptions(tempGroup.id)
     self:FillOptions()
   end
@@ -1002,6 +1002,9 @@ function OptionsPrivate.CreateFrame()
     self.moversizer:Hide()
 
     OptionsPrivate.Private.ResumeAllDynamicGroups()
+
+    -- Clear trigger expand state
+    OptionsPrivate.ClearTriggerExpandState()
   end
 
   local function GetTarget(pickedDisplay)

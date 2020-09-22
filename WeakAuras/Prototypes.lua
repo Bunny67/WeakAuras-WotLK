@@ -4178,7 +4178,7 @@ Private.event_prototypes = {
       "TENCH_UPDATE",
     },
     force_events = "TENCH_UPDATE",
-    name = L["Weapon Enchant"],
+    name = L["Weapon Enchant / Fishing Lure"],
     init = function(trigger)
       WeakAuras.TenchInit();
 
@@ -4188,12 +4188,12 @@ Private.event_prototypes = {
         local triggerStack = %s
         local triggerRemaining = %s
         local triggerShowOn = %q
-        local _, expirationTime, duration, name, stack
+        local expirationTime, duration, name, icon, stack
 
         if triggerWeaponType == "main" then
-          expirationTime, duration, name, shortenedName, _, stack = WeakAuras.GetMHTenchInfo()
+          expirationTime, duration, name, shortenedName, icon, stack = WeakAuras.GetMHTenchInfo()
         else
-          expirationTime, duration, name, shortenedName, _, stack = WeakAuras.GetOHTenchInfo()
+          expirationTime, duration, name, shortenedName, icon, stack = WeakAuras.GetOHTenchInfo()
         end
 
         local remaining = expirationTime and expirationTime - GetTime()
@@ -4202,6 +4202,11 @@ Private.event_prototypes = {
         local stackCheck = not triggerStack or stack and stack %s triggerStack
         local remainingCheck = not triggerRemaining or remaining and remaining %s triggerRemaining
         local found = expirationTime and nameCheck and stackCheck and remainingCheck
+
+        if not found then
+          expirationTime = nil
+          duration = nil
+        end
 
         if(triggerRemaining and remaining and remaining >= triggerRemaining and remaining > 0) then
           WeakAuras.ScheduleScan(expirationTime - triggerRemaining, "TENCH_UPDATE");
@@ -4238,6 +4243,42 @@ Private.event_prototypes = {
         display = L["Stack Count"],
         type = "number",
         test = "true",
+        store = true
+      },
+      {
+        name = "duration",
+        hidden = true,
+        init = "duration",
+        test = "true",
+        store = true
+      },
+      {
+        name = "expirationTime",
+        init = "expirationTime",
+        hidden = true,
+        test = "true",
+        store = true
+      },
+      {
+        name = "progressType",
+        hidden = true,
+        init = "'timed'",
+        test = "true",
+        store = true
+      },
+      {
+        name = "name",
+        hidden = true,
+        init = "spell",
+        test = "true",
+        store = true
+      },
+      {
+        name = "icon",
+        hidden = true,
+        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        test = "true",
+        store = true
       },
       {
         name = "remaining",
@@ -4261,47 +4302,10 @@ Private.event_prototypes = {
         "or (triggerShowOn == 'showAlways')"
       }
     },
-    durationFunc = function(trigger)
-      local expirationTime, duration;
-      if(trigger.weapon == "main") then
-        expirationTime, duration = WeakAuras.GetMHTenchInfo();
-      elseif(trigger.weapon == "off") then
-        expirationTime, duration = WeakAuras.GetOHTenchInfo();
-      end
-      if(expirationTime) then
-        return duration, expirationTime;
-      else
-        return 0, math.huge;
-      end
-    end,
-    nameFunc = function(trigger)
-      local _, name;
-      if(trigger.weapon == "main") then
-        _, _, name = WeakAuras.GetMHTenchInfo();
-      elseif(trigger.weapon == "off") then
-        _, _, name = WeakAuras.GetOHTenchInfo();
-      end
-      return name;
-    end,
-    iconFunc = function(trigger)
-      local _, icon;
-      if(trigger.weapon == "main") then
-        _, _, _, _, icon = WeakAuras.GetMHTenchInfo();
-      elseif(trigger.weapon == "off") then
-        _, _, _, _, icon = WeakAuras.GetOHTenchInfo();
-      end
-      return icon;
-    end,
-    stacksFunc = function(trigger)
-      local _, charges;
-      if(trigger.weapon == "main") then
-        _, _, _, _, _, charges = WeakAuras.GetMHTenchInfo();
-      elseif(trigger.weapon == "off") then
-        _, _, _, _, _, charges = WeakAuras.GetOHTenchInfo();
-      end
-      return charges;
-    end,
-    automaticrequired = true
+    automaticrequired = true,
+    canHaveDuration = true,
+    canHaveAuto = true,
+    statesParameter = "one"
   },
   ["Chat Message"] = {
     type = "event",

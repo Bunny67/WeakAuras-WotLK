@@ -229,6 +229,9 @@ function OptionsPrivate.MultipleDisplayTooltipMenu()
           id = WeakAuras.FindUnusedId(tempGroup.controlledChildren[1].." Group"),
           regionType = "group",
         };
+
+        WeakAuras.DeepMixin(data, WeakAuras.data_stub)
+        data.internalVersion = WeakAuras.InternalVersion()
         WeakAuras.Add(data);
         WeakAuras.NewDisplayButton(data);
 
@@ -263,6 +266,8 @@ function OptionsPrivate.MultipleDisplayTooltipMenu()
           regionType = "dynamicgroup",
         };
 
+        WeakAuras.DeepMixin(data, WeakAuras.data_stub)
+        data.internalVersion = WeakAuras.InternalVersion()
         WeakAuras.Add(data);
         WeakAuras.NewDisplayButton(data);
 
@@ -724,8 +729,9 @@ function WeakAuras.ShowOptions(msg)
     frame.codereview:Close();
   end
 
-  -- TODO check if it should be shown
-  frame:ShowTip()
+  if firstLoad then
+    frame:ShowTip()
+  end
 end
 
 function OptionsPrivate.UpdateOptions()
@@ -1308,9 +1314,9 @@ function WeakAuras.NewAura(sourceData, regionType, targetId)
   end
   local new_id = WeakAuras.FindUnusedId("New")
   local data = {id = new_id, regionType = regionType, uid = WeakAuras.GenerateUniqueID()}
-  WeakAuras.Mixin(data, WeakAuras.data_stub);
+  WeakAuras.DeepMixin(data, WeakAuras.data_stub);
   if (sourceData) then
-    WeakAuras.Mixin(data, sourceData)
+    WeakAuras.DeepMixin(data, sourceData);
   end
   data.internalVersion = WeakAuras.InternalVersion();
   WeakAuras.validate(data, WeakAuras.regionTypes[regionType].default);

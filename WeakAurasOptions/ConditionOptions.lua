@@ -1766,17 +1766,18 @@ local function addControlsForCondition(args, order, data, conditionVariable, con
     return;
   end
 
+  local defaultCollapsed = #conditions > 2
   local collapsed = false;
   if data.controlledChildren then
     for id, reference in pairs(conditions[i].check.references) do
       local index = reference.conditionIndex;
-      if OptionsPrivate.IsCollapsed(id, "condition", index, false) then
+      if OptionsPrivate.IsCollapsed(id, "condition", index, defaultCollapsed) then
         collapsed = true;
         break;
       end
     end
   else
-    collapsed = OptionsPrivate.IsCollapsed(data.id, "condition", i, false);
+    collapsed = OptionsPrivate.IsCollapsed(data.id, "condition", i, defaultCollapsed);
   end
 
   args["condition" .. i .. "header"] = {
@@ -1830,6 +1831,7 @@ local function addControlsForCondition(args, order, data, conditionVariable, con
             tinsert(auraData[conditionVariable], reference.conditionIndex - 1, tmp);
             fixUpLinkedInFirstCondition(auraData[conditionVariable])
             WeakAuras.Add(auraData);
+            OptionsPrivate.MoveCollapseDataUp(auraData.id, "condition", {reference.conditionIndex})
           end
         end
         WeakAuras.ClearAndUpdateOptions(data.id, true)
@@ -1840,6 +1842,7 @@ local function addControlsForCondition(args, order, data, conditionVariable, con
           tinsert(conditions, i - 1, tmp);
           fixUpLinkedInFirstCondition(conditions)
           WeakAuras.Add(data);
+          OptionsPrivate.MoveCollapseDataUp(data.id, "condition", {i})
           WeakAuras.ClearAndUpdateOptions(data.id, true)
         end
       end
@@ -1881,6 +1884,7 @@ local function addControlsForCondition(args, order, data, conditionVariable, con
             tinsert(auraData[conditionVariable], reference.conditionIndex + 1, tmp);
             fixUpLinkedInFirstCondition(auraData[conditionVariable])
             WeakAuras.Add(auraData);
+            OptionsPrivate.MoveCollapseDataDown(auraData.id, "condition", {reference.conditionIndex})
           end
         end
         WeakAuras.ClearAndUpdateOptions(data.id, true)
@@ -1892,6 +1896,7 @@ local function addControlsForCondition(args, order, data, conditionVariable, con
           tinsert(conditions, i + 1, tmp);
           fixUpLinkedInFirstCondition(conditions)
           WeakAuras.Add(data);
+          OptionsPrivate.MoveCollapseDataDown(data.id, "condition", {i})
           WeakAuras.ClearAndUpdateOptions(data.id, true)
           return;
         end
@@ -1916,6 +1921,7 @@ local function addControlsForCondition(args, order, data, conditionVariable, con
           tremove(auraData[conditionVariable], reference.conditionIndex);
           fixUpLinkedInFirstCondition(auraData[conditionVariable])
           WeakAuras.Add(auraData);
+          OptionsPrivate.RemoveCollapsed(auraData.id, "condition", {reference.conditionIndex})
         end
         WeakAuras.ClearAndUpdateOptions(data.id, true)
         return;
@@ -1923,6 +1929,7 @@ local function addControlsForCondition(args, order, data, conditionVariable, con
         tremove(conditions, i);
         fixUpLinkedInFirstCondition(conditions)
         WeakAuras.Add(data);
+        OptionsPrivate.RemoveCollapsed(data.id, "condition", {i})
         WeakAuras.ClearAndUpdateOptions(data.id, true)
         return;
       end
@@ -2534,6 +2541,14 @@ function OptionsPrivate.GetConditionOptions(data)
   for i = 1, #conditions do
     order = addControlsForCondition(args, order, data, conditionVariable, conditions, i, conditionTemplates, conditionTemplateWithoutCombinations, allProperties);
   end
+
+  args["addConditionHeader"] = {
+    type = "header",
+    width = WeakAuras.doubleWidth,
+    name = "",
+    order = order
+  }
+  order = order + 1
 
   args["addCondition"] = {
     type = "execute",

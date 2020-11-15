@@ -144,7 +144,7 @@ local funcs = {
     self:UpdateTickPlacement()
     self:UpdateTickSize()
   end,
-  OnSizeChanged = function(self)
+  OnRegionSizeChanged = function(self)
     if self.vertical then
       self.parentMinorSize, self.parentMajorSize = self.parent.bar:GetRealSize()
     else
@@ -363,7 +363,7 @@ local function modify(parent, region, parentData, data, first)
   region.parent = parent
   region.parentData = parentData
   region.tick_visible = data.tick_visible
-  region.tick_color = data.tick_color
+  region.tick_color = CopyTable(data.tick_color)
   region.tick_placement_mode = data.tick_placement_mode
   region.tick_placement = tonumber(data.tick_placement)
   region.automatic_length = data.automatic_length
@@ -395,7 +395,7 @@ local function modify(parent, region, parentData, data, first)
   parent.subRegionEvents:AddSubscriber("Update", region)
   parent.subRegionEvents:AddSubscriber("OrientationChanged", region)
   parent.subRegionEvents:AddSubscriber("InverseChanged", region)
-  parent:SetScript("OnSizeChanged", function() region:OnSizeChanged() end)
+  parent.subRegionEvents:AddSubscriber("OnRegionSizeChanged", region)
 
   region.TimerTick = nil
 end

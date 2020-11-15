@@ -1,6 +1,6 @@
 local AddonName, Private = ...
 
-local internalVersion = 36
+local internalVersion = 40
 
 -- Lua APIs
 local insert = table.insert
@@ -21,6 +21,7 @@ local debugstack, IsSpellKnown = debugstack, IsSpellKnown
 
 local ADDON_NAME = "WeakAuras"
 local WeakAuras = WeakAuras
+local L = WeakAuras.L
 local versionString = WeakAuras.versionString
 local prettyPrint = WeakAuras.prettyPrint
 
@@ -29,17 +30,16 @@ LibStub("AceTimer-3.0"):Embed(WeakAurasTimers)
 
 Private.callbacks = LibStub("CallbackHandler-1.0"):New(Private)
 
-local LDB = LibStub:GetLibrary("LibDataBroker-1.1")
+local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LibStub("LibDBIcon-1.0")
 local LCG = LibStub("LibCustomGlow-1.0")
 local LGF = LibStub("LibGetFrame-1.0")
+
 local timer = WeakAurasTimers
 WeakAuras.timer = timer
 
-local L = WeakAuras.L
-
 local loginQueue = {}
-local queueshowooc;
+local queueshowooc
 
 function WeakAuras.InternalVersion()
   return internalVersion;
@@ -84,12 +84,13 @@ function Private.PrintHelp()
   print(L["/wa pstop - Finish profiling"])
   print(L["/wa pprint - Show the results from the most recent profiling"])
   print(L["/wa repair - Repair tool"])
-  print(L["If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/wa2!"])
+  print(L["If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/weakauras!"])
 end
 
 SLASH_WEAKAURAS1, SLASH_WEAKAURAS2 = "/weakauras", "/wa";
 function SlashCmdList.WEAKAURAS(input)
   local args, msg = {}, nil
+
   for v in string.gmatch(input, "%S+") do
     if not msg then
       msg = v
@@ -97,6 +98,7 @@ function SlashCmdList.WEAKAURAS(input)
       insert(args, v)
     end
   end
+
   if msg == "pstart" then
     WeakAuras.StartProfile(args[1]);
   elseif msg == "pstop" then
@@ -115,6 +117,7 @@ function SlashCmdList.WEAKAURAS(input)
     WeakAuras.OpenOptions(msg);
   end
 end
+
 if not WeakAuras.IsCorrectVersion() then return end
 
 function Private.ApplyToDataOrChildData(data, func, ...)
@@ -133,7 +136,7 @@ function Private.ToggleMinimap()
   WeakAurasSaved.minimap.hide = not WeakAurasSaved.minimap.hide
   if WeakAurasSaved.minimap.hide then
     LDBIcon:Hide("WeakAuras");
-    prettyPrint(L["Use /wa minimap to show the minimap icon again"])
+    prettyPrint(L["Use /wa minimap to show the minimap icon again."])
   else
     LDBIcon:Show("WeakAuras");
   end
@@ -246,8 +249,6 @@ local from_files = {};
 local timers = {}; -- Timers for autohiding, keyed on id, triggernum, cloneid
 WeakAuras.timers = timers;
 
-
-
 WeakAuras.raidUnits = {};
 WeakAuras.partyUnits = {};
 do
@@ -258,6 +259,7 @@ do
     WeakAuras.partyUnits[i] = "party"..i
   end
 end
+
 local playerLevel = UnitLevel("player");
 
 -- Custom Action Functions, keyed on id, "init" / "start" / "finish"
@@ -731,6 +733,7 @@ function WeakAuras.CountWagoUpdates()
       end
     end
   end
+
   return updatedSlugsCount
 end
 
@@ -834,7 +837,6 @@ Broker_WeakAuras = LDB:NewDataObject("WeakAuras", {
   iconG = 0,
   iconB = 1
 });
-
 
 do -- Archive stuff
   local Archivist = select(2, ...).Archivist
@@ -1019,7 +1021,7 @@ loadedFrame:SetScript("OnEvent", function(self, event, addon)
         local elapsed = GetTime() - now
         local remainingSquelch = db.login_squelch_time - elapsed
         if remainingSquelch > 0 then
-          timer:ScheduleTimer(function() squelch_actions = false; end, remainingSquelch);      -- No sounds while loading
+          timer:ScheduleTimer(function() squelch_actions = false; end, remainingSquelch); -- No sounds while loading
         end
       end
     elseif(event == "PLAYER_REGEN_ENABLED") then
@@ -1037,7 +1039,7 @@ loadedFrame:SetScript("OnEvent", function(self, event, addon)
       loginQueue[#loginQueue + 1] = callback
     end
   end
-end);
+end)
 
 function WeakAuras.SetImporting(b)
   importing = b;
@@ -1242,7 +1244,6 @@ local function scanForLoadsImpl(toCheck, event, arg1, ...)
     end
   end
 
-
   Private.callbacks:Fire("ScanForLoads")
 
   wipe(toLoad);
@@ -1368,7 +1369,8 @@ end
 
 function Private.LoadDisplays(toLoad, ...)
   for id in pairs(toLoad) do
-    Private.RegisterForGlobalConditions(id);
+    local uid = WeakAuras.GetData(id).uid
+    Private.RegisterForGlobalConditions(uid);
     triggerState[id].triggers = {};
     triggerState[id].triggerCount = 0;
     triggerState[id].show = false;
@@ -1413,7 +1415,8 @@ function Private.UnloadDisplays(toUnload, ...)
       timers[id] = nil;
     end
 
-    Private.UnloadConditions(id)
+    local uid = WeakAuras.GetData(id).uid
+    Private.UnloadConditions(uid)
 
     WeakAuras.regions[id].region:Collapse();
     Private.CollapseAllClones(id);
@@ -1442,6 +1445,12 @@ end
 
 function WeakAuras.Delete(data)
   local id = data.id;
+  local uid = data.uid
+  local parentId = data.parent
+  local parentUid = data.parent and db.displays[data.parent].uid
+
+  Private.callbacks:Fire("AboutToDelete", uid, id, parentUid, parentId)
+
   if(data.parent) then
     local parentData = db.displays[data.parent];
     if(parentData and parentData.controlledChildren) then
@@ -1467,7 +1476,6 @@ function WeakAuras.Delete(data)
       end
     end
   end
-
 
   regions[id].region:Collapse()
   Private.CollapseAllClones(id);
@@ -1507,8 +1515,6 @@ function WeakAuras.Delete(data)
     eventData[id] = nil
   end
 
-  Private.DeleteConditions(id)
-
   db.displays[id] = nil;
 
   Private.DeleteAuraEnvironment(id)
@@ -1521,20 +1527,21 @@ function WeakAuras.Delete(data)
   Private.customActionsFunctions[id] = nil;
   WeakAuras.customConditionsFunctions[id] = nil;
   WeakAuras.conditionTextFormatters[id] = nil
-
   Private.frameLevels[id] = nil;
-
   WeakAuras.conditionHelpers[data.uid] = nil
-
-  WeakAuras.DeleteCollapsedData(id)
 
   Private.RemoveHistory(data.uid)
 
-  Private.callbacks:Fire("Delete", data.uid)
+  -- Add the parent
+  if parentUid then
+    WeakAuras.Add(Private.GetDataByUID(parentUid))
+  end
+
+  Private.callbacks:Fire("Delete", uid, id, parentUid, parentId)
 end
 
 function WeakAuras.Rename(data, newid)
-  local oldid = data.id;
+  local oldid = data.id
   if(data.parent) then
     local parentData = db.displays[data.parent];
     if(parentData.controlledChildren) then
@@ -1575,8 +1582,6 @@ function WeakAuras.Rename(data, newid)
     eventData[newid] = eventData[oldid]
     eventData[oldid] = nil
   end
-
-  Private.RenameConditions(oldid, newid)
 
   timers[newid] = timers[oldid];
   timers[oldid] = nil;
@@ -1629,10 +1634,10 @@ function WeakAuras.Rename(data, newid)
 
   Private.ProfileRenameAura(oldid, newid);
 
-  WeakAuras.RenameCollapsedData(oldid, newid)
-
-  -- This should not be necessary
+  -- TODO: This should not be necessary
   WeakAuras.Add(data)
+
+  Private.callbacks:Fire("Rename", data.uid, oldid, newid)
 end
 
 function Private.Convert(data, newType)
@@ -1893,7 +1898,7 @@ function Private.ValidateUniqueDataIds(silent)
     if type(data.uid) == "string" then
       if seenUIDs[data.uid] then
         if not silent then
-          prettyPrint("duplicate uid \""..data.uid.."\" detected in saved variables between \""..data.id.."\" and \""..seenUIDs[data.uid].id.."\".")
+          prettyPrint("Duplicate uid \""..data.uid.."\" detected in saved variables between \""..data.id.."\" and \""..seenUIDs[data.uid].id.."\".")
         end
         data.uid = WeakAuras.GenerateUniqueID()
         seenUIDs[data.uid] = data
@@ -1902,7 +1907,7 @@ function Private.ValidateUniqueDataIds(silent)
       end
     elseif data.uid ~= nil then
       if not silent then
-        prettyPrint("invalid uid detected in saved variables for \""..data.id.."\"")
+        prettyPrint("Invalid uid detected in saved variables for \""..data.id.."\"")
       end
       data.uid = WeakAuras.GenerateUniqueID()
       seenUIDs[data.uid] = data
@@ -1931,19 +1936,19 @@ function Private.SyncParentChildRelationships(silent)
     if data.parent then
       if data.controlledChildren then
         if not silent then
-          prettyPrint("detected corruption in saved variables: "..id.." is a group that thinks it's a parent.")
+          prettyPrint("Detected corruption in saved variables: "..id.." is a group that thinks it's a parent.")
         end
         -- A display cannot have both children and a parent
         data.parent = nil
         parents[id] = data
       elseif not db.displays[data.parent] then
         if not(silent) then
-          prettyPrint("detected corruption in saved variables: "..id.." has a nonexistent parent.")
+          prettyPrint("Detected corruption in saved variables: "..id.." has a nonexistent parent.")
         end
         data.parent = nil
       elseif not db.displays[data.parent].controlledChildren then
         if not silent then
-          prettyPrint("detected corruption in saved variables: "..id.." thinks "..data.parent..
+          prettyPrint("Detected corruption in saved variables: "..id.." thinks "..data.parent..
                       " controls it, but "..data.parent.." is not a group.")
         end
         data.parent = nil
@@ -1962,17 +1967,17 @@ function Private.SyncParentChildRelationships(silent)
       local child = children[childID]
       if not child then
         if not silent then
-          prettyPrint("detected corruption in saved variables: "..id.." thinks it controls "..childID.." which doesn't exist.")
+          prettyPrint("Detected corruption in saved variables: "..id.." thinks it controls "..childID.." which doesn't exist.")
         end
         childrenToRemove[index] = true
       elseif child.parent ~= id then
         if not silent then
-          prettyPrint("detected corruption in saved variables: "..id.." thinks it controls "..childID.." which it does not.")
+          prettyPrint("Detected corruption in saved variables: "..id.." thinks it controls "..childID.." which it does not.")
         end
         childrenToRemove[index] = true
       elseif groupChildren[childID] then
         if not silent then
-          prettyPrint("detected corruption in saved variables: "..id.." has "..childID.." as a child in multiple positions.")
+          prettyPrint("Detected corruption in saved variables: "..id.." has "..childID.." as a child in multiple positions.")
         end
         childrenToRemove[index] = true
       else
@@ -1992,7 +1997,7 @@ function Private.SyncParentChildRelationships(silent)
   for id, data in pairs(children) do
     if not childHasParent[id] then
       if not silent then
-        prettyPrint("detected corruption in saved variables: "..id.." should be controlled by "..data.parent.." but isn't.")
+        prettyPrint("Detected corruption in saved variables: "..id.." should be controlled by "..data.parent.." but isn't.")
       end
       local parent = parents[data.parent]
       tinsert(parent.controlledChildren, id)
@@ -2441,9 +2446,9 @@ local function pAdd(data, simpleChange)
       if data.triggers.disjunctive == "custom" then
         triggerLogicFunc = WeakAuras.LoadFunction("return "..(data.triggers.customTriggerLogic or ""), id, "trigger combination");
       end
+
       LoadCustomActionFunctions(data);
       Private.LoadConditionPropertyFunctions(data);
-
       Private.LoadConditionFunction(data)
 
       loadFuncs[id] = loadFunc;
@@ -2570,7 +2575,6 @@ function WeakAuras.SetRegion(data, cloneId)
       WeakAuras.regionPrototype.AddSetDurationInfo(region);
       WeakAuras.regionPrototype.AddExpandFunction(data, region, cloneId, parent, parent.regionType)
 
-
       data.animation = data.animation or {};
       data.animation.start = data.animation.start or {type = "none"};
       data.animation.main = data.animation.main or {type = "none"};
@@ -2611,6 +2615,15 @@ function WeakAuras.GetRegion(id, cloneId)
     return EnsureClone(id, cloneId);
   end
   return WeakAuras.regions[id] and WeakAuras.regions[id].region;
+end
+
+-- Note, does not create a clone!
+function Private.GetRegionByUID(uid, cloneId)
+  local id = Private.UIDtoID(uid)
+  if(cloneId and cloneId ~= "") then
+    return id and clones[id] and clones[id][cloneId];
+  end
+  return id and WeakAuras.regions[id] and WeakAuras.regions[id].region
 end
 
 function Private.CollapseAllClones(id, triggernum)
@@ -2658,6 +2671,8 @@ function Private.HandleChatAction(message_type, message, message_dest, message_c
   end
   if(message_type == "PRINT") then
     DEFAULT_CHAT_FRAME:AddMessage(message, r or 1, g or 1, b or 1);
+  elseif message_type == "ERROR" then
+    UIErrorsFrame:AddMessage(message, r or 1, g or 1, b or 1)
   elseif(message_type == "COMBAT") then
     if(CombatText_AddMessage) then
       CombatText_AddMessage(message, COMBAT_TEXT_SCROLL_FUNCTION, r or 1, g or 1, b or 1);
@@ -2802,6 +2817,7 @@ do
     for frame in pairs(dynamicGroupsToUpdate) do
       frame:DoPositionChildren()
     end
+
   end
 
   LGF.RegisterCallback("WeakAuras", "FRAME_UNIT_UPDATE", frame_monitor_callback)
@@ -2992,10 +3008,10 @@ local function wrapTriggerSystemFunction(functionName, mode)
 end
 
 Private.CanHaveDuration = wrapTriggerSystemFunction("CanHaveDuration", "firstValue");
-Private.CanHaveAuto = wrapTriggerSystemFunction("CanHaveAuto", "or");
 Private.CanHaveClones = wrapTriggerSystemFunction("CanHaveClones", "or");
 Private.CanHaveTooltip = wrapTriggerSystemFunction("CanHaveTooltip", "or");
-Private.GetNameAndIcon = wrapTriggerSystemFunction("GetNameAndIcon", "nameAndIcon");
+-- This has to be in WeakAuras for now, because GetNameAndIcon can be called from the options
+WeakAuras.GetNameAndIcon = wrapTriggerSystemFunction("GetNameAndIcon", "nameAndIcon");
 Private.GetTriggerDescription = wrapTriggerSystemFunction("GetTriggerDescription", "call");
 
 local wrappedGetOverlayInfo = wrapTriggerSystemFunction("GetOverlayInfo", "table");
@@ -3203,7 +3219,9 @@ function Private.ValueFromPath(data, path)
   if not data then
     return nil
   end
-  if(#path == 1) then
+  if (#path == 0) then
+    return data
+  elseif(#path == 1) then
     return data[path[1]];
   else
     local reducedPath = {};
@@ -3360,16 +3378,20 @@ function WeakAuras.GetTriggerStateForTrigger(id, triggernum)
   return triggerState[id][triggernum];
 end
 
+function WeakAuras.GetActiveStates(id)
+  return triggerState[id].activeStates
+end
+
 function WeakAuras.GetActiveTriggers(id)
   return triggerState[id].triggers
 end
 
 do
   local visibleFakeStates = {}
-
   local UpdateFakeTimesHandle
 
   local function UpdateFakeTimers()
+    Private.PauseAllDynamicGroups()
     local t = GetTime()
     for id, triggers in pairs(triggerState) do
       local changed = false
@@ -3386,6 +3408,7 @@ do
         Private.UpdatedTriggerState(id)
       end
     end
+    Private.ResumeAllDynamicGroups()
   end
 
   function Private.SetFakeStates()
@@ -3525,12 +3548,15 @@ local function applyToTriggerStateTriggers(stateShown, id, triggernum)
   if (stateShown and not triggerState[id].triggers[triggernum]) then
     triggerState[id].triggers[triggernum] = true;
     triggerState[id].triggerCount = triggerState[id].triggerCount + 1;
+
     return true;
   elseif (not stateShown and triggerState[id].triggers[triggernum]) then
     triggerState[id].triggers[triggernum] = false;
     triggerState[id].triggerCount = triggerState[id].triggerCount - 1;
+
     return true;
   end
+
   return false;
 end
 
@@ -3560,6 +3586,7 @@ local function evaluateTriggerStateTriggers(id)
   end
 
   Private.ActivateAuraEnvironment(nil);
+
   return result;
 end
 
@@ -3597,7 +3624,7 @@ local function ApplyStatesToRegions(id, activeTrigger, states)
 
       if (applyChanges) then
         ApplyStateToRegion(id, cloneId, region, parent);
-        Private.RunConditions(region, id, not state.show)
+        Private.RunConditions(region, data.uid, not state.show)
       end
     end
   end
@@ -3634,7 +3661,6 @@ function Private.UpdatedTriggerState(id)
   -- Figure out whether we should be shown or not
   local show = triggerState[id].show;
 
-
   if (changed or show == nil) then
     show = evaluateTriggerStateTriggers(id);
   end
@@ -3654,6 +3680,7 @@ function Private.UpdatedTriggerState(id)
   local oldShow = triggerState[id].show;
   triggerState[id].activeTrigger = newActiveTrigger;
   triggerState[id].show = show;
+  triggerState[id].fallbackStates = nil
 
   local activeTriggerState = WeakAuras.GetTriggerStateForTrigger(id, newActiveTrigger);
   if (not next(activeTriggerState)) then
@@ -3671,9 +3698,10 @@ function Private.UpdatedTriggerState(id)
       end
     end
     if (needsFallback) then
-      activeTriggerState = CreateFallbackState(id, newActiveTrigger);
+      activeTriggerState = CreateFallbackState(id, newActiveTrigger)
     end
   end
+  triggerState[id].activeStates = activeTriggerState
 
   local region;
   -- Now apply
@@ -3710,10 +3738,13 @@ function Private.UpdatedTriggerState(id)
 end
 
 function Private.RunCustomTextFunc(region, customFunc)
+
   if not customFunc then
     return nil
   end
+
   local state = region.state
+
   Private.ActivateAuraEnvironment(region.id, region.cloneId, region.state, region.states);
 
   local progress = Private.dynamic_texts.p.func(Private.dynamic_texts.p.get(state), state, 1)
@@ -3721,9 +3752,9 @@ function Private.RunCustomTextFunc(region, customFunc)
   local name = Private.dynamic_texts.n.func(Private.dynamic_texts.n.get(state))
   local icon = Private.dynamic_texts.i.func(Private.dynamic_texts.i.get(state))
   local stacks = Private.dynamic_texts.s.func(Private.dynamic_texts.s.get(state))
-
   local expirationTime
   local duration
+
   if state then
     if state.progressType == "timed" then
       expirationTime = state.expirationTime
@@ -3742,6 +3773,7 @@ function Private.RunCustomTextFunc(region, customFunc)
   end
 
   Private.ActivateAuraEnvironment(nil)
+
   return custom
 end
 
@@ -3772,6 +3804,7 @@ local function ReplaceValuePlaceHolders(textStr, region, customFunc, state, form
       value = variable.func(value)
     end
   end
+
   return value or "";
 end
 
@@ -4070,15 +4103,26 @@ function Private.CreateFormatters(input, getter)
     end
     seenSymbols[symbol] = true
   end)
+
   return formatters
 end
 
-function Private.IsAuraActive(id)
+function Private.IsAuraActive(uid)
+  local id = Private.UIDtoID(uid)
   local active = triggerState[id];
+
   return active and active.show;
 end
 
-function Private.ActiveTrigger(id)
+function WeakAuras.IsAuraActive(id)
+  local active = triggerState[id]
+
+  return active and active.show
+end
+
+function Private.ActiveTrigger(uid)
+  local id = Private.UIDtoID(uid)
+
   return triggerState[id] and triggerState[id].activeTrigger
 end
 
@@ -4124,6 +4168,7 @@ local function xPositionNextToOptions()
       xOffset = (GetScreenWidth() + optionsFrame:GetRight()) / 2;
     end
   end
+
   return xOffset;
 end
 
@@ -4589,6 +4634,7 @@ function WeakAuras.ParseNameCheck(name)
     end
   }
 
+  if not name then return end
   local start = 1
   local last = name:find(',', start, true)
 
@@ -4606,4 +4652,16 @@ end
 
 function WeakAuras.IsAuraLoaded(id)
   return Private.loaded[id]
+end
+
+function Private.IconSources(data)
+  local values = {
+    [-1] = L["Dynamic Information"],
+    [0] = L["Fallback Icon"],
+  }
+
+  for i = 1, #data.triggers do
+    values[i] = string.format(L["Trigger %i"], i)
+  end
+  return values
 end

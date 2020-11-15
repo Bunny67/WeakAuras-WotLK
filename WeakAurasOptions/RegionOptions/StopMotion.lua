@@ -44,32 +44,80 @@ local function setTextureFunc(textureWidget, texturePath, textureName)
   end
 end
 
+local function textureNameHasData(textureName)
+  local pattern = "%.x(%d+)y(%d+)f(%d+)%.[tb][gl][ap]"
+  local rows, columns, frames = textureName:lower():match(pattern)
+  return rows and columns and frames
+end
+
 local function createOptions(id, data)
     local options = {
         __title = L["Stop Motion Settings"],
         __order = 1,
         foregroundTexture = {
             type = "input",
-            width = WeakAuras.normalWidth,
+            width = WeakAuras.normalWidth - 0.15,
             name = L["Texture"],
             order = 1,
         },
+        chooseForegroundTexture = {
+            type = "execute",
+            width = 0.15,
+            name = L["Choose"],
+            order = 2,
+            func = function()
+                OptionsPrivate.OpenTexturePicker(data, {}, {
+                  texture = "foregroundTexture",
+                  color = "foregroundColor",
+                  rotation = "rotation",
+                  mirror = "mirror",
+                  blendMode = "blendMode"
+                }, texture_types, setTextureFunc);
+            end,
+            imageWidth = 24,
+            imageHeight = 24,
+            control = "WeakAurasIcon",
+            image = "Interface\\AddOns\\WeakAuras\\Media\\Textures\\browse",
+        },
         backgroundTexture = {
             type = "input",
-            width = WeakAuras.normalWidth,
+            width = WeakAuras.normalWidth - 0.15,
             name = L["Background Texture"],
             order = 5,
             disabled = function() return data.sameTexture or data.hideBackground  end,
             get = function() return data.sameTexture and data.foregroundTexture or data.backgroundTexture; end,
         },
-        chooseForegroundTexture = {
+        chooseBackgroundTexture = {
             type = "execute",
-            width = WeakAuras.normalWidth,
+            width = 0.15,
             name = L["Choose"],
-            order = 12,
+            order = 6,
             func = function()
-                OptionsPrivate.OpenTexturePicker(data, data, "foregroundTexture", texture_types, setTextureFunc);
-            end
+                OptionsPrivate.OpenTexturePicker(data, {}, {
+                  texture = "backgroundTexture",
+                  color = "backgroundColor",
+                  rotation = "rotation",
+                  mirror = "mirror",
+                  blendMode = "blendMode"
+                }, texture_types, setTextureFunc);
+            end,
+            disabled = function() return data.sameTexture or data.hideBackground; end,
+            imageWidth = 24,
+            imageHeight = 24,
+            control = "WeakAurasIcon",
+            image = "Interface\\AddOns\\WeakAuras\\Media\\Textures\\browse",
+        },
+        sameTextureSpace = {
+            type = "description",
+            width = WeakAuras.normalWidth,
+            name = "",
+            order = 13,
+        },
+        hideBackground = {
+          type = "toggle",
+          name = L["Hide"],
+          order = 14,
+          width = WeakAuras.halfWidth,
         },
         sameTexture = {
             type = "toggle",
@@ -77,16 +125,6 @@ local function createOptions(id, data)
             name = L["Same"],
             order = 15,
             disabled = function() return data.hideBackground; end
-        },
-        chooseBackgroundTexture = {
-            type = "execute",
-            width = WeakAuras.halfWidth,
-            name = L["Choose"],
-            order = 17,
-            func = function()
-                WeakAuras.OpenTexturePick(data, data, "backgroundTexture", texture_types, setTextureFunc);
-            end,
-            disabled = function() return data.sameTexture or data.hideBackground; end
         },
         desaturateForeground = {
             type = "toggle",
@@ -98,21 +136,15 @@ local function createOptions(id, data)
             type = "toggle",
             name = L["Desaturate"],
             order = 17.6,
-            width = WeakAuras.halfWidth,
+            width = WeakAuras.normalWidth,
             disabled = function() return data.hideBackground; end
-        },
-        hideBackground = {
-          type = "toggle",
-          name = L["Hide"],
-          order = 17.65,
-          width = WeakAuras.halfWidth,
         },
         -- Foreground options for custom textures
         customForegroundHeader = {
             type = "header",
             name = L["Custom Foreground"],
             order = 17.70,
-            hidden = function() return texture_data[data.foregroundTexture] end
+            hidden = function() return texture_data[data.foregroundTexture] or textureNameHasData(data.foregroundTexture) end
         },
         customForegroundRows = {
             type = "range",
@@ -121,7 +153,7 @@ local function createOptions(id, data)
             min = 1,
             max = 64,
             order = 17.71,
-            hidden = function() return texture_data[data.foregroundTexture] end
+            hidden = function() return texture_data[data.foregroundTexture] or textureNameHasData(data.foregroundTexture) end
         },
         customForegroundColumns = {
             type = "range",
@@ -130,7 +162,7 @@ local function createOptions(id, data)
             min = 1,
             max = 64,
             order = 17.72,
-            hidden = function() return texture_data[data.foregroundTexture] end
+            hidden = function() return texture_data[data.foregroundTexture] or textureNameHasData(data.foregroundTexture) end
         },
         customForegroundFrames = {
             type = "range",
@@ -140,7 +172,7 @@ local function createOptions(id, data)
             max = 4096,
             --bigStep = 0.01,
             order = 17.73,
-            hidden = function() return texture_data[data.foregroundTexture] end
+            hidden = function() return texture_data[data.foregroundTexture] or textureNameHasData(data.foregroundTexture) end
         },
         customForegroundSpace = {
             type = "execute",
@@ -148,14 +180,14 @@ local function createOptions(id, data)
             name = "",
             order = 17.74,
             image = function() return "", 0, 0 end,
-            hidden = function() return texture_data[data.foregroundTexture] end
+            hidden = function() return texture_data[data.foregroundTexture] or textureNameHasData(data.foregroundTexture) end
         },
         -- Background options for custom textures
         customBackgroundHeader = {
             type = "header",
             name = L["Custom Background"],
             order = 18.00,
-            hidden = function() return data.sameTexture or texture_data[data.backgroundTexture]
+            hidden = function() return data.sameTexture or texture_data[data.backgroundTexture] or textureNameHasData(data.backgroundTexture)
                                        or data.hideBackground end
         },
         customBackgroundRows = {
@@ -165,7 +197,7 @@ local function createOptions(id, data)
             min = 1,
             max = 64,
             order = 18.01,
-            hidden = function() return data.sameTexture or texture_data[data.backgroundTexture]
+            hidden = function() return data.sameTexture or texture_data[data.backgroundTexture] or textureNameHasData(data.backgroundTexture)
                                        or data.hideBackground end
         },
         customBackgroundColumns = {
@@ -175,7 +207,7 @@ local function createOptions(id, data)
             min = 1,
             max = 64,
             order = 18.02,
-            hidden = function() return data.sameTexture or texture_data[data.backgroundTexture]
+            hidden = function() return data.sameTexture or texture_data[data.backgroundTexture] or textureNameHasData(data.backgroundTexture)
                                        or data.hideBackground end
         },
         customBackgroundFrames = {
@@ -186,7 +218,7 @@ local function createOptions(id, data)
             max = 4096,
             step = 1,
             order = 18.03,
-            hidden = function() return data.sameTexture or texture_data[data.backgroundTexture]
+            hidden = function() return data.sameTexture or texture_data[data.backgroundTexture] or textureNameHasData(data.backgroundTexture)
                                        or data.hideBackground end
         },
         customBackgroundSpace = {
@@ -195,7 +227,7 @@ local function createOptions(id, data)
             name = "",
             order = 18.04,
             image = function() return "", 0, 0 end,
-            hidden = function() return data.sameTexture or texture_data[data.backgroundTexture]
+            hidden = function() return data.sameTexture or texture_data[data.backgroundTexture] or textureNameHasData(data.backgroundTexture)
                                        or data.hideBackground end
         },
         blendMode = {
@@ -338,11 +370,21 @@ local function modifyThumbnail(parent, region, data, fullModify, size)
       region.foregroundRows = tdata.rows;
       region.foregroundColumns = tdata.columns;
     else
-      local lastFrame = data.customForegroundFrames - 1;
-      region.startFrame = floor( (data.startPercent or 0) * lastFrame) + 1;
-      region.endFrame = floor( (data.endPercent or 1) * lastFrame) + 1;
-      region.foregroundRows = data.customForegroundRows;
-      region.foregroundColumns = data.customForegroundColumns;
+      local pattern = "%.x(%d+)y(%d+)f(%d+)%.[tb][gl][ap]"
+      local rows, columns, frames = data.foregroundTexture:lower():match(pattern)
+      if rows and columns and frames then
+        local lastFrame = frames - 1;
+        region.startFrame = floor( (data.startPercent or 0) * lastFrame) + 1;
+        region.endFrame = floor( (data.endPercent or 1) * lastFrame) + 1;
+        region.foregroundRows = rows;
+        region.foregroundColumns = columns;
+      else
+        local lastFrame = data.customForegroundFrames - 1;
+        region.startFrame = floor( (data.startPercent or 0) * lastFrame) + 1;
+        region.endFrame = floor( (data.endPercent or 1) * lastFrame) + 1;
+        region.foregroundRows = data.customForegroundRows;
+        region.foregroundColumns = data.customForegroundColumns;
+      end
     end
 
     if (region.startFrame and region.endFrame) then

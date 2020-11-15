@@ -928,5 +928,24 @@ function Private.Modernize(data)
     data.ignoreOptionsEventErrors = true
   end
 
+  if data.internalVersion < 39 then
+    if data.regionType == 'icon' or data.regionType == 'aurabar' then
+      if data.auto then
+        data.iconSource = -1
+      else
+        data.iconSource = 0
+      end
+    end
+  end
+
+  if data.internalVersion < 40 then
+    data.information = data.information or {}
+    if data.regionType == 'group' then
+      data.information.groupOffset = true
+    end
+    data.information.ignoreOptionsEventErrors = data.ignoreOptionsEventErrors
+    data.ignoreOptionsEventErrors = nil
+  end
+
   data.internalVersion = max(data.internalVersion or 0, WeakAuras.InternalVersion());
 end

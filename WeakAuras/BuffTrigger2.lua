@@ -35,9 +35,6 @@ Returns whether the trigger can have a duration.
 GetOverlayInfo(data, triggernum)
 Returns a table containing all overlays. Currently there aren't any
 
-CanHaveAuto(data, triggernum)
-Returns whether the icon can be automatically selected.
-
 CanHaveClones(data, triggernum)
 Returns whether the trigger can have clones.
 
@@ -409,7 +406,7 @@ local function FindBestMatchDataForUnit(time, id, triggernum, triggerInfo, unit)
 
     if remCheck then
       matchCount = matchCount + 1
-      stackCount = stackCount + auraData.stacks
+      stackCount = stackCount + (auraData.stacks or 0)
       if not bestMatch or triggerInfo.compareFunc(bestMatch, auraData) then
         bestMatch = auraData
       end
@@ -448,6 +445,8 @@ local function UpdateStateWithMatch(time, bestMatch, triggerStates, cloneId, mat
       affected = affected,
       unaffected = unaffected,
       totalStacks = totalStacks,
+      initialTime = time,
+      refreshTime = time,
       active = true,
       time = time,
     }
@@ -489,6 +488,15 @@ local function UpdateStateWithMatch(time, bestMatch, triggerStates, cloneId, mat
     end
 
     if state.stacks ~= bestMatch.stacks then
+      if state.stacks and bestMatch.stacks then
+        if state.stacks < bestMatch.stacks then
+          state.stackGainTime = time
+          state.stackLostTime = nil
+        else
+          state.stackGainTime = nil
+          state.stackLostTime = time
+        end
+      end
       state.stacks = bestMatch.stacks
       changed = true
     end
@@ -504,6 +512,10 @@ local function UpdateStateWithMatch(time, bestMatch, triggerStates, cloneId, mat
     end
 
     if state.expirationTime ~= bestMatch.expirationTime then
+      -- A bit fuzzy checking
+      if state.expirationTime and bestMatch.expirationTime and bestMatch.expirationTime - state.expirationTime > 0.2  then
+        state.refreshTime = time
+      end
       state.expirationTime = bestMatch.expirationTime
       changed = true
     end
@@ -2093,7 +2105,7 @@ function BuffTrigger.Add(data)
       end
 
       local matchCountFunc
-      if HasMatchCount(trigger) and trigger.match_countOperator and trigger.match_count then
+      if HasMatchCount(trigger) and trigger.match_countOperator and trigger.match_count and tonumber(trigger.match_count) then
         local count = tonumber(trigger.match_count)
         local match_countFuncStr = Private.function_strings.count:format(trigger.match_countOperator, count)
         matchCountFunc = WeakAuras.LoadFunction(match_countFuncStr)
@@ -2195,14 +2207,6 @@ end
 -- @param triggernum
 function BuffTrigger.GetOverlayInfo(data, triggernum)
   return {}
-end
-
---- Returns whether the icon can be automatically selected.
--- @param data
--- @param triggernum
--- @return boolean
-function BuffTrigger.CanHaveAuto(data, triggernum)
-  return true
 end
 
 --- Returns whether the trigger can have clones.
@@ -2422,6 +2426,25 @@ function BuffTrigger.GetTriggerConditions(data, triggernum)
     result["tooltip3"] = {
       display = L["Tooltip Value 3"],
       type = "number"
+    }
+  end
+
+  if trigger.unit ~= "multi" then
+    result["stackGainTime"] = {
+      display = L["Since Stack Gain"],
+      type = "elapsedTimer"
+    }
+    result["stackLostTime"] = {
+      display = L["Since Stack Lost"],
+      type = "elapsedTimer"
+    }
+    result["initialTime"] = {
+      display = L["Since Apply"],
+      type = "elapsedTimer"
+    }
+    result["refreshTime"] = {
+      display = L["Since Apply/Refresh"],
+      type = "elapsedTimer"
     }
   end
 

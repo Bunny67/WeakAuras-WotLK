@@ -3,6 +3,7 @@ local AddonName, Private = ...
 
 local WeakAuras = WeakAuras
 local L = WeakAuras.L
+local prettyPrint = WeakAuras.prettyPrint
 
 local UnitAura = UnitAura
 -- Unit Aura functions that return info about the first Aura matching the spellName or spellID given on the unit.
@@ -68,7 +69,7 @@ WeakAuras.WA_ClassColorName = WA_ClassColorName
 -- UTF-8 Sub is pretty commonly needed
 local WA_Utf8Sub = function(input, size)
   local output = ""
-  if not input then
+  if type(input) ~= "string" then
     return output
   end
   local i = 1
@@ -301,7 +302,6 @@ local FakeWeakAurasMixin = {
     AddMany = true,
     AddManyFromAddons = true,
     Delete = true,
-    DeleteOption = true,
     HideOptions = true,
     Rename = true,
     NewAura = true,
@@ -322,8 +322,6 @@ local FakeWeakAurasMixin = {
     CloseCodeReview = true,
     CloseImportExport = true,
     CreateTemplateView = true,
-    DeleteOption = true,
-    DeleteCollapsedData = true,
     DisplayToString = true,
     FillOptions = true,
     FindUnusedId = true,
@@ -335,7 +333,6 @@ local FakeWeakAurasMixin = {
     OpenTriggerTemplate = true,
     OpenCodeReview = true,
     PickDisplay = true,
-    RenameCollapsedData = true,
     SetMoverSizer = true,
     SetImporting = true,
     SortDisplayButtons = true,
@@ -346,9 +343,6 @@ local FakeWeakAurasMixin = {
     UpdateThumbnail = true,
     validate = true,
     getDefaultGlow = true,
-    -- Note, I'm too lazy to move these to private because the code needs to deleted...
-    IsDefinedByAddon = true,
-
   },
   blockedTables = {
     AuraWarnings = true,
@@ -365,7 +359,8 @@ local FakeWeakAurasMixin = {
     frames = true,
     loadFrame = true,
     unitLoadFrame = true,
-    importDisplayButtons = true
+    importDisplayButtons = true,
+    loaded = true
 
   },
   override = {

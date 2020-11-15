@@ -15,6 +15,38 @@ local L = WeakAuras.L
 
 local modelPicker
 
+local function GetAll(baseObject, path, property, default)
+  local valueFromPath = OptionsPrivate.Private.ValueFromPath
+  if not property then
+    return default
+  end
+  if baseObject.controlledChildren then
+    local result
+    local first = true
+    for index, childId in pairs(baseObject.controlledChildren) do
+      local childData = WeakAuras.GetData(childId)
+      local childObject = valueFromPath(childData, path)
+      if childObject and childObject[property] then
+        if first then
+          result = childObject[property]
+          first = false
+        else
+          if result ~= childObject[property] then
+            return default
+          end
+        end
+      end
+    end
+    return result
+  else
+    local object = valueFromPath(baseObject, path)
+    if object and object[property] then
+      return object[property]
+    end
+    return default
+  end
+end
+
 local function ConstructModelPicker(frame)
   local group = AceGUI:Create("InlineGroup");
   group.frame:SetParent(frame);
@@ -80,83 +112,101 @@ local function ConstructModelPicker(frame)
   model:SetFrameStrata("FULLSCREEN");
   group.model = model;
 
+  local function SetOnObject(object, model_path, model_z, model_x, model_y)
+    if model_path then
+      object.model_path = model_path
+    end
+    if model_z then
+      object.model_z = model_z
+    end
+    if model_x then
+      object.model_x = model_x
+    end
+    if model_y then
+      object.model_y = model_y
+    end
+  end
+
   function group.Pick(self, model_path, model_z, model_x, model_y)
-    model_path = model_path or self.data.model_path;
+    local valueFromPath = OptionsPrivate.Private.ValueFromPath
 
-    model_z = model_z or self.data.model_z;
-    model_x = model_x or self.data.model_x;
-    model_y = model_y or self.data.model_y;
+    self.selectedValues.model_path = model_path or self.selectedValues.model_path
+    self.selectedValues.model_x = model_x or self.selectedValues.model_x
+    self.selectedValues.model_y = model_y or self.selectedValues.model_y
+    self.selectedValues.model_z = model_z or self.selectedValues.model_z
 
-    WeakAuras.SetModel(self.model, model_path)
+    WeakAuras.SetModel(self.model, self.selectedValues.model_path)
 
-    self.model:SetPosition(model_z, model_x, model_y);
-    self.model:SetFacing(rad(self.data.rotation));
+    self.model:SetPosition(self.selectedValues.model_z, self.selectedValues.model_x, self.selectedValues.model_y);
+    self.model:SetFacing(rad(self.selectedValues.rotation));
 
-    if(not self.parentData and self.data.controlledChildren) then
-      for index, childId in pairs(self.data.controlledChildren) do
-        local childData = WeakAuras.GetData(childId);
-        if(childData) then
-          childData.model_path = model_path;
-          childData.model_z = model_z;
-          childData.model_x = model_x;
-          childData.model_y = model_y;
-          WeakAuras.Add(childData);
-          WeakAuras.UpdateThumbnail(childData);
+    if(self.baseObject.controlledChildren) then
+      for index, childId in pairs(self.baseObject.controlledChildren) do
+        local childData = WeakAuras.GetData(childId)
+        local object = valueFromPath(childData, self.path)
+        if(object) then
+          SetOnObject(object, model_path, model_z, model_x, model_y)
+          WeakAuras.Add(childData)
+          WeakAuras.UpdateThumbnail(childData)
         end
       end
     else
-      self.data.model_path = model_path;
-      self.data.model_z = model_z;
-      self.data.model_x = model_x;
-      self.data.model_y = model_y;
-
-      if self.parentData then
-        WeakAuras.Add(self.parentData)
-      else
-        WeakAuras.Add(self.data);
-        WeakAuras.UpdateThumbnail(self.data);
+      local object = valueFromPath(self.baseObject, self.path)
+      if object then
+        SetOnObject(object, model_path, model_z, model_x, model_y)
+        WeakAuras.Add(self.baseObject)
+        WeakAuras.UpdateThumbnail(self.baseObject)
       end
     end
   end
 
-  function group.Open(self, data, parentData)
-    self.data = data;
-    self.parentData = parentData
-    WeakAuras.SetModel(self.model, data.model_path)
+  function group.Open(self, baseObject, path)
+    local valueFromPath = OptionsPrivate.Private.ValueFromPath
 
-    self.model:SetPosition(data.model_z, data.model_x, data.model_y);
-    self.model:SetFacing(rad(data.rotation));
-    modelPickerZ:SetValue(data.model_z);
-    modelPickerZ.editbox:SetText(("%.2f"):format(data.model_z));
-    modelPickerX:SetValue(data.model_x);
-    modelPickerX.editbox:SetText(("%.2f"):format(data.model_x));
-    modelPickerY:SetValue(data.model_y);
-    modelPickerY.editbox:SetText(("%.2f"):format(data.model_y));
+    self.baseObject = baseObject
+    self.path = path
+    self.selectedValues = {}
 
-    modelPickerZ.frame:Show();
-    modelPickerY.frame:Show();
-    modelPickerX.frame:Show();
+    self.selectedValues.model_path = GetAll(baseObject, path, "model_path", "spells/arcanepower_state_chest.m2")
 
-    if(not parentData and data.controlledChildren) then
+    WeakAuras.SetModel(self.model, self.selectedValues.model_path)
+
+    self.selectedValues.model_x = GetAll(baseObject, path, "model_x", 0)
+    self.selectedValues.model_y = GetAll(baseObject, path, "model_y", 0)
+    self.selectedValues.model_z = GetAll(baseObject, path, "model_z", 0)
+    self.selectedValues.rotation = GetAll(baseObject, path, "rotation", 0)
+
+    self.model:SetPosition(self.selectedValues.model_z, self.selectedValues.model_x, self.selectedValues.model_y);
+    self.model:SetFacing(rad(self.selectedValues.rotation));
+    modelPickerZ:SetValue(self.selectedValues.model_z);
+    modelPickerZ.editbox:SetText(("%.2f"):format(self.selectedValues.model_z));
+    modelPickerX:SetValue(self.selectedValues.model_x);
+    modelPickerX.editbox:SetText(("%.2f"):format(self.selectedValues.model_x));
+    modelPickerY:SetValue(self.selectedValues.model_y);
+    modelPickerY.editbox:SetText(("%.2f"):format(self.selectedValues.model_y));
+
+    if(baseObject.controlledChildren) then
       self.givenModel = {};
       self.givenZ = {};
       self.givenX = {};
       self.givenY = {};
-      for index, childId in pairs(data.controlledChildren) do
-        local childData = WeakAuras.GetData(childId);
-        if(childData) then
-          self.givenModel[childId] = childData.model_path;
-          self.givenZ[childId] = childData.model_z;
-          self.givenX[childId] = childData.model_x;
-          self.givenY[childId] = childData.model_y;
+      for index, childId in pairs(baseObject.controlledChildren) do
+        local childData = WeakAuras.GetData(childId)
+        local object = valueFromPath(childData, path)
+        if(object) then
+          self.givenModel[childId] = object.model_path;
+          self.givenZ[childId] = object.model_z;
+          self.givenX[childId] = object.model_x;
+          self.givenY[childId] = object.model_y;
         end
       end
     else
-      self.givenModel = data.model_path;
+      local object = valueFromPath(baseObject, path)
 
-      self.givenZ = data.model_z;
-      self.givenX = data.model_x;
-      self.givenY = data.model_y;
+      self.givenModel = object.model_path;
+      self.givenZ = object.model_z;
+      self.givenX = object.model_x;
+      self.givenY = object.model_y;
     end
     frame.window = "model";
     frame:UpdateFrameVisible()
@@ -169,20 +219,31 @@ local function ConstructModelPicker(frame)
   end
 
   function group.CancelClose(self)
-    if(not group.parentData and group.data.controlledChildren) then
-      for index, childId in pairs(group.data.controlledChildren) do
+    local valueFromPath = OptionsPrivate.Private.ValueFromPath
+    if(group.baseObject.controlledChildren) then
+      for index, childId in pairs(group.baseObject.controlledChildren) do
         local childData = WeakAuras.GetData(childId);
-        if(childData) then
-          childData.model_path = group.givenModel[childId];
-          childData.model_z = group.givenZ[childId];
-          childData.model_x = group.givenX[childId];
-          childData.model_y = group.givenY[childId];
+        local object = valueFromPath(childData, self.path)
+        if(object) then
+          object.model_path = group.givenModel[childId];
+          object.model_z = group.givenZ[childId];
+          object.model_x = group.givenX[childId];
+          object.model_y = group.givenY[childId];
           WeakAuras.Add(childData);
           WeakAuras.UpdateThumbnail(childData);
         end
       end
     else
-      group:Pick(group.givenModel, group.givenZ, group.givenX, group.givenY);
+      local object = valueFromPath(self.baseObject, self.path)
+
+      if(object) then
+        object.model_path = group.givenModel
+        object.model_z = group.givenZ
+        object.model_x = group.givenX
+        object.model_y = group.givenY
+        WeakAuras.Add(self.baseObject);
+        WeakAuras.UpdateThumbnail(self.baseObject);
+      end
     end
     group.Close();
   end

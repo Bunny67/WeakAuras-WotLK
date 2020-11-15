@@ -171,10 +171,10 @@ function OptionsPrivate.CreateFrame()
   frame:Hide()
 
   frame:SetScript("OnHide", function()
-    OptionsPrivate.Private.ClearFakeStates()
-    OptionsPrivate.SetDragging()
-
     OptionsPrivate.Private.PauseAllDynamicGroups()
+
+    OptionsPrivate.Private.ClearFakeStates()
+
 
     for id, data in pairs(WeakAuras.regions) do
       data.region:Collapse()
@@ -446,7 +446,7 @@ function OptionsPrivate.CreateFrame()
   tipPopupCtrlC:SetPoint("TOPRIGHT", urlWidget, "BOTTOMRIGHT", 0, 0)
   tipPopupCtrlC:SetJustifyH("LEFT")
   tipPopupCtrlC:SetJustifyV("TOP")
-  tipPopupCtrlC:SetText("Press Ctrl+C to copy the URL")
+  tipPopupCtrlC:SetText(L["Press Ctrl+C to copy the URL"])
 
   local function ToggleTip(referenceWidget, url, title, description)
     if tipPopup:IsVisible() and urlWidget.text == url then
@@ -476,10 +476,12 @@ function OptionsPrivate.CreateFrame()
     tipFrame:AddChild(button)
   end
 
-  addFooter(L["Get Help"], [[Interface\AddOns\WeakAuras\Media\Textures\discord.tga]], "https://discord.gg/wa2",
+  addFooter(L["Get Help"], [[Interface\AddOns\WeakAuras\Media\Textures\discord.tga]], "https://discord.gg/weakauras",
             L["Chat with WeakAuras experts on our Discord server."])
+
   addFooter(L["Documentation"], [[Interface\AddOns\WeakAuras\Media\Textures\GitHub.tga]], "https://github.com/WeakAuras/WeakAuras2/wiki",
             L["Check out our wiki for a large collection of examples and snippets."])
+
   addFooter(L["Find Auras"], [[Interface\AddOns\WeakAuras\Media\Textures\wagoupdate_logo.tga]], "https://wago.io",
             L["Browse Wago, the largest collection of auras."])
 
@@ -487,8 +489,9 @@ function OptionsPrivate.CreateFrame()
     addFooter(L["Update Auras"], [[Interface\AddOns\WeakAuras\Media\Textures\wagoupdate_refresh.tga]], "https://weakauras.wtf",
             L["Keep your Wago imports up to date with the Companion App."])
   end
-  addFooter(L["Found a Bug?"], [[Interface\AddOns\WeakAuras\Media\Textures\bug_report.tga]], "https://github.com/WeakAuras/WeakAuras2/issues/new",
-            L["Report bugs our our issue tracker."])
+
+  addFooter(L["Found a Bug?"], [[Interface\AddOns\WeakAuras\Media\Textures\bug_report.tga]], "https://github.com/WeakAuras/WeakAuras2/issues/new?assignees=&labels=%F0%9F%90%9B+Bug&template=bug_report.md&title=",
+            L["Report bugs on our issue tracker."])
 
   -- Disable for now
   --local closeTipButton = CreateFrame("Button", nil, tipFrame.frame, "UIPanelCloseButton")
@@ -600,6 +603,25 @@ function OptionsPrivate.CreateFrame()
   importButton:SetTexture("Interface\\AddOns\\WeakAuras\\Media\\Textures\\importsmall")
   importButton:SetCallback("OnClick", OptionsPrivate.ImportFromString)
   toolbarContainer:AddChild(importButton)
+
+  local lockButton = AceGUI:Create("WeakAurasToolbarButton")
+  lockButton:SetText(L["Lock Positions"])
+  lockButton:SetTexture("Interface\\AddOns\\WeakAuras\\Media\\Textures\\lockPosition")
+  lockButton:SetCallback("OnClick", function(self)
+    if WeakAurasOptionsSaved.lockPositions then
+      lockButton:SetStrongHighlight(false)
+      lockButton:UnlockHighlight()
+      WeakAurasOptionsSaved.lockPositions = false
+    else
+      lockButton:SetStrongHighlight(true)
+      lockButton:LockHighlight()
+      WeakAurasOptionsSaved.lockPositions = true
+    end
+  end)
+  if WeakAurasOptionsSaved.lockPositions then
+    lockButton:LockHighlight()
+  end
+  toolbarContainer:AddChild(lockButton)
 
   local magnetButton = AceGUI:Create("WeakAurasToolbarButton")
   magnetButton:SetText(L["Magnetically Align"])
@@ -781,6 +803,7 @@ function OptionsPrivate.CreateFrame()
   unloadedButton:SetExpandDescription(L["Expand all non-loaded displays"])
   unloadedButton:SetCollapseDescription(L["Collapse all non-loaded displays"])
   unloadedButton:SetViewClick(function()
+    OptionsPrivate.Private.PauseAllDynamicGroups()
     if unloadedButton.view.func() == 2 then
       for id, child in pairs(displayButtons) do
         if OptionsPrivate.Private.loaded[id] == nil then
@@ -794,6 +817,7 @@ function OptionsPrivate.CreateFrame()
         end
       end
     end
+    OptionsPrivate.Private.ResumeAllDynamicGroups()
   end)
   unloadedButton:SetViewTest(function()
     local none, all = true, true
@@ -821,6 +845,7 @@ function OptionsPrivate.CreateFrame()
 
   frame.ClearOptions = function(self, id)
     aceOptions[id] = nil
+    OptionsPrivate.commonOptionsCache:Clear()
     if type(id) == "string" then
       local data = WeakAuras.GetData(id)
       if data and data.parent then
@@ -862,6 +887,7 @@ function OptionsPrivate.CreateFrame()
     if not self.pickedDisplay then
       return
     end
+    OptionsPrivate.commonOptionsCache:Clear()
     self.selectedTab = self.selectedTab or "region"
     local data
     if type(self.pickedDisplay) == "string" then
@@ -915,6 +941,8 @@ function OptionsPrivate.CreateFrame()
     if not self.pickedDisplay then
       return
     end
+
+    OptionsPrivate.commonOptionsCache:Clear()
 
     frame:UpdateOptions()
 
@@ -1179,6 +1207,9 @@ function OptionsPrivate.CreateFrame()
     if self.pickedDisplay == id then
       return
     end
+
+    OptionsPrivate.Private.PauseAllDynamicGroups()
+
     self:ClearPicks(noHide)
     local data = WeakAuras.GetData(id)
 
@@ -1206,7 +1237,6 @@ function OptionsPrivate.CreateFrame()
       self.selectedTab = tab
     end
     self:FillOptions()
-
     WeakAuras.SetMoverSizer(id)
 
     local _, _, _, _, yOffset = displayButtons[id].frame:GetPoint(1)
@@ -1216,6 +1246,7 @@ function OptionsPrivate.CreateFrame()
     if yOffset then
       self.buttonsScroll:SetScrollPos(yOffset, yOffset - 32)
     end
+
     if data.controlledChildren then
       for index, childId in pairs(data.controlledChildren) do
         displayButtons[childId]:PriorityShow(1)
@@ -1225,6 +1256,8 @@ function OptionsPrivate.CreateFrame()
     if data.controlledChildren and #data.controlledChildren == 0 then
       WeakAurasOptions:NewAura(true)
     end
+
+    OptionsPrivate.Private.ResumeAllDynamicGroups()
   end
 
   frame.CenterOnPicked = function(self)

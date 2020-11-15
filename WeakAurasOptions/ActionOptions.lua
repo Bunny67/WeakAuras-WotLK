@@ -100,7 +100,10 @@ function OptionsPrivate.GetActionOptions(data)
         name = "",
         order = 3,
         image = function() return "", 0, 0 end,
-        hidden = function() return not(data.actions.start.message_type == "WHISPER" or data.actions.start.message_type == "COMBAT" or data.actions.start.message_type == "PRINT") end
+        hidden = function()
+          return not(data.actions.start.message_type == "WHISPER" or data.actions.start.message_type == "COMBAT"
+                     or data.actions.start.message_type == "PRINT" or data.actions.start.message_type == "ERROR")
+        end
       },
       start_message_color = {
         type = "color",
@@ -108,7 +111,11 @@ function OptionsPrivate.GetActionOptions(data)
         name = L["Color"],
         order = 3,
         hasAlpha = false,
-        hidden = function() return not(data.actions.start.message_type == "COMBAT" or data.actions.start.message_type == "PRINT") end,
+        hidden = function()
+          return not(data.actions.start.message_type == "COMBAT"
+                     or data.actions.start.message_type == "PRINT"
+                     or data.actions.start.message_type == "ERROR")
+        end,
         get = function() return data.actions.start.r or 1, data.actions.start.g or 1, data.actions.start.b or 1 end,
         set = function(info, r, g, b)
           data.actions.start.r = r;
@@ -480,7 +487,11 @@ function OptionsPrivate.GetActionOptions(data)
         name = L["Color"],
         order = 23,
         hasAlpha = false,
-        hidden = function() return not(data.actions.finish.message_type == "COMBAT" or data.actions.finish.message_type == "PRINT") end,
+        hidden = function() return
+          not(data.actions.finish.message_type == "COMBAT"
+              or data.actions.finish.message_type == "PRINT"
+              or data.actions.finish.message_type == "ERROR")
+            end,
         get = function() return data.actions.finish.r or 1, data.actions.finish.g or 1, data.actions.finish.b or 1 end,
         set = function(info, r, g, b)
           data.actions.finish.r = r;

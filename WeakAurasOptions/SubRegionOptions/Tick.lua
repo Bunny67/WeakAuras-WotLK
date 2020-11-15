@@ -156,26 +156,36 @@ local function createOptions(parentData, data, index, subIndex)
       type = "input",
       name = L["Texture"],
       order = 11,
-      width = WeakAuras.doubleWidth,
+      width = WeakAuras.doubleWidth - 0.15,
       disabled = function() return not data.use_texture end,
-      hidden = hiddentickextras,
-    },
-    tick_desaturate = {
-      type = "toggle",
-      width = WeakAuras.normalWidth,
-      name = L["Desaturate"],
-      order = 12,
       hidden = hiddentickextras,
     },
     texture_chooser = {
       type = "execute",
       name = L["Choose"],
-      width = WeakAuras.normalWidth,
-      order = 13,
+      width = 0.15,
+      order = 11.5,
       func = function()
-        OptionsPrivate.OpenTexturePicker(data, "tick_texture", OptionsPrivate.Private.texture_types);
+        OptionsPrivate.OpenTexturePicker(parentData, {
+          "subRegions", index
+        }, {
+          texture = "tick_texture",
+          color = "tick_color",
+          blendMode = "tick_blend_mode"
+        }, OptionsPrivate.Private.texture_types);
       end,
       disabled = function() return not data.use_texture end,
+      hidden = hiddentickextras,
+      imageWidth = 24,
+      imageHeight = 24,
+      control = "WeakAurasIcon",
+      image = "Interface\\AddOns\\WeakAuras\\Media\\Textures\\browse",
+    },
+    tick_desaturate = {
+      type = "toggle",
+      width = WeakAuras.doubleWidth,
+      name = L["Desaturate"],
+      order = 12,
       hidden = hiddentickextras,
     },
     tick_rotation = {

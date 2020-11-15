@@ -148,186 +148,208 @@ end
 
 
 Private.anim_function_strings = {
-  straight = [[
-    function(progress, start, delta)
-      return start + (progress * delta)
-    end
-  ]],
-  straightTranslate = [[
-    function(progress, startX, startY, deltaX, deltaY)
-      return startX + (progress * deltaX), startY + (progress * deltaY)
-    end
-  ]],
-  straightScale = [[
-    function(progress, startX, startY, scaleX, scaleY)
-      return startX + (progress * (scaleX - startX)), startY + (progress * (scaleY - startY))
-    end
-  ]],
-  straightColor = [[
-    function(progress, r1, g1, b1, a1, r2, g2, b2, a2)
-      return r1 + (progress * (r2 - r1)), g1 + (progress * (g2 - g1)), b1 + (progress * (b2 - b1)), a1 + (progress * (a2 - a1))
-    end
-  ]],
-  straightHSV = [[
-    function(progress, r1, g1, b1, a1, r2, g2, b2, a2)
-      return WeakAuras.GetHSVTransition(progress, r1, g1, b1, a1, r2, g2, b2, a2)
-    end
-  ]],
-  circle = [[
-    function(progress, startX, startY, deltaX, deltaY)
-      local angle = progress * 2 * math.pi
-      return startX + (deltaX * math.cos(angle)), startY + (deltaY * math.sin(angle))
-    end
-  ]],
-  circle2 = [[
-    function(progress, startX, startY, deltaX, deltaY)
-      local angle = progress * 2 * math.pi
-      return startX + (deltaX * math.sin(angle)), startY + (deltaY * math.cos(angle))
-    end
-  ]],
-  spiral = [[
-    function(progress, startX, startY, deltaX, deltaY)
-      local angle = progress * 2 * math.pi
-      return startX + (progress * deltaX * math.cos(angle)), startY + (progress * deltaY * math.sin(angle))
-    end
-  ]],
-  spiralandpulse = [[
-    function(progress, startX, startY, deltaX, deltaY)
-      local angle = (progress + 0.25) * 2 * math.pi
-      return startX + (math.cos(angle) * deltaX * math.cos(angle*2)), startY + (math.abs(math.cos(angle)) * deltaY * math.sin(angle*2))
-    end
-  ]],
-  shake = [[
-    function(progress, startX, startY, deltaX, deltaY)
-      local prog
-      if(progress < 0.25) then
-        prog = progress * 4
-      elseif(progress < .75) then
-        prog = 2 - (progress * 4)
-      else
-        prog = (progress - 1) * 4
-      end
-      return startX + (prog * deltaX), startY + (prog * deltaY)
-    end
-  ]],
-  starShakeDecay = [[
-    function(progress, startX, startY, deltaX, deltaY)
-      local spokes = 10
-      local fullCircles = 4
+straight = [[
+function(progress, start, delta)
+    return start + (progress * delta)
+end
+]],
 
-      local r = min(abs(deltaX), abs(deltaY))
-      local xScale = deltaX / r
-      local yScale = deltaY / r
+straightTranslate = [[
+function(progress, startX, startY, deltaX, deltaY)
+    return startX + (progress * deltaX), startY + (progress * deltaY)
+end
+]],
 
-      local deltaAngle = fullCircles *2 / spokes * math.pi
-      local p = progress * spokes
-      local i1 = floor(p)
-      p = p - i1
+straightScale = [[
+function(progress, startX, startY, scaleX, scaleY)
+    return startX + (progress * (scaleX - startX)), startY + (progress * (scaleY - startY))
+end
+]],
 
-      local angle1 = i1 * deltaAngle
-      local angle2 = angle1 + deltaAngle
+straightColor = [[
+function(progress, r1, g1, b1, a1, r2, g2, b2, a2)
+    return r1 + (progress * (r2 - r1)), g1 + (progress * (g2 - g1)), b1 + (progress * (b2 - b1)), a1 + (progress * (a2 - a1))
+end
+]],
 
-      local x1 = r * math.cos(angle1)
-      local y1 = r * math.sin(angle1)
+straightHSV = [[
+function(progress, r1, g1, b1, a1, r2, g2, b2, a2)
+    return WeakAuras.GetHSVTransition(progress, r1, g1, b1, a1, r2, g2, b2, a2)
+end
+]],
 
-      local x2 = r * math.cos(angle2)
-      local y2 = r * math.sin(angle2)
+circle = [[
+function(progress, startX, startY, deltaX, deltaY)
+    local angle = progress * 2 * math.pi
+    return startX + (deltaX * math.cos(angle)), startY + (deltaY * math.sin(angle))
+end
+]],
 
-      local x, y = p * x2 + (1-p) * x1, p * y2 + (1-p) * y1
-      local ease = math.sin(progress * math.pi / 2)
-      return ease * x * xScale, ease * y * yScale
-    end
-  ]],
-  bounceDecay = [[
-    function(progress, startX, startY, deltaX, deltaY)
-      local prog = (progress * 3.5) % 1
-      local bounce = math.ceil(progress * 3.5)
-      local bounceDistance = math.sin(prog * math.pi) * (bounce / 4)
-    return startX + (bounceDistance * deltaX), startY + (bounceDistance * deltaY)
-  end
-  ]],
-  bounce = [[
-    function(progress, startX, startY, deltaX, deltaY)
-      local bounceDistance = math.sin(progress * math.pi)
-      return startX + (bounceDistance * deltaX), startY + (bounceDistance * deltaY)
-    end
-  ]],
-  flash = [[
-    function(progress, start, delta)
-      local prog
-      if(progress < 0.5) then
-        prog = progress * 2
-      else
-        prog = (progress - 1) * 2
-      end
-      return start + (prog * delta)
-    end
-  ]],
-  pulse = [[
-    function(progress, startX, startY, scaleX, scaleY)
-      local angle = (progress * 2 * math.pi) - (math.pi / 2)
-      return startX + (((math.sin(angle) + 1)/2) * (scaleX - 1)), startY + (((math.sin(angle) + 1)/2) * (scaleY - 1))
-    end
-  ]],
-  alphaPulse = [[
-    function(progress, start, delta)
-      local angle = (progress * 2 * math.pi) - (math.pi / 2)
-      return start + (((math.sin(angle) + 1)/2) * delta)
-    end
-  ]],
-  pulseColor = [[
-    function(progress, r1, g1, b1, a1, r2, g2, b2, a2)
-      local angle = (progress * 2 * math.pi) - (math.pi / 2)
-      local newProgress = ((math.sin(angle) + 1)/2);
-      return r1 + (newProgress * (r2 - r1)),
-           g1 + (newProgress * (g2 - g1)),
-           b1 + (newProgress * (b2 - b1)),
-           a1 + (newProgress * (a2 - a1))
-    end
-  ]],
-  pulseHSV = [[
-    function(progress, r1, g1, b1, a1, r2, g2, b2, a2)
-      local angle = (progress * 2 * math.pi) - (math.pi / 2)
-      local newProgress = ((math.sin(angle) + 1)/2);
-      return WeakAuras.GetHSVTransition(newProgress, r1, g1, b1, a1, r2, g2, b2, a2)
-    end
-  ]],
-  fauxspin = [[
-    function(progress, startX, startY, scaleX, scaleY)
-      local angle = progress * 2 * math.pi
-      return math.cos(angle) * scaleX, startY + (progress * (scaleY - startY))
-    end
-  ]],
-  fauxflip = [[
-    function(progress, startX, startY, scaleX, scaleY)
-      local angle = progress * 2 * math.pi
-      return startX + (progress * (scaleX - startX)), math.cos(angle) * scaleY
-    end
-  ]],
-  backandforth = [[
-    function(progress, start, delta)
+circle2 = [[
+function(progress, startX, startY, deltaX, deltaY)
+    local angle = progress * 2 * math.pi
+    return startX + (deltaX * math.sin(angle)), startY + (deltaY * math.cos(angle))
+end
+]],
+
+spiral = [[
+function(progress, startX, startY, deltaX, deltaY)
+    local angle = progress * 2 * math.pi
+    return startX + (progress * deltaX * math.cos(angle)), startY + (progress * deltaY * math.sin(angle))
+end
+]],
+
+spiralandpulse = [[
+function(progress, startX, startY, deltaX, deltaY)
+    local angle = (progress + 0.25) * 2 * math.pi
+    return startX + (math.cos(angle) * deltaX * math.cos(angle*2)), startY + (math.abs(math.cos(angle)) * deltaY * math.sin(angle*2))
+end
+]],
+
+shake = [[
+function(progress, startX, startY, deltaX, deltaY)
     local prog
     if(progress < 0.25) then
-      prog = progress * 4
-      elseif(progress < .75) then
-      prog = 2 - (progress * 4)
+        prog = progress * 4
+    elseif(progress < .75) then
+        prog = 2 - (progress * 4)
     else
-      prog = (progress - 1) * 4
+        prog = (progress - 1) * 4
+    end
+    return startX + (prog * deltaX), startY + (prog * deltaY)
+end
+]],
+
+starShakeDecay = [[
+function(progress, startX, startY, deltaX, deltaY)
+    local spokes = 10
+    local fullCircles = 4
+
+    local r = min(abs(deltaX), abs(deltaY))
+    local xScale = deltaX / r
+    local yScale = deltaY / r
+
+    local deltaAngle = fullCircles *2 / spokes * math.pi
+    local p = progress * spokes
+    local i1 = floor(p)
+    p = p - i1
+
+    local angle1 = i1 * deltaAngle
+    local angle2 = angle1 + deltaAngle
+
+    local x1 = r * math.cos(angle1)
+    local y1 = r * math.sin(angle1)
+
+    local x2 = r * math.cos(angle2)
+    local y2 = r * math.sin(angle2)
+
+    local x, y = p * x2 + (1-p) * x1, p * y2 + (1-p) * y1
+    local ease = math.sin(progress * math.pi / 2)
+    return ease * x * xScale, ease * y * yScale
+end
+]],
+
+bounceDecay = [[
+function(progress, startX, startY, deltaX, deltaY)
+    local prog = (progress * 3.5) % 1
+    local bounce = math.ceil(progress * 3.5)
+    local bounceDistance = math.sin(prog * math.pi) * (bounce / 4)
+    return startX + (bounceDistance * deltaX), startY + (bounceDistance * deltaY)
+end
+]],
+
+bounce = [[
+function(progress, startX, startY, deltaX, deltaY)
+    local bounceDistance = math.sin(progress * math.pi)
+    return startX + (bounceDistance * deltaX), startY + (bounceDistance * deltaY)
+end
+]],
+
+flash = [[
+function(progress, start, delta)
+    local prog
+    if(progress < 0.5) then
+        prog = progress * 2
+    else
+        prog = (progress - 1) * 2
     end
     return start + (prog * delta)
+end
+]],
+
+pulse = [[
+function(progress, startX, startY, scaleX, scaleY)
+    local angle = (progress * 2 * math.pi) - (math.pi / 2)
+    return startX + (((math.sin(angle) + 1)/2) * (scaleX - 1)), startY + (((math.sin(angle) + 1)/2) * (scaleY - 1))
+end
+]],
+
+alphaPulse = [[
+function(progress, start, delta)
+    local angle = (progress * 2 * math.pi) - (math.pi / 2)
+    return start + (((math.sin(angle) + 1)/2) * delta)
+end
+]],
+
+pulseColor = [[
+function(progress, r1, g1, b1, a1, r2, g2, b2, a2)
+    local angle = (progress * 2 * math.pi) - (math.pi / 2)
+    local newProgress = ((math.sin(angle) + 1)/2);
+    return r1 + (newProgress * (r2 - r1)),
+         g1 + (newProgress * (g2 - g1)),
+         b1 + (newProgress * (b2 - b1)),
+         a1 + (newProgress * (a2 - a1))
+end
+]],
+
+pulseHSV = [[
+function(progress, r1, g1, b1, a1, r2, g2, b2, a2)
+    local angle = (progress * 2 * math.pi) - (math.pi / 2)
+    local newProgress = ((math.sin(angle) + 1)/2);
+    return WeakAuras.GetHSVTransition(newProgress, r1, g1, b1, a1, r2, g2, b2, a2)
+end
+]],
+
+fauxspin = [[
+function(progress, startX, startY, scaleX, scaleY)
+    local angle = progress * 2 * math.pi
+    return math.cos(angle) * scaleX, startY + (progress * (scaleY - startY))
+end
+]],
+
+fauxflip = [[
+function(progress, startX, startY, scaleX, scaleY)
+    local angle = progress * 2 * math.pi
+    return startX + (progress * (scaleX - startX)), math.cos(angle) * scaleY
+end
+]],
+
+backandforth = [[
+function(progress, start, delta)
+    local prog
+    if(progress < 0.25) then
+        prog = progress * 4
+    elseif(progress < .75) then
+        prog = 2 - (progress * 4)
+    else
+        prog = (progress - 1) * 4
     end
-  ]],
-  wobble = [[
-    function(progress, start, delta)
+    return start + (prog * delta)
+end
+]],
+
+wobble = [[
+function(progress, start, delta)
     local angle = progress * 2 * math.pi
     return start + math.sin(angle) * delta
-    end
-  ]],
-  hide = [[
-    function()
+end
+]],
+
+hide = [[
+function()
     return 0
-    end
-  ]]
+end
+]]
 };
 
 Private.anim_presets = {
@@ -1503,7 +1525,8 @@ Private.event_prototypes = {
         init = "unitPowerType",
         test = "true",
         store = true,
-        conditionType = "select"
+        conditionType = "select",
+        reloadOptions = true
       },
       {
         name = "requirePowerType",
@@ -1657,7 +1680,6 @@ Private.event_prototypes = {
       return ret:format(trigger.use_cloneId and "true" or "false");
     end,
     name = L["Combat Log"],
-    canHaveAuto = true,
     statesParameter = "all",
     args = {
       {}, -- timestamp ignored with _ argument
@@ -3020,7 +3042,6 @@ Private.event_prototypes = {
       return ret:format(trigger.use_cloneId and "true" or "false");
     end,
     statesParameter = "all",
-    canHaveAuto = true,
     args = {
       {
         name = "message",
@@ -3062,7 +3083,6 @@ Private.event_prototypes = {
     },
     force_events = "DBM_TimerForce",
     name = L["DBM Timer"],
-    canHaveAuto = true,
     canHaveDuration = "timed",
     triggerFunction = function(trigger)
       WeakAuras.RegisterDBMCallback("DBM_TimerStart")
@@ -3257,7 +3277,6 @@ Private.event_prototypes = {
       return ret:format(trigger.use_cloneId and "true" or "false");
     end,
     statesParameter = "all",
-    canHaveAuto = true,
     args = {
       {
         name = "addon",
@@ -3312,7 +3331,6 @@ Private.event_prototypes = {
     },
     force_events = "BigWigs_Timer_Force",
     name = L["BigWigs Timer"],
-    canHaveAuto = true,
     canHaveDuration = "timed",
     triggerFunction = function(trigger)
       WeakAuras.RegisterBigWigsTimer()
@@ -3539,20 +3557,33 @@ Private.event_prototypes = {
     internal_events = {
       "SWING_TIMER_START",
       "SWING_TIMER_CHANGE",
-      "SWING_TIMER_END"
+      "SWING_TIMER_END",
+      "SWING_TIMER_UPDATE"
     },
+    force_events = "SWING_TIMER_UPDATE",
     name = L["Swing Timer"],
-    loadFunc = function(trigger)
+    loadFunc = function()
       WeakAuras.InitSwingTimer();
     end,
     init = function(trigger)
-      trigger.hand = trigger.hand or "main";
       local ret = [=[
         local inverse = %s;
         local hand = %q;
-        local duration, expirationTime = WeakAuras.GetSwingTimerInfo(hand);
+        local triggerRemaining = %s
+        local duration, expirationTime, name, icon = WeakAuras.GetSwingTimerInfo(hand)
+        local remaining = expirationTime and expirationTime - GetTime()
+        local remainingCheck = not triggerRemaining or remaining and remaining %s triggerRemaining
+
+        if triggerRemaining and remaining and remaining >= triggerRemaining and remaining > 0 then
+          WeakAuras.ScheduleScan(expirationTime - triggerRemaining, "SWING_TIMER_UPDATE")
+        end
       ]=];
-      return ret:format((trigger.use_inverse and "true" or "false"), trigger.hand);
+      return ret:format(
+        (trigger.use_inverse and "true" or "false"),
+        trigger.hand or "main",
+        trigger.use_remaining and tonumber(trigger.remaining or 0) or "nil",
+        trigger.remaining_operator or "<"
+      );
     end,
     args = {
       {
@@ -3561,6 +3592,48 @@ Private.event_prototypes = {
         display = L["Weapon"],
         type = "select",
         values = "swing_types",
+        test = "true"
+      },
+      {
+        name = "duration",
+        hidden = true,
+        init = "duration",
+        test = "true",
+        store = true
+      },
+      {
+        name = "expirationTime",
+        init = "expirationTime",
+        hidden = true,
+        test = "true",
+        store = true
+      },
+      {
+        name = "progressType",
+        hidden = true,
+        init = "'timed'",
+        test = "true",
+        store = true
+      },
+      {
+        name = "name",
+        hidden = true,
+        init = "spell",
+        test = "true",
+        store = true
+      },
+      {
+        name = "icon",
+        hidden = true,
+        init = "icon or 'Interface\\AddOns\\WeakAuras\\Media\\Textures\\icon'",
+        test = "true",
+        store = true
+      },
+      {
+        name = "remaining",
+        display = L["Remaining Time"],
+        type = "number",
+        enable = function(trigger) return not trigger.use_inverse end,
         test = "true"
       },
       {
@@ -3574,19 +3647,9 @@ Private.event_prototypes = {
         test = "(inverse and duration == 0) or (not inverse and duration > 0)"
       }
     },
-    durationFunc = function(trigger)
-      local duration, expirationTime = WeakAuras.GetSwingTimerInfo(trigger.hand);
-      return duration, expirationTime;
-    end,
-    nameFunc = function(trigger)
-      local _, _, name = WeakAuras.GetSwingTimerInfo(trigger.hand);
-      return name;
-    end,
-    iconFunc = function(trigger)
-      local _, _, _, icon = WeakAuras.GetSwingTimerInfo(trigger.hand);
-      return icon;
-    end,
-    automaticrequired = true
+    automaticrequired = true,
+    canHaveDuration = true,
+    statesParameter = "one"
   },
   ["Action Usable"] = {
     type = "status",
@@ -3839,7 +3902,6 @@ Private.event_prototypes = {
     },
     automaticrequired = true,
     statesParameter = "one",
-    canHaveAuto = true
   },
   ["Totem"] = {
     type = "status",
@@ -3855,7 +3917,6 @@ Private.event_prototypes = {
     force_events = "PLAYER_ENTERING_WORLD",
     name = L["Totem"],
     statesParameter = "full",
-    canHaveAuto = true,
     canHaveDuration = "timed",
     triggerFunction = function(trigger)
       local ret = [[return
@@ -4188,28 +4249,29 @@ Private.event_prototypes = {
         local triggerStack = %s
         local triggerRemaining = %s
         local triggerShowOn = %q
-        local expirationTime, duration, name, icon, stack
+        local expirationTime, duration, name, icon, stacks
 
         if triggerWeaponType == "main" then
-          expirationTime, duration, name, shortenedName, icon, stack = WeakAuras.GetMHTenchInfo()
+          expirationTime, duration, name, shortenedName, icon, stacks = WeakAuras.GetMHTenchInfo()
         else
-          expirationTime, duration, name, shortenedName, icon, stack = WeakAuras.GetOHTenchInfo()
+          expirationTime, duration, name, shortenedName, icon, stacks = WeakAuras.GetOHTenchInfo()
         end
 
         local remaining = expirationTime and expirationTime - GetTime()
 
         local nameCheck = triggerName == "" or name and triggerName == name or shortenedName and triggerName == shortenedName
-        local stackCheck = not triggerStack or stack and stack %s triggerStack
+        local stackCheck = not triggerStack or stacks and stacks %s triggerStack
         local remainingCheck = not triggerRemaining or remaining and remaining %s triggerRemaining
         local found = expirationTime and nameCheck and stackCheck and remainingCheck
+
+        if(triggerRemaining and remaining and remaining >= triggerRemaining and remaining > 0) then
+          WeakAuras.ScheduleScan(expirationTime - triggerRemaining, "TENCH_UPDATE");
+        end
 
         if not found then
           expirationTime = nil
           duration = nil
-        end
-
-        if(triggerRemaining and remaining and remaining >= triggerRemaining and remaining > 0) then
-          WeakAuras.ScheduleScan(expirationTime - triggerRemaining, "TENCH_UPDATE");
+          remaining = nil
         end
       ]];
 
@@ -4239,7 +4301,7 @@ Private.event_prototypes = {
         test = "true"
       },
       {
-        name = "stack",
+        name = "stacks",
         display = L["Stack Count"],
         type = "number",
         test = "true",
@@ -4262,7 +4324,7 @@ Private.event_prototypes = {
       {
         name = "progressType",
         hidden = true,
-        init = "'timed'",
+        init = "duration and 'timed'",
         test = "true",
         store = true
       },
@@ -4304,7 +4366,6 @@ Private.event_prototypes = {
     },
     automaticrequired = true,
     canHaveDuration = true,
-    canHaveAuto = true,
     statesParameter = "one"
   },
   ["Chat Message"] = {
@@ -4891,7 +4952,6 @@ Private.event_prototypes = {
       return result
     end,
     force_events = unitHelperFunctions.UnitChangedForceEvents,
-    canHaveAuto = true,
     canHaveDuration = "timed",
     name = L["Cast"],
     init = function(trigger)
@@ -5126,7 +5186,7 @@ Private.event_prototypes = {
       },
       {
         name = "destUnit",
-        display = L["Caster's Target "],
+        display = L["Caster's Target"],
         type = "unit",
         values = "actual_unit_types_with_specific",
         conditionType = "unit",
@@ -5488,13 +5548,13 @@ Private.event_prototypes = {
         tinsert(events, "RAID_ROSTER_UPDATE")
       end
 
-      if trigger.use_instance_size then
+      if trigger.use_instance_size ~= nil then
         tinsert(events, "ZONE_CHANGED")
         tinsert(events, "ZONE_CHANGED_INDOORS")
         tinsert(events, "ZONE_CHANGED_NEW_AREA")
       end
 
-      if trigger.use_instance_difficulty then
+      if trigger.use_instance_difficulty ~= nil then
         tinsert(events, "PLAYER_DIFFICULTY_CHANGED")
         tinsert(events, "ZONE_CHANGED")
         tinsert(events, "ZONE_CHANGED_INDOORS")
@@ -5520,10 +5580,12 @@ Private.event_prototypes = {
     end,
     force_events = "CONDITIONS_CHECK",
     name = L["Conditions"],
-    init = function(trigger)
-      if(trigger.use_mounted ~= nil) then
+    loadFunc = function(trigger)
+      if (trigger.use_mounted ~= nil) then
         WeakAuras.WatchForMounts();
       end
+    end,
+    init = function(trigger)
       return "";
     end,
     args = {
@@ -5709,7 +5771,6 @@ Private.event_prototypes = {
       return ret;
     end,
     statesParameter = "one",
-    canHaveAuto = true,
     args = {
       {
         name = "behavior",

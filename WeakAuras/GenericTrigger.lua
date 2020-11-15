@@ -34,9 +34,6 @@ Returns whether the trigger can have a duration.
 GetOverlayInfo(data, triggernum)
 Returns a table containing the names of all overlays
 
-CanHaveAuto(data, triggernum)
-Returns whether the icon can be automatically selected.
-
 CanHaveClones(data)
 Returns whether the trigger can have clones.
 
@@ -698,16 +695,16 @@ function WeakAuras.ScanEvents(event, arg1, arg2, ...)
       Private.StopProfileSystem("generictrigger " .. orgEvent )
       return;
     end
-    Private.ScanEventsInternal(event_list, event, arg1, arg2, ...);
+    WeakAuras.ScanEventsInternal(event_list, event, arg1, arg2, ...);
 
   elseif (event == "COMBAT_LOG_EVENT_UNFILTERED_CUSTOM") then
     -- This reverts the COMBAT_LOG_EVENT_UNFILTERED_CUSTOM workaround so that custom triggers that check the event argument will work as expected
     if(event == "COMBAT_LOG_EVENT_UNFILTERED_CUSTOM") then
       event = "COMBAT_LOG_EVENT_UNFILTERED";
     end
-    Private.ScanEventsInternal(event_list, event, arg1, arg2, ...);
+    WeakAuras.ScanEventsInternal(event_list, event, arg1, arg2, ...);
   else
-    Private.ScanEventsInternal(event_list, event, arg1, arg2, ...);
+    WeakAuras.ScanEventsInternal(event_list, event, arg1, arg2, ...);
   end
   Private.StopProfileSystem("generictrigger " .. orgEvent )
 end
@@ -739,7 +736,7 @@ function WeakAuras.ScanUnitEvents(event, unit, ...)
   Private.StopProfileSystem("generictrigger " .. event .. " " .. unit)
 end
 
-function Private.ScanEventsInternal(event_list, event, arg1, arg2, ... )
+function WeakAuras.ScanEventsInternal(event_list, event, arg1, arg2, ... )
   for id, triggers in pairs(event_list) do
     Private.StartProfileAura(id);
     Private.ActivateAuraEnvironment(id);
@@ -1377,7 +1374,7 @@ function GenericTrigger.Add(data, region)
           automaticAutoHide = automaticAutoHide,
           tsuConditionVariables = tsuConditionVariables,
           prototype = prototype,
-          ignoreOptionsEventErrors = data.ignoreOptionsEventErrors
+          ignoreOptionsEventErrors = data.information.ignoreOptionsEventErrors
         };
       end
     end
@@ -1772,9 +1769,9 @@ do
 
   local function FetchSpellCooldown(self, id)
     if self.duration[id] and self.expirationTime[id] then
-      return self.expirationTime[id] - self.duration[id], self.duration[id]
+      return self.expirationTime[id] - self.duration[id], self.duration[id], self.readyTime[id]
     end
-    return 0, 0
+    return 0, 0, nil
   end
 
   local function HandleSpell(self, id, startTime, duration)
@@ -1800,6 +1797,7 @@ do
         if self.expirationTime[id] and self.expirationTime[id] > endTime and self.expirationTime[id] ~= 0 then
           self.duration[id] = 0
           self.expirationTime[id] = 0
+          self.readyTime[id] = time
           changed = true
           nowReady = true
         end
@@ -1819,6 +1817,12 @@ do
       nowReady = endTime == 0
     end
 
+    if duration == 0 then
+      self.readyTime[id] = time
+    else
+      self.readyTime[id] = nil
+    end
+
     RecheckHandles:Schedule(endTime, id)
     return changed, nowReady
   end
@@ -1827,6 +1831,7 @@ do
     local cd = {
       duration = {},
       expirationTime = {},
+      readyTime = {},
       handles = {}, -- Share handles, and use lowest time to schedule
       HandleSpell = HandleSpell,
       FetchSpellCooldown = FetchSpellCooldown
@@ -1895,19 +1900,19 @@ do
   end
 
   function WeakAuras.GetSpellCooldown(id, ignoreRuneCD, showgcd, track)
-    local startTime, duration, gcdCooldown;
+    local startTime, duration, gcdCooldown, readyTime
     if track == "charges" then
-      startTime, duration = spellCdsCharges:FetchSpellCooldown(id)
+      startTime, duration, readyTime = spellCdsCharges:FetchSpellCooldown(id)
     elseif track == "cooldown" then
       if ignoreRuneCD then
-        startTime, duration = spellCdsOnlyCooldownRune:FetchSpellCooldown(id)
+        startTime, duration, readyTime = spellCdsOnlyCooldownRune:FetchSpellCooldown(id)
       else
-        startTime, duration = spellCdsOnlyCooldown:FetchSpellCooldown(id)
+        startTime, duration, readyTime = spellCdsOnlyCooldown:FetchSpellCooldown(id)
       end
     elseif (ignoreRuneCD) then
-      startTime, duration = spellCdsRune:FetchSpellCooldown(id)
+      startTime, duration, readyTime = spellCdsRune:FetchSpellCooldown(id)
     else
-      startTime, duration = spellCds:FetchSpellCooldown(id)
+      startTime, duration, readyTime = spellCds:FetchSpellCooldown(id)
     end
 
     if (showgcd) then
@@ -1918,7 +1923,7 @@ do
       end
     end
 
-    return startTime, duration, gcdCooldown;
+    return startTime, duration, gcdCooldown, readyTime
   end
 
   function WeakAuras.GetSpellCharges(id)
@@ -2665,7 +2670,6 @@ do
   function WeakAuras.ScheduleDbmCheck(fireTime)
     if not scheduled_scans[fireTime] then
       scheduled_scans[fireTime] = timer:ScheduleTimer(doDbmScan, fireTime - GetTime() + 0.1, fireTime)
-      WeakAuras.debug("Scheduled dbm scan at "..fireTime)
     end
   end
 end
@@ -3330,40 +3334,6 @@ function GenericTrigger.GetOverlayInfo(data, triggernum)
   return result;
 end
 
-function GenericTrigger.CanHaveAuto(data, triggernum)
-  -- Is also called on importing before conversion, so do a few checks
-  local trigger = data.triggers[triggernum].trigger
-
-  if (not trigger) then
-    return false;
-  end
-  if(
-    (
-    (
-    trigger.type == "event"
-    or trigger.type == "status"
-    )
-    and trigger.event
-    and Private.event_prototypes[trigger.event]
-    and (
-    Private.event_prototypes[trigger.event].iconFunc
-    or Private.event_prototypes[trigger.event].canHaveAuto
-    )
-    )
-    or (
-    trigger.type == "custom"
-    and ((
-    trigger.customIcon
-    and trigger.customIcon ~= ""
-    ) or trigger.custom_type == "stateupdate")
-    )
-    ) then
-    return true;
-  else
-    return false;
-  end
-end
-
 function GenericTrigger.CanHaveClones(data)
   return false;
 end
@@ -3507,6 +3477,27 @@ local commonConditions = {
   }
 }
 
+function Private.ExpandCustomVariables(variables)
+  -- Make the life of tsu authors easier, by automatically filling in the details for
+  -- expirationTime, duration, value, total, stacks, if those exists but aren't a table value
+  -- By allowing a short-hand notation of just variable = type
+  -- In addition to the long form of variable = { type = xyz, display = "desc"}
+  for k, v in pairs(commonConditions) do
+    if (variables[k] and type(variables[k]) ~= "table") then
+      variables[k] = v;
+    end
+  end
+
+  for k, v in pairs(variables) do
+    if (type(v) == "string") then
+      variables[k] = {
+        display = k,
+        type = v,
+      };
+    end
+  end
+end
+
 function GenericTrigger.GetTriggerConditions(data, triggernum)
   local trigger = data.triggers[triggernum].trigger
 
@@ -3544,7 +3535,7 @@ function GenericTrigger.GetTriggerConditions(data, triggernum)
       for _, v in pairs(Private.event_prototypes[trigger.event].args) do
         if (v.conditionType and v.name and v.display) then
           local enable = true;
-          if (v.enable) then
+          if (v.enable ~= nil) then
             if type(v.enable) == "function" then
               enable = v.enable(trigger);
             elseif type(v.enable) == "boolean" then
@@ -3559,12 +3550,12 @@ function GenericTrigger.GetTriggerConditions(data, triggernum)
             }
             if (result[v.name].type == "select" or result[v.name].type == "unit") then
               if (v.conditionValues) then
-                result[v.name].values = WeakAuras[v.conditionValues];
+                result[v.name].values = Private[v.conditionValues] or WeakAuras[v.conditionValues];
               else
                 if type(v.values) == "function" then
                   result[v.name].values = v.values()
                 else
-                  result[v.name].values = WeakAuras[v.values];
+                  result[v.name].values = Private[v.values] or WeakAuras[v.values];
                 end
               end
             end
@@ -3622,25 +3613,7 @@ function GenericTrigger.GetTriggerConditions(data, triggernum)
         if (type(result)) ~= "table" then
           return nil;
         end
-        -- Make the life of tsu authors easier, by automatically filling in the details for
-        -- expirationTime, duration, value, total, stacks, if those exists but aren't a table value
-        -- By allowing a short-hand notation of just variable = type
-        -- In addition to the long form of variable = { type = xyz, display = "desc"}
-        for k, v in pairs(commonConditions) do
-          if (result[k] and type(result[k]) ~= "table") then
-            result[k] = v;
-          end
-        end
-
-        for k, v in pairs(result) do
-          if (type(v) == "string") then
-            result[k] = {
-              display = k,
-              type = v,
-            };
-          end
-        end
-
+        Private.ExpandCustomVariables(result)
         for k, v in pairs(result) do
           if (type(v) ~= "table") then
             result[k] = nil;

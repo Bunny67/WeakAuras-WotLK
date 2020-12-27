@@ -545,6 +545,26 @@ function WeakAuras.CheckTalentByIndex(index)
   return rank and rank > 0;
 end
 
+function WeakAuras.CheckNumericIds(loadids, currentId)
+  if (not loadids or not currentId) then
+    return false;
+  end
+
+  local searchFrom = 0;
+  local startI, endI = string.find(loadids, currentId, searchFrom);
+  while (startI) do
+    searchFrom = endI + 1; -- start next search from end
+    if (startI == 1 or tonumber(string.sub(loadids, startI - 1, startI - 1)) == nil) then
+      -- Either right at start, or character before is not a number
+      if (endI == string.len(loadids) or tonumber(string.sub(loadids, endI + 1, endI + 1)) == nil) then
+        return true;
+      end
+    end
+    startI, endI = string.find(loadids, currentId, searchFrom);
+  end
+  return false;
+end
+
 function WeakAuras.CheckString(ids, currentId)
   if (not ids or not currentId) then
     return false;
@@ -857,6 +877,17 @@ Private.load_prototype = {
       test = "WeakAuras.CheckString(%q, zone)",
       events = {"ZONE_CHANGED", "ZONE_CHANGED_INDOORS", "ZONE_CHANGED_NEW_AREA", "VEHICLE_UPDATE"},
       desc = L["Supports multiple entries, separated by commas"]
+    },
+    {
+      name = "zoneId",
+      display = L["Zone ID(s)"],
+      type = "string",
+      init = "arg",
+      test = "WeakAuras.CheckNumericIds(%q, zoneId)",
+      events = {"ZONE_CHANGED", "ZONE_CHANGED_INDOORS", "ZONE_CHANGED_NEW_AREA", "VEHICLE_UPDATE"},
+      desc = function()
+	    return ("\n|cffffd200%s|r%s: %d\n\n%s"):format(L["Current Zone\n"], GetRealZoneText(), GetCurrentMapAreaID(), L["Supports multiple entries, separated by commas"])
+	  end
     },
     {
       name = "size",

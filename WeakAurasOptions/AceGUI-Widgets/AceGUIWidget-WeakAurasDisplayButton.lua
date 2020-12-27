@@ -527,6 +527,8 @@ local methods = {
             end
           end
           editbox:Insert("[WeakAuras: "..fullName.." - "..data.id.."]");
+          OptionsPrivate.Private.linked = OptionsPrivate.Private.linked or {}
+          OptionsPrivate.Private.linked[data.id] = true
         elseif not data.controlledChildren then
           -- select all buttons between 1st select and current
           OptionsPrivate.PickDisplayMultipleShift(data.id)
@@ -624,12 +626,21 @@ local methods = {
       if (WeakAuras.IsImporting()) then return end;
       if data.controlledChildren then
         local new_idGroup = OptionsPrivate.DuplicateAura(data)
+        -- Do this after duplicating the parent!
+        OptionsPrivate.Private.PauseAllDynamicGroups()
         for index, childId in pairs(data.controlledChildren) do
           local childData = WeakAuras.GetData(childId)
-          OptionsPrivate.DuplicateAura(childData, new_idGroup)
+          OptionsPrivate.DuplicateAura(childData, new_idGroup, true)
         end
+
+        local button = WeakAuras.GetDisplayButton(new_idGroup)
+        button.callbacks.UpdateExpandButton()
+        WeakAuras.UpdateDisplayButton(WeakAuras.GetData(new_idGroup))
+
         WeakAuras.SortDisplayButtons()
         OptionsPrivate.PickAndEditDisplay(new_idGroup)
+
+        OptionsPrivate.Private.ResumeAllDynamicGroups()
       else
         local new_id = OptionsPrivate.DuplicateAura(data)
         WeakAuras.SortDisplayButtons()

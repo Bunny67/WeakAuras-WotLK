@@ -570,10 +570,19 @@ local function modifyThumbnail(parent, borderframe, data, fullModify, width, hei
   -- Fake icon (code)
   if(data.icon) then
     function borderframe:SetIcon(path)
-      local success = icon:SetTexture(data.auto and path or data.displayIcon) and (data.auto and path or data.displayIcon);
-      if not(success) then
-        icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark");
+      local iconPath
+      if data.iconSource == 0 then
+        iconPath = data.displayIcon or "Interface\\Icons\\INV_Misc_QuestionMark"
+      else
+        iconPath = path or data.displayIcon or "Interface\\Icons\\INV_Misc_QuestionMark"
       end
+      local success = icon:SetTexture(data.auto and path or data.displayIcon) and (data.auto and path or data.displayIcon);
+      icon:SetTexture(iconPath)
+    end
+
+    if data and data.iconSource ~= 0 then
+      local name, icon = WeakAuras.GetNameAndIcon(data)
+      borderframe:SetIcon(icon)
     end
 
     icon:Show();
@@ -587,7 +596,7 @@ local function createIcon()
   -- Default data
   local data = {
     icon = true,
-    auto = true,
+    iconSource = 0,
     texture = "Runes",
     orientation = "HORIZONTAL",
     alpha = 1.0,

@@ -408,6 +408,7 @@ local function createOptions(id, data)
       order = 28,
       min = 0.05,
       softMax = 2,
+      max = 10,
       bigStep = 0.05,
       get = function()
         return data.scale or 1
@@ -445,7 +446,7 @@ local function createOptions(id, data)
 
   return {
     dynamicgroup = options,
-    position = OptionsPrivate.commonOptions.PositionOptions(id, data, nil, true, disableSelfPoint),
+    position = OptionsPrivate.commonOptions.PositionOptions(id, data, nil, true, disableSelfPoint, true),
   };
 end
 

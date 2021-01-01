@@ -1561,9 +1561,9 @@ function OptionsPrivate.InsertCollapsed(id, namespace, path, value)
   data[insertPoint] = {[collapsed] = value}
 end
 
-function OptionsPrivate.AddTextFormatOption(input, withHeader, get, addOption, hidden, setHidden)
+function OptionsPrivate.AddTextFormatOption(input, withHeader, get, addOption, hidden, setHidden, index, total)
   local headerOption
-  if withHeader then
+  if withHeader and (not index or index == 1) then
     headerOption =  {
       type = "execute",
       control = "WeakAurasExpandSmall",
@@ -1620,7 +1620,7 @@ function OptionsPrivate.AddTextFormatOption(input, withHeader, get, addOption, h
     end
   end)
 
-  if withHeader then
+  if withHeader and (not index or index == total) then
     addOption("header_anchor",
     {
       type = "description",
@@ -1634,7 +1634,7 @@ function OptionsPrivate.AddTextFormatOption(input, withHeader, get, addOption, h
   )
   end
 
-  if not next(seenSymbols) and withHeader then
+  if not next(seenSymbols) and headerOption and not index then
     headerOption.hidden = true
   end
 

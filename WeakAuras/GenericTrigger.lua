@@ -3145,6 +3145,22 @@ do
   end
 end
 
+-- Item Count
+local itemCountWatchFrame;
+function WeakAuras.RegisterItemCountWatch()
+  if not(itemCountWatchFrame) then
+    itemCountWatchFrame = CreateFrame("frame");
+    itemCountWatchFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED");
+    itemCountWatchFrame:SetScript("OnEvent", function(_, _, unit)
+      if unit ~= "player" then return end
+      Private.StartProfileSystem("generictrigger");
+      timer:ScheduleTimer(WeakAuras.ScanEvents, 0.2, "ITEM_COUNT_UPDATE");
+      timer:ScheduleTimer(WeakAuras.ScanEvents, 0.5, "ITEM_COUNT_UPDATE");
+      Private.StopProfileSystem("generictrigger");
+    end);
+  end
+end
+
 -- Queued Action
 do
   local GetActionInfo, GetMacroSpell, GetSpellLink = GetActionInfo, GetMacroSpell, GetSpellLink

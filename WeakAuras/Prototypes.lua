@@ -4124,15 +4124,23 @@ Private.event_prototypes = {
         "PLAYER_ENTERING_WORLD"
       }
     },
+    internal_events = {
+      "ITEM_COUNT_UPDATE",
+    },
     force_events = "BAG_UPDATE",
     name = L["Item Count"],
+    loadFunc = function(trigger)
+      if(trigger.use_includeCharges) then
+        WeakAuras.RegisterItemCountWatch();
+      end
+    end,
     init = function(trigger)
       trigger.itemName = trigger.itemName or 0;
       local itemName = type(trigger.itemName) == "number" and trigger.itemName or "[["..trigger.itemName.."]]";
       local ret = [[
-        local count = GetItemCount(%s, %s);
+        local count = GetItemCount(%s, %s, %s);
       ]];
-      return ret:format(itemName, trigger.use_includeBank and "true" or "nil");
+      return ret:format(itemName, trigger.use_includeBank and "true" or "nil", trigger.use_includeCharges and "true" or "nil");
     end,
     args = {
       {
@@ -4149,17 +4157,23 @@ Private.event_prototypes = {
         test = "true"
       },
       {
+        name = "includeCharges",
+        display = L["Include Charges"],
+        type = "toggle",
+        test = "true"
+      },
+      {
         name = "count",
         display = L["Item Count"],
         type = "number"
       }
     },
     durationFunc = function(trigger)
-      local count = GetItemCount(trigger.itemName, trigger.use_includeBank);
+      local count = GetItemCount(trigger.itemName, trigger.use_includeBank, trigger.use_includeCharges);
       return count, 0, true;
     end,
     stacksFunc = function(trigger)
-      local count = GetItemCount(trigger.itemName, trigger.use_includeBank);
+      local count = GetItemCount(trigger.itemName, trigger.use_includeBank, trigger.use_includeCharges);
       return count, 0, true;
     end,
     nameFunc = function(trigger)

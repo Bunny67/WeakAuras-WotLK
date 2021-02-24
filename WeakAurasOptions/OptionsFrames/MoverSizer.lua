@@ -941,8 +941,9 @@ local function ConstructMoverSizer(parent)
     local x, y = mover:GetCenter()
     if x and y then
       if mover:GetRight() < margin or mover:GetLeft() + margin > GetScreenWidth() or mover:GetTop() < 20 or mover:GetBottom() + margin > GetScreenHeight() then
+        frame.arrowTexture:GetRect()
         local arrowX, arrowY = frame.arrowTexture:GetCenter()
-        local arrowAngle = atan2(y - arrowY, x - arrowX)
+        local arrowAngle = atan2(y - (arrowY or 0), x - (arrowX or 0))
         frame.offscreenText:Show()
         frame.arrowTexture:Show()
         frame.arrowTexture:SetRotation( (arrowAngle - 90) / 180 * math.pi)

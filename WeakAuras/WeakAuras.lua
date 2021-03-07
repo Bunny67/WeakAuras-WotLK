@@ -1,6 +1,6 @@
 local AddonName, Private = ...
 
-local internalVersion = 40
+local internalVersion = 44
 
 -- Lua APIs
 local insert = table.insert
@@ -576,7 +576,11 @@ local function ConstructFunction(prototype, trigger, skipOptional)
                   if not arg.test then
                     test = test..name.."=="..(tonumber(value) or "[["..value.."]]").." or ";
                   else
-                    test = test..arg.test:format(tonumber(value) or "[["..value.."]]").." or ";
+                    if arg.extraOption then
+                      test = test..arg.test:format(tonumber(value) or "[["..value.."]]", trigger[name .. "_extraOption"] or 0).." or ";
+                    else
+                      test = test..arg.test:format(tonumber(value) or "[["..value.."]]").." or ";
+                    end
                   end
                   any = true;
                 end
@@ -585,7 +589,16 @@ local function ConstructFunction(prototype, trigger, skipOptional)
                 else
                   test = "(false";
                 end
-                test = test..")";
+                test = test..")"
+                if arg.inverse then
+                  if type(arg.inverse) == "boolean" then
+                    test = "not " .. test
+                  elseif type(arg.inverse) == "function" then
+                    if arg.inverse(trigger) then
+                      test = "not " .. test
+                    end
+                  end
+                end
               end
             elseif(trigger["use_"..name]) then -- single selection
               local value = trigger[name] and trigger[name].single;
@@ -616,6 +629,10 @@ local function ConstructFunction(prototype, trigger, skipOptional)
               test = "("..name.."==[["..trigger[name].."]])";
             else
               test = "("..name..":"..trigger[name.."_operator"]:format(trigger[name])..")";
+            end
+          elseif(arg.type == "number") then
+            if number then
+              test = "("..name..(trigger[name.."_operator"] or "==").. number ..")";
             end
           else
             if(type(trigger[name]) == "table") then
@@ -1184,6 +1201,7 @@ local function scanForLoadsImpl(toCheck, event, arg1, ...)
   local _, class = UnitClass("player");
 
   local inCombat = UnitAffectingCombat("player") -- or UnitAffectingCombat("pet");
+  local alive = not UnitIsDeadOrGhost('player')
   local vehicle = UnitInVehicle("player") or UnitOnTaxi("player")
   local vehicleUi = UnitHasVehicleUI("player")
 
@@ -1200,8 +1218,8 @@ local function scanForLoadsImpl(toCheck, event, arg1, ...)
     if (data and not data.controlledChildren) then
       local loadFunc = loadFuncs[id];
       local loadOpt = loadFuncsForOptions[id];
-      shouldBeLoaded = loadFunc and loadFunc("ScanForLoads_Auras", inCombat, vehicle, vehicleUi, group, player, realm, class, faction, playerLevel, zone, zoneId, size, difficulty);
-      couldBeLoaded =  loadOpt and loadOpt("ScanForLoads_Auras",   inCombat, vehicle, vehicleUi, group, player, realm, class, faction, playerLevel, zone, zoneId, size, difficulty);
+      shouldBeLoaded = loadFunc and loadFunc("ScanForLoads_Auras", inCombat, alive, vehicle, vehicleUi, group, player, realm, class, faction, playerLevel, zone, zoneId, size, difficulty);
+      couldBeLoaded =  loadOpt and loadOpt("ScanForLoads_Auras",   inCombat, alive, vehicle, vehicleUi, group, player, realm, class, faction, playerLevel, zone, zoneId, size, difficulty);
 
       if(shouldBeLoaded and not loaded[id]) then
         changed = changed + 1;
@@ -1278,6 +1296,9 @@ loadFrame:RegisterEvent("PLAYER_REGEN_ENABLED");
 loadFrame:RegisterEvent("SPELLS_CHANGED");
 loadFrame:RegisterEvent("UNIT_INVENTORY_CHANGED")
 loadFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+loadFrame:RegisterEvent("PLAYER_DEAD")
+loadFrame:RegisterEvent("PLAYER_ALIVE")
+loadFrame:RegisterEvent("PLAYER_UNGHOST")
 
 local unitLoadFrame = CreateFrame("FRAME");
 WeakAuras.unitLoadFrame = unitLoadFrame;
@@ -2599,7 +2620,6 @@ local function EnsureClone(id, cloneId)
   if not(clones[id][cloneId]) then
     local data = WeakAuras.GetData(id);
     WeakAuras.SetRegion(data, cloneId);
-    clones[id][cloneId].justCreated = true;
   end
   return clones[id][cloneId];
 end
@@ -3844,10 +3864,6 @@ end
 local function ContainsPlaceHolders(textStr, symbolFunc)
   if not textStr then
     return false
-  end
-
-  if textStr:find("\\n") then
-    return true
   end
 
   local endPos = textStr:len();

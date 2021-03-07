@@ -1,7 +1,7 @@
 --[[ GenericTrigger.lua
 This file contains the generic trigger system. That is every trigger except the aura triggers.
 
-It registers the GenericTrigger table for the trigger types "status", "event" and "custom" and has the following API:
+It registers the GenericTrigger table for the generic trigger types and "custom" and has the following API:
 
 Add(data)
 Adds a display, creating all internal data structures for all triggers.
@@ -223,13 +223,9 @@ function ConstructTest(trigger, arg)
   return test, preamble
 end
 
-function ConstructFunction(prototype, trigger, inverse)
+function ConstructFunction(prototype, trigger)
   if (prototype.triggerFunction) then
     return prototype.triggerFunction(trigger);
-  end
-
-  if (inverse and prototype.automaticrequired) then
-    return "return function() return true end"
   end
 
   local input;
@@ -244,7 +240,7 @@ function ConstructFunction(prototype, trigger, inverse)
   local debug = {};
   local store = {};
   local init;
-  local preambles = ""
+  local preambles = "\n"
   if(prototype.init) then
     init = prototype.init(trigger);
   else
@@ -282,7 +278,7 @@ function ConstructFunction(prototype, trigger, inverse)
           end
         end
         if (preamble) then
-          preambles = preambles .. "\n" .. preamble
+          preambles = preambles .. preamble .. "\n"
         end
       end
     end
@@ -294,29 +290,23 @@ function ConstructFunction(prototype, trigger, inverse)
 
   ret = ret.."if(";
   ret = ret..((#required > 0) and tconcat(required, " and ").." and " or "");
-  if(inverse) then
-    ret = ret.."not ("..(#tests > 0 and tconcat(tests, " and ") or "true")..")";
-  else
-    ret = ret..(#tests > 0 and tconcat(tests, " and ") or "true");
-  end
+  ret = ret..(#tests > 0 and tconcat(tests, " and ") or "true");
   ret = ret..") then\n";
   if(#debug > 0) then
     ret = ret.."print('ret: true');\n";
   end
 
-  if (not inverse) then
-    if (prototype.statesParameter == "all") then
-      ret = ret .. "  state[cloneId] = state[cloneId] or {}\n"
-      ret = ret .. "  state = state[cloneId]\n"
-      ret = ret .. "  state.changed = true\n"
-    end
+  if (prototype.statesParameter == "all") then
+    ret = ret .. "  state[cloneId] = state[cloneId] or {}\n"
+    ret = ret .. "  state = state[cloneId]\n"
+    ret = ret .. "  state.changed = true\n"
+  end
 
-    for _, v in ipairs(store) do
-      ret = ret .. "    if (state." .. v .. " ~= " .. v .. ") then\n"
-      ret = ret .. "      state." .. v .. " = " .. v .. "\n"
-      ret = ret .. "      state.changed = true\n"
-      ret = ret .. "    end\n"
-    end
+  for _, v in ipairs(store) do
+    ret = ret .. "    if (state." .. v .. " ~= " .. v .. ") then\n"
+    ret = ret .. "      state." .. v .. " = " .. v .. "\n"
+    ret = ret .. "      state.changed = true\n"
+    ret = ret .. "    end\n"
   end
   ret = ret.."return true else return false end end";
 
@@ -538,6 +528,10 @@ local function RunTriggerFunc(allStates, data, id, triggernum, event, arg1, arg2
   local optionsEvent = event == "OPTIONS";
   local errorHandler = (optionsEvent and data.ignoreOptionsEventErrors) and ignoreErrorHandler or geterrorhandler()
   local updateTriggerState = false;
+
+  local unitForUnitTrigger
+  local cloneIdForUnitTrigger
+
   if(data.triggerFunc) then
     local untriggerCheck = false;
     if (data.statesParameter == "full") then
@@ -571,17 +565,16 @@ local function RunTriggerFunc(allStates, data, id, triggernum, event, arg1, arg2
         end
       end
       if arg1 then
-        local unit, cloneId
         if Private.multiUnitUnits[data.trigger.unit] then
-          unit = arg1
-          cloneId = arg1
+          unitForUnitTrigger = arg1
+          cloneIdForUnitTrigger = arg1
         else
-          unit = data.trigger.unit
-          cloneId = ""
+          unitForUnitTrigger = data.trigger.unit
+          cloneIdForUnitTrigger = ""
         end
-        allStates[cloneId] = allStates[cloneId] or {};
-        local state = allStates[cloneId];
-        local ok, returnValue = pcall(data.triggerFunc, state, event, unit, arg1, arg2, ...);
+        allStates[cloneIdForUnitTrigger] = allStates[cloneIdForUnitTrigger] or {};
+        local state = allStates[cloneIdForUnitTrigger];
+        local ok, returnValue = pcall(data.triggerFunc, state, event, unitForUnitTrigger, arg1, arg2, ...);
         if not ok then
           errorHandler(returnValue)
         elseif (ok and returnValue) or optionsEvent then
@@ -638,10 +631,9 @@ local function RunTriggerFunc(allStates, data, id, triggernum, event, arg1, arg2
       elseif data.statesParameter == "unit" then
         if data.untriggerFunc then
           if arg1 then
-            local cloneId = Private.multiUnitUnits[data.trigger.unit] and arg1 or ""
-            local state = allStates[cloneId]
+            local state = allStates[cloneIdForUnitTrigger]
             if state then
-              local ok, returnValue = pcall(data.untriggerFunc, state, event, arg1, arg2, ...);
+              local ok, returnValue = pcall(data.untriggerFunc, state, event, unitForUnitTrigger, arg2, ...);
               if not ok then
                 errorHandler(returnValue)
               elseif ok and returnValue then
@@ -651,6 +643,11 @@ local function RunTriggerFunc(allStates, data, id, triggernum, event, arg1, arg2
               end
             end
           end
+        end
+        if not updateTriggerState and not allStates[cloneIdForUnitTrigger].show then
+          -- We added this state automatically, but the trigger didn't end up using it,
+          -- so remove it again
+          allStates[cloneIdForUnitTrigger] = nil
         end
       elseif (data.statesParameter == "one") then
         allStates[""] = allStates[""] or {};
@@ -1123,8 +1120,8 @@ function GenericTrigger.Add(data, region)
     local triggerType;
     if(trigger and type(trigger) == "table") then
       triggerType = trigger.type;
-      if(triggerType == "status" or triggerType == "event" or triggerType == "custom") then
-        local triggerFuncStr, triggerFunc, untriggerFuncStr, untriggerFunc, statesParameter;
+      if(Private.category_event_prototype[triggerType] or triggerType == "custom") then
+        local triggerFuncStr, triggerFunc, untriggerFunc, statesParameter;
         local trigger_events = {};
         local internal_events = {};
         local trigger_unit_events = {};
@@ -1133,7 +1130,9 @@ function GenericTrigger.Add(data, region)
         local durationFunc, overlayFuncs, nameFunc, iconFunc, textureFunc, stacksFunc, loadFunc;
         local tsuConditionVariables;
         local prototype = nil
-        if(triggerType == "status" or triggerType == "event") then
+        local automaticAutoHide
+        local duration
+        if(Private.category_event_prototype[triggerType]) then
           if not(trigger.event) then
             error("Improper arguments to WeakAuras.Add - trigger type is \"event\" but event is not defined");
           elseif not(event_prototypes[trigger.event]) then
@@ -1179,41 +1178,15 @@ function GenericTrigger.Add(data, region)
               end
             end
 
+
             if (prototype.automaticrequired) then
-              trigger.unevent = "auto";
+              untriggerFunc = trueFunction
             elseif prototype.timedrequired then
-              if type(prototype.timedrequired) == "function" then
-                if prototype.timedrequired(trigger) then
-                  trigger.unevent = "timed"
-                else
-                  if not(Private.eventend_types[trigger.unevent]) then
-                    trigger.unevent = "timed"
-                  end
-                end
-              else
-                trigger.unevent = "timed"
-              end
-            elseif prototype.automatic then
-              if not(Private.autoeventend_types[trigger.unevent]) then
-                trigger.unevent = "auto"
-              end
+              automaticAutoHide = true
+              duration = tonumber(trigger.duration or "1")
             else
-              if not(Private.eventend_types[trigger.unevent]) then
-                trigger.unevent = "timed"
-              end
+              WeakAuras.prettyPrint("Invalid Prototype found: " .. prototype.name)
             end
-            trigger.duration = trigger.duration or "1"
-
-            if(trigger.unevent == "custom") then
-              untriggerFuncStr = ConstructFunction(prototype, untrigger);
-            elseif(trigger.unevent == "auto") then
-              untriggerFuncStr = ConstructFunction(prototype, trigger, true);
-            end
-
-            if(untriggerFuncStr) then
-              untriggerFunc = WeakAuras.LoadFunction(untriggerFuncStr, id);
-            end
-
 
             if(prototype) then
               local trigger_all_events = prototype.events;
@@ -1225,6 +1198,11 @@ function GenericTrigger.Add(data, region)
                   trigger_subevents = trigger_subevents(trigger, untrigger)
                 end
               end
+
+              if trigger.event == "Combat Log" and trigger.subeventPrefix and trigger.subeventSuffix then
+                tinsert(trigger_subevents, trigger.subeventPrefix .. trigger.subeventSuffix)
+              end
+
               if (type(trigger_all_events) == "function") then
                 trigger_all_events = trigger_all_events(trigger, untrigger);
               end
@@ -1238,7 +1216,7 @@ function GenericTrigger.Add(data, region)
               end
             end
           end
-        else
+        else -- CUSTOM
           triggerFunc = WeakAuras.LoadFunction("return "..(trigger.custom or ""), id);
           if (trigger.custom_type == "stateupdate") then
             tsuConditionVariables = WeakAuras.LoadFunction("return function() return \n" .. (trigger.customVariables or "") .. "\n end");
@@ -1330,26 +1308,13 @@ function GenericTrigger.Add(data, region)
           if (trigger.custom_type == "stateupdate") then
             statesParameter = "full";
           end
-        end
 
-        local automaticAutoHide;
-        local duration;
-        if(triggerType == "custom"
-          and trigger.custom_type == "event"
-          and trigger.custom_hide == "timed") then
+          if(trigger.custom_type == "event" and trigger.custom_hide == "timed") then
             automaticAutoHide = true;
             if (not trigger.dynamicDuration) then
               duration = tonumber(trigger.duration);
             end
-        end
-
-        if (triggerType == "event" and trigger.unevent == "timed") then
-          duration = tonumber(trigger.duration);
-          automaticAutoHide = true;
-        end
-
-        if triggerType == "event" and  trigger.event == "Combat Log" and trigger.subeventPrefix and trigger.subeventSuffix then
-          tinsert(trigger_subevents, trigger.subeventPrefix .. trigger.subeventSuffix)
+          end
         end
 
         events[id] = events[id] or {};
@@ -1365,7 +1330,6 @@ function GenericTrigger.Add(data, region)
           unit_events = trigger_unit_events,
           inverse = trigger.use_inverse,
           subevents = trigger_subevents,
-          unevent = trigger.unevent,
           durationFunc = durationFunc,
           overlayFuncs = overlayFuncs,
           nameFunc = nameFunc,
@@ -3012,6 +2976,23 @@ do
   end
 end
 
+-- Cast Latency
+do
+  local castLatencyFrame = nil
+  WeakAuras.frames["Cast Latency Handler"] = castLatencyFrame
+  function WeakAuras.WatchForCastLatency()
+    if not castLatencyFrame then
+      castLatencyFrame = CreateFrame("Frame")
+      castLatencyFrame:RegisterEvent("CURRENT_SPELL_CAST_CHANGED")
+      castLatencyFrame:SetScript("OnEvent", function(event)
+        Private.StartProfileSystem("generictrigger")
+        WeakAuras.ScanEvents("CAST_LATENCY_UPDATE", "player")
+        Private.StopProfileSystem("generictrigger")
+      end)
+    end
+  end
+end
+
 -- Mounted Frame
 do
   local mountedFrame
@@ -3100,7 +3081,7 @@ do
   local function nameplateHide(self)
     Private.StartProfileSystem("nameplatetrigger")
     visibleNameplates[self] = nil
-    WeakAuras.ScanEvents("NP_HIDE", self, gsub(self.nameText:GetText(), FSPAT, ""))
+    WeakAuras.ScanEvents("NP_HIDE", self, gsub(self.nameText:GetText() or "", FSPAT, ""))
     Private.StopProfileSystem("nameplatetrigger")
   end
 
@@ -3240,7 +3221,7 @@ do
 
   local function doCastScan(firetime, unit)
     scheduled_scans[unit][firetime] = nil;
-    WeakAuras.ScanEvents("CAST_REMAINING_CHECK", unit);
+    WeakAuras.ScanEvents("CAST_REMAINING_CHECK_" .. string.lower(unit), unit);
   end
   function WeakAuras.ScheduleCastCheck(fireTime, unit)
     scheduled_scans[unit] = scheduled_scans[unit] or {}
@@ -3259,7 +3240,7 @@ end
 function GenericTrigger.CanHaveDuration(data, triggernum)
   local trigger = data.triggers[triggernum].trigger
 
-  if (trigger.type == "event" or trigger.type == "status") then
+  if (Private.category_event_prototype[trigger.type]) then
     if trigger.event and Private.event_prototypes[trigger.event] then
       if Private.event_prototypes[trigger.event].durationFunc then
         if(type(Private.event_prototypes[trigger.event].init) == "function") then
@@ -3275,10 +3256,9 @@ function GenericTrigger.CanHaveDuration(data, triggernum)
         end
       elseif Private.event_prototypes[trigger.event].canHaveDuration then
         return Private.event_prototypes[trigger.event].canHaveDuration
+      elseif Private.event_prototypes[trigger.event].timedrequired then
+        return "timed"
       end
-    end
-    if trigger.unevent == "timed" and trigger.duration then
-      return "timed"
     end
   elseif (trigger.type == "custom") then
     if trigger.custom_type == "event" and trigger.custom_hide == "timed" and trigger.duration then
@@ -3360,7 +3340,7 @@ end
 function GenericTrigger.GetNameAndIcon(data, triggernum)
   local trigger = data.triggers[triggernum].trigger
   local icon, name
-  if (trigger.type == "event" or trigger.type == "status") then
+  if (Private.category_event_prototype[trigger.type]) then
     if(trigger.event and Private.event_prototypes[trigger.event]) then
       if(Private.event_prototypes[trigger.event].iconFunc) then
         icon = Private.event_prototypes[trigger.event].iconFunc(trigger);
@@ -3380,7 +3360,7 @@ end
 -- @return string
 function GenericTrigger.CanHaveTooltip(data, triggernum)
   local trigger = data.triggers[triggernum].trigger
-  if (trigger.type == "event" or trigger.type == "status") then
+  if (Private.category_event_prototype[trigger.type]) then
     if (trigger.event and Private.event_prototypes[trigger.event]) then
       if(Private.event_prototypes[trigger.event].hasSpellID) then
         return "spell";
@@ -3429,7 +3409,7 @@ function GenericTrigger.SetToolTip(trigger, state)
     end
   end
 
-  if (trigger.type == "event" or trigger.type == "status") then
+  if (Private.category_event_prototype[trigger.type]) then
     if (trigger.event and Private.event_prototypes[trigger.event]) then
       if(Private.event_prototypes[trigger.event].hasSpellID) then
         GameTooltip:SetSpellByID(trigger.spellName);
@@ -3446,7 +3426,7 @@ end
 function GenericTrigger.GetAdditionalProperties(data, triggernum)
   local trigger = data.triggers[triggernum].trigger
   local ret = "";
-  if (trigger.type == "event" or trigger.type == "status") then
+  if (Private.category_event_prototype[trigger.type]) then
     if (trigger.event and Private.event_prototypes[trigger.event]) then
       local found = false;
       local additional = ""
@@ -3523,7 +3503,7 @@ end
 function GenericTrigger.GetTriggerConditions(data, triggernum)
   local trigger = data.triggers[triggernum].trigger
 
-  if (trigger.type == "event" or trigger.type == "status") then
+  if (Private.category_event_prototype[trigger.type]) then
     if (trigger.event and Private.event_prototypes[trigger.event]) then
       local result = {};
 
@@ -3754,25 +3734,13 @@ function GenericTrigger.CreateFallbackState(data, triggernum, state)
 end
 
 function GenericTrigger.GetName(triggerType)
-  if (triggerType == "status") then
-    return L["Status"];
-  end
-  if (triggerType == "event") then
-    return L["Event"];
-  end
-  if (triggerType == "custom") then
-    return L["Custom"];
-  end
+  return Private.event_categories[triggerType].name
 end
 
 function GenericTrigger.GetTriggerDescription(data, triggernum, namestable)
   local trigger = data.triggers[triggernum].trigger
-  if(trigger.type == "event" or trigger.type == "status") then
-    if(trigger.type == "event") then
-      tinsert(namestable, {L["Trigger:"], (Private.event_types[trigger.event] or L["Undefined"])});
-    else
-      tinsert(namestable, {L["Trigger:"], (Private.status_types[trigger.event] or L["Undefined"])});
-    end
+  if (Private.category_event_prototype[trigger.type]) then
+    tinsert(namestable, {L["Trigger:"], (Private.event_prototypes[trigger.event].name or L["Undefined"])});
     if(trigger.event == "Combat Log" and trigger.subeventPrefix and trigger.subeventSuffix) then
       tinsert(namestable, {L["Message type:"], (Private.subevent_prefix_types[trigger.subeventPrefix] or L["Undefined"]).." "..(Private.subevent_suffix_types[trigger.subeventSuffix] or L["Undefined"])});
     end
@@ -3818,4 +3786,17 @@ do
   end
 end
 
-WeakAuras.RegisterTriggerSystem({"event", "status", "custom"}, GenericTrigger);
+local types = {}
+tinsert(types, "custom")
+for type in pairs(Private.category_event_prototype) do
+  tinsert(types, type)
+end
+
+-- The Options/GenericTrigger.lua needs this table, since at the time
+-- of registering the types the options code doesn't yet have access
+-- to the Private table.
+
+-- So for now make it simply a member of WeakAuras
+WeakAuras.genericTriggerTypes = types
+
+WeakAuras.RegisterTriggerSystem(types, GenericTrigger);

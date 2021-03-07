@@ -80,12 +80,6 @@ local function modify(parent, region, data)
   if not text:GetFont() then -- Font invalid, set the font but keep the setting
     text:SetFont(STANDARD_TEXT_FONT, data.fontSize <= 33 and data.fontSize or 33, data.outline);
   end
-  text:SetTextHeight(data.fontSize);
-  if text:GetFont() then
-    text:SetText("")
-    text:SetText(WeakAuras.ReplaceRaidMarkerSymbols(data.displayText));
-  end
-  text.displayText = data.displayText;
   text:SetJustifyH(data.justify);
 
   text:ClearAllPoints();
@@ -111,6 +105,7 @@ local function modify(parent, region, data)
     region.tooltipFrame:EnableMouse(false);
   end
 
+  text:SetTextHeight(data.fontSize);
   text:SetShadowColor(unpack(data.shadowColor))
   text:SetShadowOffset(data.shadowXOffset, data.shadowYOffset)
 
@@ -139,8 +134,8 @@ local function modify(parent, region, data)
       local height = text:GetStringHeight();
 
       if(region.height ~= height) then
-        region.height = text:GetStringHeight();
-        region:SetHeight(region.height);
+        region.height = height
+        region:SetHeight(height)
         if(data.parent and WeakAuras.regions[data.parent].region.PositionChildren) then
           WeakAuras.regions[data.parent].region:PositionChildren();
         end
@@ -226,7 +221,9 @@ local function modify(parent, region, data)
   region.TimerTick = TimerTick
 
   if not UpdateText then
-    SetText(data.displayText);
+    local textStr = data.displayText
+    textStr = textStr:gsub("\\n", "\n");
+    SetText(textStr)
   end
 
   function region:Color(r, g, b, a)

@@ -220,6 +220,10 @@ Off Screen]=]
 	L["Can be a UID (e.g., party1)."] = "Can be a UID (e.g., party1)."
 	L["Cancel"] = "Abbrechen"
 	--[[Translation missing --]]
+	L["Cast by Player Character"] = "Cast by Player Character"
+	--[[Translation missing --]]
+	L["Cast by Players"] = "Cast by Players"
+	--[[Translation missing --]]
 	L["Center"] = "Center"
 	L["Chat Message"] = "Chatnachricht"
 	--[[Translation missing --]]
@@ -407,7 +411,6 @@ UNIT_POWER, UNIT_AURA PLAYER_TARGET_CHANGED]=]
 	L["Entry limit"] = "Entry limit"
 	--[[Translation missing --]]
 	L["Entry Name Source"] = "Entry Name Source"
-	L["Event"] = "Ereignis"
 	L["Event Type"] = "Ereignistyp"
 	L["Event(s)"] = "Ereignis(se)"
 	L["Everything"] = "Alles"
@@ -594,6 +597,8 @@ Falls die Zahl als Dezimalzahl (z.B. 0.5), Bruch (z.B. 1/2) oder Prozentsatz (z.
 	L["Import"] = "Importieren"
 	L["Import a display from an encoded string"] = "Anzeige von Klartext importieren"
 	--[[Translation missing --]]
+	L["Indent Size"] = "Indent Size"
+	--[[Translation missing --]]
 	L["Information"] = "Information"
 	--[[Translation missing --]]
 	L["Inner"] = "Inner"
@@ -603,10 +608,12 @@ Falls die Zahl als Dezimalzahl (z.B. 0.5), Bruch (z.B. 1/2) oder Prozentsatz (z.
 	--[[Translation missing --]]
 	L["Invalid type for '%s'. Expected 'bool', 'number', 'select', 'string', 'timer' or 'elapsedTimer'."] = "Invalid type for '%s'. Expected 'bool', 'number', 'select', 'string', 'timer' or 'elapsedTimer'."
 	--[[Translation missing --]]
-	L["Invalid type for property '%s' in 's'. Expected '%s'"] = "Invalid type for property '%s' in 's'. Expected '%s'"
+	L["Invalid type for property '%s' in '%s'. Expected '%s'"] = "Invalid type for property '%s' in '%s'. Expected '%s'"
 	L["Inverse"] = "Invertiert"
 	--[[Translation missing --]]
 	L["Inverse Slant"] = "Inverse Slant"
+	--[[Translation missing --]]
+	L["Is Boss Debuff"] = "Is Boss Debuff"
 	L["Is Stealable"] = "Ist stehlbar"
 	L["Justify"] = "Ausrichten"
 	--[[Translation missing --]]
@@ -710,10 +717,14 @@ Nur ein Wert kann ausgewählt werden.]=]
 	L["Offer a guided way to create auras for your character"] = "Offer a guided way to create auras for your character"
 	--[[Translation missing --]]
 	L["Offset by |cFFFF0000%s|r/|cFFFF0000%s|r"] = "Offset by |cFFFF0000%s|r/|cFFFF0000%s|r"
+	--[[Translation missing --]]
+	L["Offset by 1px"] = "Offset by 1px"
 	L["Okay"] = "Okey"
 	L["On Hide"] = "Beim Ausblenden"
 	L["On Init"] = "Beim Initialisieren"
 	L["On Show"] = "Beim Einblenden"
+	--[[Translation missing --]]
+	L["Only Match auras cast by a player (not an npc)"] = "Only Match auras cast by a player (not an npc)"
 	L["Only match auras cast by people other than the player"] = "Nur Auren von anderen Spielern"
 	--[[Translation missing --]]
 	L["Only match auras cast by people other than the player or his pet"] = "Only match auras cast by people other than the player or his pet"
@@ -884,7 +895,7 @@ Nur ein Wert kann ausgewählt werden.]=]
 	L["Shows a progress bar with name, timer, and icon"] = "Zeigt einen Fortschrittsbalken mit Name, Zeitanzeige und Symbol"
 	L["Shows a spell icon with an optional cooldown overlay"] = "Zeigt ein Zaubersymbol mit optionaler Abklingzeit-Anzeige."
 	--[[Translation missing --]]
-	L["Shows a stop motion textures"] = "Shows a stop motion textures"
+	L["Shows a stop motion texture"] = "Shows a stop motion texture"
 	L["Shows a texture that changes based on duration"] = "Zeigt eine Textur, die sich über die Zeit verändert"
 	L["Shows one or more lines of text, which can include dynamic information such as progress or stacks"] = "Zeigt ein oder mehrere Zeilen Text an, der dynamische Informationen anzeigen kann, z.B. Fortschritt oder Stapel"
 	L["Simple"] = "Einfach"
@@ -935,7 +946,6 @@ Nur ein Wert kann ausgewählt werden.]=]
 	L["Start Collapsed"] = "Start Collapsed"
 	--[[Translation missing --]]
 	L["Start of %s"] = "Start of %s"
-	L["Status"] = "Status"
 	L["Stealable"] = "stehlbare Aura"
 	L["Step Size"] = "Schrittgröße"
 	--[[Translation missing --]]

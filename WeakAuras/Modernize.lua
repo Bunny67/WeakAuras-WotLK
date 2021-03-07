@@ -948,5 +948,129 @@ function Private.Modernize(data)
     data.ignoreOptionsEventErrors = nil
   end
 
+  if data.internalVersion < 41 then
+    local newTypes = {
+      ["Cooldown Ready (Spell)"] = "spell",
+      ["Queued Action"] = "spell",
+      ["Charges Changed"] = "spell",
+      ["Action Usable"] = "spell",
+      ["Chat Message"] = "event",
+      ["Unit Characteristics"] = "unit",
+      ["Cooldown Progress (Spell)"] = "spell",
+      ["Power"] = "unit",
+      ["Combat Log"] = "combatlog",
+      ["Health"] = "unit",
+      ["Cooldown Progress (Item)"] = "item",
+      ["Conditions"] = "unit",
+      ["Spell Known"] = "spell",
+      ["Cooldown Ready (Item)"] = "item",
+      ["Pet Behavior"] = "unit",
+      ["Range Check"] = "unit",
+      ["Character Stats"] = "unit",
+      ["Talent Known"] = "unit",
+      ["Threat Situation"] = "unit",
+      ["Equipment Set"] = "item",
+      ["Death Knight Rune"] = "unit",
+      ["Cast"] = "unit",
+      ["Item Count"] = "item",
+      ["BigWigs Timer"] = "addons",
+      ["DBM Timer"] = "addons",
+      ["Item Equipped"] = "item",
+      ["DBM Announce"] = "addons",
+      ["Swing Timer"] = "unit",
+      ["Totem"] = "spell",
+      ["Ready Check"] = "event",
+      ["BigWigs Message"] = "addons",
+      ["Stance/Form/Aura"] = "unit",
+      ["Weapon Enchant"] = "item",
+      ["Global Cooldown"] = "spell",
+      ["Experience"] = "unit",
+      ["GTFO"] = "addons",
+      ["Cooldown Ready (Equipment Slot)"] = "item",
+      ["Crowd Controlled"] = "unit",
+      ["Cooldown Progress (Equipment Slot)"] = "item",
+      ["Combat Events"] = "event",
+      ["Combo Points"] = "unit",
+    }
+
+    for triggerId, triggerData in ipairs(data.triggers) do
+      if triggerData.trigger.type == "status" or triggerData.trigger.type == "event" then
+        local newType = newTypes[triggerData.trigger.event]
+        if newType then
+          triggerData.trigger.type = newType
+        else
+          WeakAuras.prettyPrint("Unknown trigger type found in, please report: ", data.id, triggerData.trigger.event)
+        end
+      end
+    end
+  end
+
+  if data.internalVersion < 44 then
+    local function fixUp(data, prefix)
+      local pattern = prefix .. "(.*)_format"
+
+      local found = false
+      for property in pairs(data) do
+        local symbol = property:match(pattern)
+        if symbol then
+          found = true
+          break
+        end
+      end
+
+      if not found then
+        return
+      end
+
+      local old = CopyTable(data)
+      for property in pairs(old) do
+        local symbol = property:match(pattern)
+        if symbol then
+          if data[property] == "timed" then
+            data[prefix .. symbol .. "_time_format"] = 0
+
+            local oldDynamic = data[prefix .. symbol .. "_time_dynamic"]
+            data[prefix .. symbol .. "_time_dynamic_threshold"] = oldDynamic and 3 or 60
+          end
+          data[prefix .. symbol .. "_time_dynamic"] = nil
+          if data[prefix .. symbol .. "_time_precision"] == 0 then
+            data[prefix .. symbol .. "_time_precision"] = 1
+            data[prefix .. symbol .. "_time_dynamic_threshold"] = 0
+          end
+        end
+      end
+    end
+
+    if data.regionType == "text" then
+      fixUp(data, "displayText_format_")
+    end
+
+    if data.subRegions then
+      for index, subRegionData in ipairs(data.subRegions) do
+        if subRegionData.type == "subtext" then
+          fixUp(subRegionData, "text_text_format_")
+        end
+      end
+    end
+
+    if data.actions then
+      for _, when in ipairs{ "start", "finish" } do
+        if data.actions[when] then
+          fixUp(data.actions[when], "message_format_")
+        end
+      end
+    end
+
+    if data.conditions then
+      for conditionIndex, condition in ipairs(data.conditions) do
+        for changeIndex, change in ipairs(condition.changes) do
+          if change.property == "chat" and change.value then
+            fixUp(change.value, "message_format_")
+          end
+        end
+      end
+    end
+  end
+
   data.internalVersion = max(data.internalVersion or 0, WeakAuras.InternalVersion());
 end

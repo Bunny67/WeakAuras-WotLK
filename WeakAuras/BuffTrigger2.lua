@@ -132,6 +132,20 @@ local function IsSingleMissing(trigger)
   return not IsGroupTrigger(trigger) and trigger.matchesShowOn == "showOnMissing"
 end
 
+local function CanHaveMatchCheck(trigger)
+  if IsGroupTrigger(trigger) then
+    return true
+  end
+  if trigger.matchesShowOn == "showOnMissing" then
+    return false
+  end
+  if trigger.matchesShowOn == "showOnActive" or trigger.matchesShowOn == "showOnMatches" or not trigger.matchesShowOn then
+    return true
+  end
+  -- Always: If clones are shown
+  return trigger.showClones
+end
+
 local function HasMatchCount(trigger)
   if IsGroupTrigger(trigger) then
     return trigger.useMatch_count
@@ -1830,16 +1844,16 @@ function BuffTrigger.Rename(oldid, newid)
 end
 
 local function createScanFunc(trigger)
-  local isSingleMissing = IsSingleMissing(trigger)
+  local canHaveMatchCheck = CanHaveMatchCheck(trigger)
   local isMulti = trigger.unit == "multi"
-  local useStacks = not isSingleMissing and not isMulti and trigger.useStacks
-  local use_stealable = not isSingleMissing and not isMulti and trigger.use_stealable
-  local use_debuffClass = not isSingleMissing and not isMulti and trigger.use_debuffClass
-  local use_tooltip = not isSingleMissing and not isMulti and trigger.fetchTooltip and trigger.use_tooltip
-  local use_tooltipValue = not isSingleMissing and not isMulti and trigger.fetchTooltip and trigger.use_tooltipValue
-  local use_total = not isSingleMissing and not isMulti and trigger.useTotal and trigger.total
-  local use_ignore_name = not isSingleMissing and not isMulti and trigger.useIgnoreName and trigger.ignoreAuraNames
-  local use_ignore_spellId = not isSingleMissing and not isMulti and trigger.useIgnoreExactSpellId and trigger.ignoreAuraSpellids
+  local useStacks = canHaveMatchCheck and not isMulti and trigger.useStacks
+  local use_stealable = not canHaveMatchCheck and not isMulti and trigger.use_stealable
+  local use_debuffClass = canHaveMatchCheck and not isMulti and trigger.use_debuffClass
+  local use_tooltip = canHaveMatchCheck and not isMulti and trigger.fetchTooltip and trigger.use_tooltip
+  local use_tooltipValue = canHaveMatchCheck and not isMulti and trigger.fetchTooltip and trigger.use_tooltipValue
+  local use_total = canHaveMatchCheck and not isMulti and trigger.useTotal and trigger.total
+  local use_ignore_name = canHaveMatchCheck and not isMulti and trigger.useIgnoreName and trigger.ignoreAuraNames
+  local use_ignore_spellId = canHaveMatchCheck and not isMulti and trigger.useIgnoreExactSpellId and trigger.ignoreAuraSpellids
 
   if not useStacks and use_stealable == nil and not use_debuffClass and trigger.ownOnly == nil
        and not use_tooltip and not use_tooltipValue and not trigger.useNamePattern and not use_total
@@ -2069,7 +2083,7 @@ function BuffTrigger.Add(data)
       local scanFunc = createScanFunc(trigger)
 
       local remFunc
-      if trigger.unit ~= "multi" and not IsSingleMissing(trigger) and trigger.useRem then
+      if trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and trigger.useRem then
         local remFuncStr = Private.function_strings.count:format(trigger.remOperator or ">=", tonumber(trigger.rem) or 0)
         remFunc = WeakAuras.LoadFunction(remFuncStr)
       end
@@ -2170,7 +2184,7 @@ function BuffTrigger.Add(data)
         perUnitMode = perUnitMode,
         scanFunc = scanFunc,
         remainingFunc = remFunc,
-        remainingCheck = trigger.unit ~= "multi" and not IsSingleMissing(trigger) and trigger.useRem and tonumber(trigger.rem) or 0,
+        remainingCheck = trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and trigger.useRem and tonumber(trigger.rem) or 0,
         id = id,
         triggernum = triggernum,
         compareFunc = trigger.combineMode == "showHighest" and highestExpirationTime or lowestExpirationTime,
@@ -2798,7 +2812,11 @@ local function UpdateMatchDataMulti(time, base, key, event, sourceGUID, sourceNa
 end
 
 local function AugmentMatchDataMultiWith(matchData, unit, name, icon, stacks, debuffClass, duration, expirationTime, unitCaster, isStealable, _, spellId)
-  ScheduleMultiCleanUp(matchData.GUID, expirationTime)
+  if expirationTime == 0 then
+    expirationTime = math.huge
+  else
+    ScheduleMultiCleanUp(matchData.GUID, expirationTime)
+  end
   local changed = false
   if matchData.name ~= name then
     matchData.name = name

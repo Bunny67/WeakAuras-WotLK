@@ -245,11 +245,12 @@ local function modifyThumbnail(parent, frame, data)
   function frame:SetIcon(path)
     local iconPath
     if data.iconSource == 0 then
-      iconPath = data.displayIcon or "Interface\\Icons\\INV_Misc_QuestionMark"
+      iconPath = data.displayIcon
     else
-      iconPath = path or data.displayIcon or "Interface\\Icons\\INV_Misc_QuestionMark"
+      iconPath = path or data.displayIcon
     end
-    self.icon:SetTexture(iconPath)
+
+    self.icon:SetTexture(iconPath and iconPath ~= "" and iconPath or "Interface\\Icons\\INV_Misc_QuestionMark")
   end
 
   if data then

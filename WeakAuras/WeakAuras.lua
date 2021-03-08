@@ -4694,7 +4694,3 @@ function WeakAuras.GetTriggerCategoryFor(triggerType)
   local prototype = Private.event_prototypes[triggerType]
   return prototype and prototype.type
 end
-
-function WeakAuras.UnitStagger(unit)
-  return UnitStagger(unit) or 0
-end

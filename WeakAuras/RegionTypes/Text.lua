@@ -80,6 +80,11 @@ local function modify(parent, region, data)
   if not text:GetFont() then -- Font invalid, set the font but keep the setting
     text:SetFont(STANDARD_TEXT_FONT, data.fontSize <= 33 and data.fontSize or 33, data.outline);
   end
+  text:SetTextHeight(data.fontSize);
+  if text:GetFont() then
+    text:SetText("")
+    text:SetText(WeakAuras.ReplaceRaidMarkerSymbols(data.displayText));
+  end
   text:SetJustifyH(data.justify);
 
   text:ClearAllPoints();
@@ -105,7 +110,6 @@ local function modify(parent, region, data)
     region.tooltipFrame:EnableMouse(false);
   end
 
-  text:SetTextHeight(data.fontSize);
   text:SetShadowColor(unpack(data.shadowColor))
   text:SetShadowOffset(data.shadowXOffset, data.shadowYOffset)
 

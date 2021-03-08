@@ -830,7 +830,7 @@ Private.load_prototype = {
     },
     {
       name = "talent",
-      display = L["Talent selected"],
+      display = L["Talent"],
       type = "multiselect",
       values = valuesForTalentFunction,
       test = "WeakAuras.CheckTalentByIndex(%d)",
@@ -838,7 +838,7 @@ Private.load_prototype = {
     },
     {
       name = "talent2",
-      display = L["And Talent selected"],
+      display = L["And Talent"],
       type = "multiselect",
       values = valuesForTalentFunction,
       test = "WeakAuras.CheckTalentByIndex(%d)",
@@ -849,7 +849,7 @@ Private.load_prototype = {
     },
     {
       name = "talent3",
-      display = L["And Talent selected"],
+      display = L["And Talent"],
       type = "multiselect",
       values = valuesForTalentFunction,
       test = "WeakAuras.CheckTalentByIndex(%d)",
@@ -902,7 +902,7 @@ Private.load_prototype = {
     },
     {
       name = "size",
-      display = L["Instance Type"],
+      display = L["Instance Size Type"],
       type = "multiselect",
       values = "instance_types",
       init = "arg",

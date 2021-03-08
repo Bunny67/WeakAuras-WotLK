@@ -4451,7 +4451,7 @@ function Private.AnchorFrame(data, region, parent)
         errorhandler(ret)
       end
     else
-      region:SetParent(frame);
+      region:SetParent(parent or frame);
     end
 
     local anchorPoint = data.anchorPoint

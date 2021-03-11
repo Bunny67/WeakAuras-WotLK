@@ -42,7 +42,7 @@ function GetNumSubgroupMembers()
 end
 
 function GetNumGroupMembers()
-	return GetNumRaidMembers()
+	return IsInRaid() and GetNumRaidMembers() or GetNumPartyMembers()
 end
 
 RAID_CLASS_COLORS.HUNTER.colorStr = "ffabd473"

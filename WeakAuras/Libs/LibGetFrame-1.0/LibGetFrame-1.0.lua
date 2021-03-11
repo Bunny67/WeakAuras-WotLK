@@ -1,5 +1,5 @@
 local MAJOR_VERSION = "LibGetFrame-1.0"
-local MINOR_VERSION = 24
+local MINOR_VERSION = 26
 if not LibStub then error(MAJOR_VERSION .. " requires LibStub.") end
 local lib = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not lib then return end
@@ -14,35 +14,35 @@ local maxDepth = 50
 
 local defaultFramePriorities = {
     -- raid frames
-    [1] = "^Vd1", -- vuhdo
-    [2] = "^Vd2", -- vuhdo
-    [3] = "^Vd3", -- vuhdo
-    [4] = "^Vd4", -- vuhdo
-    [5] = "^Vd5", -- vuhdo
-    [6] = "^Vd", -- vuhdo
-    [7] = "^HealBot", -- healbot
-    [8] = "^GridLayout", -- grid
-    [9] = "^Grid2Layout", -- grid2
-    [10] = "^PlexusLayout", -- plexus
-    [11] = "^ElvUF_RaidGroup", -- elv
-    [12] = "^oUF_bdGrid", -- bdgrid
-    [13] = "^oUF_.-Raid", -- generic oUF
-    [14] = "^LimeGroup", -- lime
-    [15] = "^SUFHeaderraid", -- suf
+    "^Vd1", -- vuhdo
+    "^Vd2", -- vuhdo
+    "^Vd3", -- vuhdo
+    "^Vd4", -- vuhdo
+    "^Vd5", -- vuhdo
+    "^Vd", -- vuhdo
+    "^HealBot", -- healbot
+    "^GridLayout", -- grid
+    "^Grid2Layout", -- grid2
+    "^PlexusLayout", -- plexus
+    "^ElvUF_RaidGroup", -- elv
+    "^oUF_bdGrid", -- bdgrid
+    "^oUF_.-Raid", -- generic oUF
+    "^LimeGroup", -- lime
+    "^SUFHeaderraid", -- suf
     -- party frames
-    [16] = "^AleaUI_GroupHeader", -- Alea
-    [17] = "^SUFHeaderparty", --suf
-    [18] = "^ElvUF_PartyGroup", -- elv
-    [19] = "^oUF_.-Party", -- generic oUF
-    [20] = "^PitBull4_Groups_Party", -- pitbull4
-    [21] = "^CompactRaid", -- blizz
-    [22] = "^PartyMemberFrame", -- blizz
+    "^AleaUI_GroupHeader", -- Alea
+    "^SUFHeaderparty", --suf
+    "^ElvUF_PartyGroup", -- elv
+    "^oUF_.-Party", -- generic oUF
+    "^PitBull4_Groups_Party", -- pitbull4
+    "^CompactRaid", -- blizz
+    "^PartyMemberFrame", -- blizz
     -- player frame
-    [23] = "^SUFUnitplayer",
-    [24] = "^PitBull4_Frames_Player",
-    [25] = "^ElvUF_Player",
-    [26] = "^oUF_.-Player",
-    [27] = "^PlayerFrame",
+    "^SUFUnitplayer",
+    "^PitBull4_Frames_Player",
+    "^ElvUF_Player",
+    "^oUF_.-Player",
+    "^PlayerFrame",
 }
 
 local defaultPlayerFrames = {
@@ -68,8 +68,28 @@ local defaultTargettargetFrames = {
     "oUF_ToT",
     "TargetTargetFrame",
 }
+local defaultPartyFrames = {
+    "^AleaUI_GroupHeader",
+    "^SUFHeaderparty",
+    "^ElvUF_PartyGroup",
+    "^oUF_.-Party",
+    "^PitBull4_Groups_Party",
+    "^PartyMemberFrame",
+}
 local defaultPartyTargetFrames = {
     "SUFChildpartytarget%d",
+}
+local defaultRaidFrames = {
+    "^Vd",
+    "^HealBot",
+    "^GridLayout",
+    "^Grid2Layout",
+    "^PlexusLayout",
+    "^ElvUF_RaidGroup",
+    "^oUF_.-Raid",
+    "^LimeGroup",
+    "^SUFHeaderraid",
+    "^RaidPullout",
 }
 
 local GetFramesCache = {}
@@ -123,7 +143,7 @@ end
 local waitFrame = CreateFrame("Frame")
 local function waitFrame_OnUpdate(self, elapsed)
 	self.delay = (self.delay or 1) - elapsed
-	if self.delay < elapsed then
+	if self.delay < 0 then
 		doScanForUnitFrames()
 		self:SetScript("OnUpdate", nil)
 		self.delay = nil
@@ -135,6 +155,7 @@ local function ScanForUnitFrames(noDelay)
         doScanForUnitFrames()
     elseif not wait then
         wait = true
+        waitFrame.delay = 1
 		waitFrame:SetScript("OnUpdate", waitFrame_OnUpdate)
     end
 end
@@ -150,13 +171,15 @@ end
 
 local function GetUnitFrames(target, ignoredFrames)
     if not UnitExists(target) then
-        if type(target) == "string" and target:find("Player") then
+        if type(target) ~= "string" then return end
+        local B = tonumber(target:sub(5, 5), 16)
+        if B and B % 8 == 0 then
             target = select(6, GetPlayerInfoByGUID(target))
         else
             target = target:gsub(" .*", "")
-            if not UnitExists(target) then
-                return
-            end
+        end
+        if not UnitExists(target) then
+            return
         end
     end
 
@@ -186,11 +209,15 @@ local defaultOptions = {
     ignorePlayerFrame = true,
     ignoreTargetFrame = true,
     ignoreTargettargetFrame = true,
+    ignorePartyFrame = false,
     ignorePartyTargetFrame = true,
+    ignoreRaidFrame = false,
     playerFrames = defaultPlayerFrames,
     targetFrames = defaultTargetFrames,
     targettargetFrames = defaultTargettargetFrames,
+    partyFrames = defaultPartyFrames,
     partyTargetFrames = defaultPartyTargetFrames,
+    raidFrames = defaultRaidFrames,
     ignoreFrames = {
         "PitBull4_Frames_Target's target's target",
         "ElvUF_PartyGroup%dUnitButton%dTarget",
@@ -235,8 +262,18 @@ function lib.GetUnitFrame(target, opt)
             tinsert(ignoredFrames, v)
         end
     end
+    if opt.ignorePartyFrame then
+        for _,v in pairs(opt.partyFrames) do
+            tinsert(ignoredFrames, v)
+        end
+    end
     if opt.ignorePartyTargetFrame then
         for _,v in pairs(opt.partyTargetFrames) do
+            tinsert(ignoredFrames, v)
+        end
+    end
+    if opt.ignoreRaidFrame then
+        for _,v in pairs(opt.raidFrames) do
             tinsert(ignoredFrames, v)
         end
     end

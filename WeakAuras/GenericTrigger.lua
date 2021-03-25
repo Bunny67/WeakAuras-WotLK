@@ -3086,7 +3086,7 @@ do
 
   local function nameplateShow(self)
     Private.StartProfileSystem("nameplatetrigger")
-    local name = gsub(self.nameText:GetText(), FSPAT, "")
+    local name = gsub(self.nameText:GetText() or "", FSPAT, "")
     visibleNameplates[self] = name
     WeakAuras.ScanEvents("NP_SHOW", self, name)
 	Private.StopProfileSystem("nameplatetrigger")
@@ -3108,6 +3108,7 @@ do
         frame:HookScript("OnShow", nameplateShow)
         frame:HookScript("OnHide", nameplateHide)
         nameplateShow(frame)
+        nameplateList[frame] = true
       end
     end
   end
@@ -3125,13 +3126,17 @@ do
     lastUpdate = 0
   end
 
-  function WeakAuras.GetUnitNameplate(name)
+  local resultNameplates = {}
+  function WeakAuras.GetUnitNameplate(name, results)
     if not name or name == "" then return end
+    results = results or resultNameplates
+    wipe(results)
     for frame, nameplateName in pairs(visibleNameplates) do
       if name == nameplateName then
-        return frame
+        results[#results + 1] = frame
       end
     end
+    return results[1], results
   end
 
   function WeakAuras.WatchNamePlates()

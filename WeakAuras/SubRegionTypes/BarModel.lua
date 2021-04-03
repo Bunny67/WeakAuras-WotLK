@@ -101,7 +101,7 @@ local funcs = {
   end,
   SetAlpha = function(self, alpha)
     if self.model then
-      self.model:SetModelAlpha(alpha)
+      self.model:SetAlpha(alpha)
     end
     self.alpha = alpha
   end,

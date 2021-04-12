@@ -189,6 +189,8 @@ end
 -- @param id The id of the timer, as returned by `:ScheduleTimer` or `:ScheduleRepeatingTimer`
 -- @return The time left on the timer.
 function AceTimer:TimeLeft(id)
+	if not id then return end
+
 	local timer = activeTimers[id]
 	if not timer then
 		return 0

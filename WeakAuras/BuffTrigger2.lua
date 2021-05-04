@@ -230,8 +230,6 @@ local function UpdateToolTipDataInMatchData(matchData, time)
 end
 
 local function UpdateMatchData(time, matchDataChanged, unit, index, filter, name, icon, stacks, debuffClass, duration, expirationTime, unitCaster, isStealable, _, spellId)
-  isStealable = isStealable and true or false
-
   if not matchData[unit] then
     matchData[unit] = {}
   end
@@ -2814,8 +2812,6 @@ local function UpdateMatchDataMulti(time, base, key, event, sourceGUID, sourceNa
 end
 
 local function AugmentMatchDataMultiWith(matchData, unit, name, icon, stacks, debuffClass, duration, expirationTime, unitCaster, isStealable, _, spellId)
-  isStealable = isStealable and true or false
-
   if expirationTime == 0 then
     expirationTime = math.huge
   else

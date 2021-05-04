@@ -230,6 +230,8 @@ local function UpdateToolTipDataInMatchData(matchData, time)
 end
 
 local function UpdateMatchData(time, matchDataChanged, unit, index, filter, name, icon, stacks, debuffClass, duration, expirationTime, unitCaster, isStealable, _, spellId)
+  isStealable = isStealable and true or false
+
   if not matchData[unit] then
     matchData[unit] = {}
   end
@@ -1847,7 +1849,7 @@ local function createScanFunc(trigger)
   local canHaveMatchCheck = CanHaveMatchCheck(trigger)
   local isMulti = trigger.unit == "multi"
   local useStacks = canHaveMatchCheck and not isMulti and trigger.useStacks
-  local use_stealable = not canHaveMatchCheck and not isMulti and trigger.use_stealable
+  local use_stealable = canHaveMatchCheck and not isMulti and trigger.use_stealable
   local use_debuffClass = canHaveMatchCheck and not isMulti and trigger.use_debuffClass
   local use_tooltip = canHaveMatchCheck and not isMulti and trigger.fetchTooltip and trigger.use_tooltip
   local use_tooltipValue = canHaveMatchCheck and not isMulti and trigger.fetchTooltip and trigger.use_tooltipValue
@@ -2812,6 +2814,8 @@ local function UpdateMatchDataMulti(time, base, key, event, sourceGUID, sourceNa
 end
 
 local function AugmentMatchDataMultiWith(matchData, unit, name, icon, stacks, debuffClass, duration, expirationTime, unitCaster, isStealable, _, spellId)
+  isStealable = isStealable and true or false
+
   if expirationTime == 0 then
     expirationTime = math.huge
   else

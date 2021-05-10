@@ -32,7 +32,7 @@ function spellCache.Build()
     local id = 0
     local misses = 0
 
-    while misses < 400 do
+    while misses < 53000 do
       id = id + 1
       local name, _, icon = GetSpellInfo(id)
 

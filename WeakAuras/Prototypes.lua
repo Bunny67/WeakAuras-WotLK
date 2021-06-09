@@ -6059,7 +6059,7 @@ Private.event_prototypes = {
 
 };
 
-if (DBM and tonumber(DBM.Revision) < 7003) then 
+if (DBM and tonumber(DBM.Revision) < 7003) then
   Private.event_prototypes["DBM Announce"] = nil
   Private.event_prototypes["DBM Timer"] = nil
 end

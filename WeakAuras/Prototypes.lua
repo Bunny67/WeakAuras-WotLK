@@ -6059,8 +6059,10 @@ Private.event_prototypes = {
 
 };
 
-Private.event_prototypes["DBM Announce"] = nil
-Private.event_prototypes["DBM Timer"] = nil
+if (DBM and tonumber(DBM.Revision) < 7003) then 
+  Private.event_prototypes["DBM Announce"] = nil
+  Private.event_prototypes["DBM Timer"] = nil
+end
 Private.event_prototypes["BigWigs Message"] = nil
 Private.event_prototypes["BigWigs Timer"] = nil
 

@@ -1515,7 +1515,7 @@ do
             event = "SWING_TIMER_CHANGE";
             mainTimer = timer:ScheduleTimer(swingEnd, mainSpeed, "main");
           else
-            timer:CancelTimer(mainTimer, true);
+            timer:CancelTimer(offTimer, true);
             lastSwingOff = currentTime;
             swingDurationOff = offSpeed;
             event = "SWING_TIMER_CHANGE";
@@ -1554,7 +1554,7 @@ do
           timer:CancelTimer(mainTimer)
           local multiplier = mainSpeedNew / mainSpeed
           local timeLeft = (lastSwingMain + swingDurationMain - GetTime()) * multiplier
-          swingDurationMain = mainSpeedNew
+          swingDurationMain = GetTime()-lastSwingMain + timeLeft
           mainTimer = timer:ScheduleTimer(swingEnd, timeLeft, "main")
           WeakAuras.ScanEvents("SWING_TIMER_CHANGE")
         end
@@ -1562,9 +1562,9 @@ do
       if lastSwingOff then
         if offSpeedNew ~= offSpeed then
           timer:CancelTimer(offTimer)
-          local multiplier = offSpeedNew / mainSpeed
+          local multiplier = offSpeedNew / offSpeed
           local timeLeft = (lastSwingOff + swingDurationOff - GetTime()) * multiplier
-          swingDurationOff = offSpeedNew
+          swingDurationOff = GetTime() - lastSwingOff + timeLeft
           offTimer = timer:ScheduleTimer(swingEnd, timeLeft, "off")
           WeakAuras.ScanEvents("SWING_TIMER_CHANGE")
         end

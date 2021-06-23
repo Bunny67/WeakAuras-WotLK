@@ -5,7 +5,7 @@ local AddonName, OptionsPrivate = ...
 local strtrim, strsub = strtrim, strsub
 
 -- WoW APIs
-local GetTime, CreateFrame = GetTime, CreateFrame
+local CreateFrame = CreateFrame
 
 local AceGUI = LibStub("AceGUI-3.0")
 
@@ -54,6 +54,7 @@ local function ConstructImportExport(frame)
         elseif(mode == "table") then
           displayStr = OptionsPrivate.Private.DataToString(id);
         end
+        input.editBox:SetMaxBytes(nil);
         input.editBox:SetScript("OnEscapePressed", function() group:Close(); end);
         input.editBox:SetScript("OnChar", function() input:SetText(displayStr); input.editBox:HighlightText(); end);
         input.editBox:SetScript("OnMouseUp", function() input.editBox:HighlightText(); end);
@@ -64,21 +65,35 @@ local function ConstructImportExport(frame)
         input:SetFocus();
       end
     elseif(mode == "import") then
-      input.editBox:SetScript("OnEscapePressed", function()
-        importexport:Close()
-      end)
-      input.editBox:SetScript("OnChar", nil)
-      input.editBox:SetScript("OnMouseUp", nil)
-      input.editBox:SetScript("OnTextChanged", function()
-        local str = input:GetText()
-        str = str:match("^%s*(.-)%s*$")
-        input:SetLabel(""..#str)
-        if #str > 20 then
-          WeakAuras.Import(str)
+      local textBuffer, i, lastPaste = {}, 0
+      local function clearBuffer(self)
+        lastPaste = nil
+        self:SetScript('OnUpdate', nil)
+        local pasted = strtrim(table.concat(textBuffer))
+        input.editBox:ClearFocus();
+        pasted = pasted:match( "^%s*(.-)%s*$" );
+        if (#pasted > 20) then
+          WeakAuras.Import(pasted);
+          input:SetLabel(L["Processed %i chars"]:format(i));
+          input.editBox:SetMaxBytes(2500);
+          input.editBox:SetText(strsub(pasted, 1, 2500));
         end
+      end
+
+      input.editBox:SetScript('OnChar', function(self, c)
+        if not lastPaste then
+          textBuffer, i, lastPaste = {}, 0, 1
+          self:SetScript('OnUpdate', clearBuffer)
+        end
+        i = i + 1
+        textBuffer[i] = c
       end)
-      input:SetText("")
-      input:SetLabel("0");
+
+      input.editBox:SetText("");
+      input.editBox:SetMaxBytes(2500);
+      input.editBox:SetScript("OnEscapePressed", function() group:Close(); end);
+      input.editBox:SetScript("OnMouseUp", nil);
+      input:SetLabel(L["Paste text below"]);
       input:SetFocus();
     end
   end

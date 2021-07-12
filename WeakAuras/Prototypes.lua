@@ -3115,6 +3115,30 @@ Private.event_prototypes = {
     timedrequired = true
   },
   -- DBM events
+  ["DBM Stage"] = {
+    type = "addons",
+    events = {},
+    internal_events = {
+      "DBM_SetStage"
+    },
+    name = L["DBM Stage"],
+    init = function(trigger)
+      WeakAuras.RegisterDBMCallback("DBM_SetStage");
+      return ""
+    end,
+    args = {
+      {
+        name = "stage",
+        init = "WeakAuras.GetDBMStage()",
+        display = L["Stage"],
+        type = "number",
+        conditionType = "number",
+        store = true,
+      }
+    },
+    automaticrequired = true,
+    statesParameter = "one",
+  },
   ["DBM Announce"] = {
     type = "addons",
     events = {},
@@ -6059,9 +6083,12 @@ Private.event_prototypes = {
 
 };
 
-if not (DBM and (tonumber(DBM.Revision) or 0) >= 7003) then
+if not (DBM and DBM.ReleaseRevision >= 7003) then
   Private.event_prototypes["DBM Announce"] = nil
   Private.event_prototypes["DBM Timer"] = nil
+end
+if not (DBM and DBM.ReleaseRevision >= 7005) then
+  Private.event_prototypes["DBM Stage"] = nil
 end
 Private.event_prototypes["BigWigs Message"] = nil
 Private.event_prototypes["BigWigs Timer"] = nil

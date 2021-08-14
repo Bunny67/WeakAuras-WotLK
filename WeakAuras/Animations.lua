@@ -81,7 +81,7 @@ local function UpdateAnimations()
         end
       else
         anim.region:ClearAllPoints();
-        local ok, x, y = xpcall(anim.translateFunc, progress, anim.startX, anim.startY, anim.dX, anim.dY);
+        local ok, x, y = pcall(anim.translateFunc, progress, anim.startX, anim.startY, anim.dX, anim.dY);
         if not ok then
           errorHandler(x)
         else

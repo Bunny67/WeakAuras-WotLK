@@ -54,7 +54,7 @@ local FramePoolResetter = function(framePool, frame)
 	frame:ClearAllPoints()
 end
 
-local GlowFramePool = CreateFramePool("Frame", GlowParent, nil, FramePoolResetter)
+local GlowFramePool = CreateFramePool("Frame", GlowParent, "", FramePoolResetter)
 lib.GlowFramePool = GlowFramePool
 
 local function addFrameAndTex(r, color, name, key, N, xOffset, yOffset, texture, texCoord, desaturated, frameLevel)
@@ -564,7 +564,7 @@ local function ButtonGlowResetter(framePool,frame)
 	frame:Hide()
 	frame:ClearAllPoints()
 end
-local ButtonGlowPool = CreateFramePool("Frame", GlowParent, nil, ButtonGlowResetter)
+local ButtonGlowPool = CreateFramePool("Frame", GlowParent, "", ButtonGlowResetter)
 lib.ButtonGlowPool = ButtonGlowPool
 
 local function AnimIn_OnPlay(anim)

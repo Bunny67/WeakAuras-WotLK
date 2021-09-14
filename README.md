@@ -1,4 +1,4 @@
-# WeakAuras 2 WotLK (3.3.5a)
+# WeakAuras 3 Cata (4.3.4)
 
 WeakAuras is a powerful and flexible framework that allows the display of highly customizable graphics on World of Warcraft's user interface to indicate buffs, debuffs, and other relevant information. This addon was created to be a lightweight replacement for Power Auras but has since introduced more functionalities while remaining efficient and easy to use.
 

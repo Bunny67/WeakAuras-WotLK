@@ -24,7 +24,7 @@ local type = _G.type
 
 local GetSpellInfo = _G.GetSpellInfo
 local GetSpellLink = _G.GetSpellLink
-local GetSpellName = _G.GetSpellName
+local GetSpellBookItemName = _G.GetSpellBookItemName
 local GetSpellTabInfo = _G.GetSpellTabInfo
 
 local IsSpellInRange = _G.IsSpellInRange
@@ -98,10 +98,10 @@ local function UpdateBook(bookType)
 	wipe(blacklistedIDs)
 
 	for spellBookID = 1, max do
-		local spellName, rank = GetSpellName(spellBookID, bookType)
+		local spellName = GetSpellBookItemName(spellBookID, bookType)
 
-		if spellName and (rank == "" or rank:match("%d+")) then
-			local link = GetSpellLink(spellName, rank)
+		if spellName then
+			local link = GetSpellLink(spellName)
 			local spellID = tonumber(link and link:gsub("|", "||"):match("spell:(%d+)"))
 
 			if spellName then

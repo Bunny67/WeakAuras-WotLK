@@ -1481,7 +1481,7 @@ do
     WeakAuras.ScanEvents("SWING_TIMER_END");
   end
 
-  local function swingTimerCLEUCheck(ts, event, sourceGUID, _, _, destGUID, _, _, ...)
+  local function swingTimerCLEUCheck(ts, event, _, sourceGUID, _, _, _, destGUID, _, _, _, ...)
     Private.StartProfileSystem("generictrigger swing");
     if(sourceGUID == selfGUID) then
       if(event == "SWING_DAMAGE" or event == "SWING_MISSED") then
@@ -2426,11 +2426,11 @@ function WeakAuras.GetEquipmentSetInfo(itemSetName, partial)
       if (name ~= nil) then
         equipmentSetItemIDs = GetEquipmentSetItemIDs(name, equipmentSetItemIDs)
         for slot, item in ipairs(equipmentSetItemIDs) do
-          if item > 0 then
+          if item > 1 then
             numItems = numItems + 1
-			if equipmentItemIDs[slot] == item then
-			  numEquipped = numEquipped + 1
-			end
+            if equipmentItemIDs[slot] == item then
+              numEquipped = numEquipped + 1
+            end
           end
         end
         local match = (not partial and numItems == numEquipped)

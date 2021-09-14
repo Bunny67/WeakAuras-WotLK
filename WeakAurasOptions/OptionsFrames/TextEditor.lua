@@ -111,7 +111,7 @@ end]=]
   {
     name = "Trigger: CLEU",
     snippet = [=[
-function(event, timestamp, subEvent, sourceGUID, sourceName, sourceFlags, destGUID, destName, destFlags, ...)
+function(event, timestamp, subEvent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
 
     return
 end]=]

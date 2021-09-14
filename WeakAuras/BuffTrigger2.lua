@@ -2952,7 +2952,7 @@ local function HandleCombatLogRemove(scanFuncsName, scanFuncsSpellId, sourceGUID
   end
 end
 
-local function CombatLog(_, event, sourceGUID, sourceName, _, destGUID, destName, _, spellId, spellName, _, auraType, amount)
+local function CombatLog(_, event, _, sourceGUID, sourceName, _, _, destGUID, destName, _, _, spellId, spellName, _, auraType, amount)
   if event == "SPELL_AURA_APPLIED" or event == "SPELL_AURA_REFRESH" or event == "SPELL_AURA_APPLIED_DOSE" or event == "SPELL_AURA_REMOVED_DOSE" then
     if auraType == "BUFF" then
       HandleCombatLog(scanFuncNameMulti["HELPFUL"], scanFuncSpellIdMulti["HELPFUL"], "HELPFUL", event, sourceGUID, sourceName, destGUID, destName, spellId, spellName, amount)

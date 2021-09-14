@@ -1233,7 +1233,7 @@ Private.event_prototypes = {
         type = "string",
         store = true,
         conditionType = "string",
-        test = "tostring(tonumber(string.sub(UnitGUID(unit) or '', 8, 12), 16) or '') == %q",
+        test = "tostring(tonumber(string.sub(UnitGUID(unit) or '', 6, 10), 16) or '') == %q",
       },
       {
         name = "attackable",
@@ -1487,7 +1487,7 @@ Private.event_prototypes = {
         type = "string",
         store = true,
         conditionType = "string",
-        test = "tostring(tonumber(string.sub(UnitGUID(unit) or '', 8, 12), 16) or '') == %q",
+        test = "tostring(tonumber(string.sub(UnitGUID(unit) or '', 6, 10), 16) or '') == %q",
       },
       {
         name = "class",
@@ -1547,18 +1547,9 @@ Private.event_prototypes = {
     events = function(trigger)
       local unit = trigger.unit
       local result = {}
-      AddUnitEventForEvents(result, unit, "UNIT_MANA")
-      AddUnitEventForEvents(result, unit, "UNIT_RAGE")
-      AddUnitEventForEvents(result, unit, "UNIT_FOCUS")
-      AddUnitEventForEvents(result, unit, "UNIT_ENERGY")
-      AddUnitEventForEvents(result, unit, "UNIT_RUNIC_POWER")
-      AddUnitEventForEvents(result, unit, "UNIT_MAXMANA")
-      AddUnitEventForEvents(result, unit, "UNIT_MAXRAGE")
-      AddUnitEventForEvents(result, unit, "UNIT_MAXFOCUS")
-      AddUnitEventForEvents(result, unit, "UNIT_MAXENERGY")
-      AddUnitEventForEvents(result, unit, "UNIT_MAXRUNIC_POWER")
+      AddUnitEventForEvents(result, unit, "UNIT_POWER")
+      AddUnitEventForEvents(result, unit, "UNIT_MAXPOWER")
       AddUnitEventForEvents(result, unit, "UNIT_DISPLAYPOWER")
-      AddUnitEventForEvents(result, unit, "UNIT_HAPPINESS")
       AddUnitEventForEvents(result, unit, "UNIT_NAME_UPDATE")
 
       if trigger.use_ignoreDead or trigger.use_ignoreDisconnected then
@@ -1706,7 +1697,7 @@ Private.event_prototypes = {
         type = "string",
         store = true,
         conditionType = "string",
-        test = "tostring(tonumber(string.sub(UnitGUID(unit) or '', 8, 12), 16) or '') == %q",
+        test = "tostring(tonumber(string.sub(UnitGUID(unit) or '', 6, 10), 16) or '') == %q",
       },
       {
         name = "class",
@@ -1770,6 +1761,7 @@ Private.event_prototypes = {
     args = {
       {}, -- timestamp ignored with _ argument
       {}, -- messageType ignored with _ argument (it is checked before the dynamic function)
+      {}, -- hideCaster
       {
         name = "sourceGUID",
         init = "arg",
@@ -1805,7 +1797,7 @@ Private.event_prototypes = {
         name = "sourceNpcId",
         display = L["Source NPC Id"],
         type = "string",
-        test = "tostring(tonumber(string.sub(sourceGUID or '', 8, 12), 16) or '') == %q",
+        test = "tostring(tonumber(string.sub(sourceGUID or '', 6, 10), 16) or '') == %q",
         enable = function(trigger)
           return not (trigger.subeventPrefix == "ENVIRONMENTAL")
         end,
@@ -1828,6 +1820,7 @@ Private.event_prototypes = {
         display = L["Source Reaction"],
         type = "select",
         values = "combatlog_flags_check_reaction",
+        init = "arg",
         test = "WeakAuras.CheckCombatLogFlagsReaction(sourceFlags, %q)",
         conditionType = "select",
         conditionTest = function(state, needle)
@@ -1883,7 +1876,7 @@ Private.event_prototypes = {
         name = "destNpcId",
         display = L["Destination NPC Id"],
         type = "string",
-        test = "tostring(tonumber(string.sub(destGUID or '', 8, 12), 16) or '') == %q",
+        test = "tostring(tonumber(string.sub(destGUID or '', 6, 10), 16) or '') == %q",
         enable = function(trigger)
           return not (trigger.subeventPrefix == "SPELL" and trigger.subeventSuffix == "_CAST_START");
         end,
@@ -1905,22 +1898,17 @@ Private.event_prototypes = {
         conditionTest = function(state, needle)
           return state and state.show and WeakAuras.CheckCombatLogFlags(state.destFlags, needle);
         end,
-        enable = function(trigger)
-          return not (trigger.subeventPrefix == "SPELL" and trigger.subeventSuffix == "_CAST_START");
-        end,
       },
       {
         name = "destFlags2",
         display = L["Destination Reaction"],
         type = "select",
+        init = "arg",
         values = "combatlog_flags_check_reaction",
         test = "WeakAuras.CheckCombatLogFlagsReaction(destFlags, %q)",
         conditionType = "select",
         conditionTest = function(state, needle)
           return state and state.show and WeakAuras.CheckCombatLogFlagsReaction(state.destFlags, needle);
-        end,
-        enable = function(trigger)
-          return not (trigger.subeventPrefix == "SPELL" and trigger.subeventSuffix == "_CAST_START");
         end,
       },
       {
@@ -1935,11 +1923,6 @@ Private.event_prototypes = {
         end,
         enable = function(trigger)
           return not (trigger.subeventPrefix == "SPELL" and trigger.subeventSuffix == "_CAST_START");
-        end,
-      },
-      {-- destFlags ignore for SPELL_CAST_START
-        enable = function(trigger)
-          return (trigger.subeventPrefix == "SPELL" and trigger.subeventSuffix == "_CAST_START");
         end,
       },
       {
@@ -2491,7 +2474,7 @@ Private.event_prototypes = {
         conditionEvents = {
           "SPELL_UPDATE_USABLE",
           "PLAYER_TARGET_CHANGED",
-          "UNIT_MANA", "UNIT_RAGE", "UNIT_FOCUS", "UNIT_ENERGY", "UNIT_RUNIC_POWER"
+          "UNIT_POWER"
         },
       },
       {
@@ -2506,7 +2489,7 @@ Private.event_prototypes = {
         conditionEvents = {
           "SPELL_UPDATE_USABLE",
           "PLAYER_TARGET_CHANGED",
-          "UNIT_MANA", "UNIT_RAGE", "UNIT_FOCUS", "UNIT_ENERGY", "UNIT_RUNIC_POWER"
+          "UNIT_POWER"
         }
       },
       {
@@ -3770,7 +3753,7 @@ Private.event_prototypes = {
         "RUNE_TYPE_UPDATE",
       },
       ["unit_events"] = {
-        ["player"] = { "UNIT_POWER", "UNIT_ENERGY", "UNIT_MANA", "UNIT_RAGE" }
+        ["player"] = { "UNIT_POWER" }
       }
     },
     internal_events = {
@@ -5249,7 +5232,7 @@ Private.event_prototypes = {
         type = "string",
         store = true,
         conditionType = "string",
-        test = "tostring(tonumber(string.sub(UnitGUID(unit) or '', 8, 12), 16) or '') == %q",
+        test = "tostring(tonumber(string.sub(UnitGUID(unit) or '', 6, 10), 16) or '') == %q",
         enable = function(trigger)
           return not trigger.use_inverse
         end

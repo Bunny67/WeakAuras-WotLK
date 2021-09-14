@@ -1,7 +1,7 @@
 --[[-----------------------------------------------------------------------------
 EditBox Widget
 -------------------------------------------------------------------------------]]
-local Type, Version = "EditBox", 28
+local Type, Version = "EditBox", 24
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
@@ -81,21 +81,18 @@ end
 local function EditBox_OnReceiveDrag(frame)
 	local self = frame.obj
 	local type, id, info = GetCursorInfo()
-	local name
 	if type == "item" then
-		name = info
+		self:SetText(info)
+		self:Fire("OnEnterPressed", info)
+		ClearCursor()
 	elseif type == "spell" then
-		name = GetSpellInfo(id, info)
-	elseif type == "macro" then
-		name = GetMacroInfo(id)
-	end
-	if name then
+		local name = GetSpellInfo(id, info)
 		self:SetText(name)
 		self:Fire("OnEnterPressed", name)
 		ClearCursor()
-		HideButton(self)
-		AceGUI:ClearFocus()
 	end
+	HideButton(self)
+	AceGUI:ClearFocus()
 end
 
 local function EditBox_OnTextChanged(frame)
@@ -198,10 +195,6 @@ local methods = {
 		if not self.frame:IsShown() then
 			self.frame:SetScript("OnShow", Frame_OnShowFocus)
 		end
-	end,
-
-	["HighlightText"] = function(self, from, to)
-		self.editbox:HighlightText(from, to)
 	end
 }
 

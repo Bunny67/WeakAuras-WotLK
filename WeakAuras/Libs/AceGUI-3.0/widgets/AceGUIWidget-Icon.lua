@@ -9,7 +9,7 @@ if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 local select, pairs, print = select, pairs, print
 
 -- WoW APIs
-local CreateFrame, UIParent = CreateFrame, UIParent
+local CreateFrame, UIParent, GetBuildInfo = CreateFrame, UIParent, GetBuildInfo
 
 --[[-----------------------------------------------------------------------------
 Scripts
@@ -56,7 +56,7 @@ local methods = {
 	["SetImage"] = function(self, path, ...)
 		local image = self.image
 		image:SetTexture(path)
-
+		
 		if image:GetTexture() then
 			local n = select("#", ...)
 			if n == 4 or n == 8 then
@@ -131,8 +131,12 @@ local function Constructor()
 	for method, func in pairs(methods) do
 		widget[method] = func
 	end
-
-	widget.SetText = widget.SetLabel
+	-- SetText is deprecated, but keep it around for a while. (say, to WoW 4.0)
+	if (select(4, GetBuildInfo()) < 40000) then
+		widget.SetText = widget.SetLabel
+	else
+		widget.SetText = function(self, ...) print("AceGUI-3.0-Icon: SetText is deprecated! Use SetLabel instead!"); self:SetLabel(...) end
+	end
 
 	return AceGUI:RegisterAsWidget(widget)
 end

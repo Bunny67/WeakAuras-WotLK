@@ -1,4 +1,4 @@
-local Type, Version = "MultiLineEditBox", 28
+local Type, Version = "MultiLineEditBox", 25
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
@@ -17,23 +17,6 @@ local _G = _G
 --[[-----------------------------------------------------------------------------
 Support functions
 -------------------------------------------------------------------------------]]
-
-if not AceGUIMultiLineEditBoxInsertLink then
-	-- upgradeable hook
-	hooksecurefunc("ChatEdit_InsertLink", function(...) return _G.AceGUIMultiLineEditBoxInsertLink(...) end)
-end
-
-function _G.AceGUIMultiLineEditBoxInsertLink(text)
-	for i = 1, AceGUI:GetWidgetCount(Type) do
-		local editbox = _G[("MultiLineEditBox%uEdit"):format(i)]
-		if editbox and editbox:IsVisible() and editbox:HasFocus() then
-			editbox:Insert(text)
-			return true
-		end
-	end
-end
-
-
 local function Layout(self)
 	self:SetHeight(self.numlines * 14 + (self.disablebutton and 19 or 41) + self.labelHeight)
 
@@ -233,7 +216,7 @@ local methods = {
 		end
 		Layout(self)
 	end,
-
+	
 	["ClearFocus"] = function(self)
 		self.editBox:ClearFocus()
 		self.frame:SetScript("OnShow", nil)
@@ -245,20 +228,16 @@ local methods = {
 			self.frame:SetScript("OnShow", OnShowFocus)
 		end
 	end,
-
-	["HighlightText"] = function(self, from, to)
-		self.editBox:HighlightText(from, to)
-	end,
-
+	
 	["GetCursorPosition"] = function(self)
 		return self.editBox:GetCursorPosition()
 	end,
-
+	
 	["SetCursorPosition"] = function(self, ...)
 		return self.editBox:SetCursorPosition(...)
 	end,
-
-
+	
+	
 }
 
 --[[-----------------------------------------------------------------------------
@@ -273,7 +252,7 @@ local backdrop = {
 local function Constructor()
 	local frame = CreateFrame("Frame", nil, UIParent)
 	frame:Hide()
-
+	
 	local widgetNum = AceGUI:GetNextWidgetNum(Type)
 
 	local label = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -290,7 +269,7 @@ local function Constructor()
 	button:SetText(ACCEPT)
 	button:SetScript("OnClick", OnClick)
 	button:Disable()
-
+	
 	local text = button:GetFontString()
 	text:ClearAllPoints()
 	text:SetPoint("TOPLEFT", button, "TOPLEFT", 5, -5)
@@ -322,7 +301,7 @@ local function Constructor()
 	scrollFrame:SetScript("OnSizeChanged", OnSizeChanged)
 	scrollFrame:HookScript("OnVerticalScroll", OnVerticalScroll)
 
-	local editBox = CreateFrame("EditBox", ("%s%dEdit"):format(Type, widgetNum), scrollFrame)
+	local editBox = CreateFrame("EditBox", nil, scrollFrame)
 	editBox:SetAllPoints()
 	editBox:SetFontObject(ChatFontNormal)
 	editBox:SetMultiLine(true)
@@ -339,7 +318,7 @@ local function Constructor()
 	editBox:SetScript("OnTextChanged", OnTextChanged)
 	editBox:SetScript("OnTextSet", OnTextSet)
 	editBox:SetScript("OnEditFocusGained", OnEditFocusGained)
-
+	
 
 	scrollFrame:SetScrollChild(editBox)
 

@@ -88,10 +88,8 @@ local methods = {
     local secondDropDown = AceGUI:Create("Dropdown")
 
     firstDropdown:SetRelativeWidth(0.5)
-    firstDropdown:SetPulloutWidth(200)
     secondDropDown:SetRelativeWidth(0.5)
     secondDropDown:SetLabel(" ")
-    secondDropDown:SetPulloutWidth(200)
     secondDropDown.userdata.defaultSelection = {}
 
     widget.firstDropdown = firstDropdown

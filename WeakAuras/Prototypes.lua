@@ -10,7 +10,7 @@ local ceil, min = ceil, min
 -- WoW APIs
 local GetTalentInfo = GetTalentInfo
 local UnitClass, UnitHealth, UnitHealthMax, UnitName, UnitPower, UnitPowerMax = UnitClass, UnitHealth, UnitHealthMax, UnitName, UnitPower, UnitPowerMax
-local GetSpellInfo, GetItemInfo, GetItemCount, GetItemIcon = GetSpellInfo, GetItemInfo, GetItemCount, GetItemIcon
+local GetSpellInfo, GetItemInfo, GetItemCount, GetItemIcon, GetTalentTabInfo = GetSpellInfo, GetItemInfo, GetItemCount, GetItemIcon, GetTalentTabInfo
 local GetShapeshiftFormInfo, GetShapeshiftForm = GetShapeshiftFormInfo, GetShapeshiftForm
 local GetRuneCooldown, UnitCastingInfo, UnitChannelInfo = GetRuneCooldown, UnitCastingInfo, UnitChannelInfo
 local UnitDetailedThreatSituation, UnitThreatSituation = UnitDetailedThreatSituation, UnitThreatSituation
@@ -545,6 +545,10 @@ function WeakAuras.CheckTalentByIndex(index)
   return rank and rank > 0;
 end
 
+function WeakAuras.CheckSpecByIndex(index)
+  return GetPrimaryTalentTree() == index
+end
+
 function WeakAuras.CheckNumericIds(loadids, currentId)
   if (not loadids or not currentId) then
     return false;
@@ -695,6 +699,15 @@ function WeakAuras.IsSpellKnownIncludingPet(spell)
   end
 end
 
+local function valuesForSpecFunction(trigger)
+  local spec_types = {}
+  for k, v in pairs({"First", "Second", "Third"}) do
+      local _, tabName = GetTalentTabInfo(k)
+      tinsert(spec_types, L[v.." Tree"]..(tabName and " ("..tabName..")" or ""))
+  end
+  return spec_types
+end
+
 local function valuesForTalentFunction(trigger)
   return function()
     local single_class;
@@ -836,6 +849,15 @@ Private.load_prototype = {
       type = "multiselect",
       values = "class_types",
       init = "arg"
+    },
+    {
+      name = "spec",
+      display = L["Talent Specialization"],
+      type = "multiselect",
+      values = valuesForSpecFunction,
+      test = "WeakAuras.CheckSpecByIndex(%d)",
+      init = "arg",
+      events = {"PLAYER_TALENT_UPDATE", "SPELL_UPDATE_USABLE"}
     },
     {
       name = "talent",

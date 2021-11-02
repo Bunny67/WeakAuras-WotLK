@@ -998,6 +998,7 @@ L["Space"] = "공간"
 L["Spacing"] = "간격"
 L["Spark"] = "섬광"
 L["Spec Role"] = "전문화 역할"
+L["Specialization"] = "전문화"
 --[[Translation missing --]]
 L["Specific Type"] = "Specific Type"
 L["Specific Unit"] = "특정 유닛"

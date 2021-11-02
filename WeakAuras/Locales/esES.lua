@@ -1376,6 +1376,7 @@ L["Spark"] = "Spark"
 --[[Translation missing --]]
 L["Spec Role"] = "Spec Role"
 --[[Translation missing --]]
+L["Specialization"] = "Especialización"
 L["Specific Type"] = "Specific Type"
 L["Specific Unit"] = "Unidad Específica"
 L["Spell"] = "Hechizo"

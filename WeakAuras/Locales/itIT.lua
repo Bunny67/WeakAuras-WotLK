@@ -1550,6 +1550,7 @@ L["Spark"] = "Spark"
 --[[Translation missing --]]
 L["Spec Role"] = "Spec Role"
 --[[Translation missing --]]
+L["Specialization"] = "Specializzazione"
 L["Specific Type"] = "Specific Type"
 --[[Translation missing --]]
 L["Specific Unit"] = "Specific Unit"

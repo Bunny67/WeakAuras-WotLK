@@ -1316,6 +1316,7 @@ L["Spacing"] = "Espaciar"
 L["Spark"] = "Spark"
 --[[Translation missing --]]
 L["Spec Role"] = "Spec Role"
+L["Specialization"] = "Especialización"
 --[[Translation missing --]]
 L["Specific Type"] = "Specific Type"
 L["Specific Unit"] = "Unidad específica"

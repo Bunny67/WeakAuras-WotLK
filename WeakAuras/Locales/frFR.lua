@@ -1139,6 +1139,7 @@ L["Space"] = "Ecart"
 L["Spacing"] = "Ecartement"
 L["Spark"] = "Étincelle"
 L["Spec Role"] = "Rôle de Spécification"
+L["Specialization"] = "Spécialisation"
 --[[Translation missing --]]
 L["Specific Type"] = "Specific Type"
 L["Specific Unit"] = "Unité spécifique"

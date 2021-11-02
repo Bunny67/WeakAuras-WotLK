@@ -702,16 +702,11 @@ end
 local function valuesForSpecFunction(trigger)
     return function()
       local single_class;
-      local min_specs = 3;
       -- First check to use if the class load is on multi-select with only one class selected
-      -- Also check the number of specs for each class selected in the multi-select and keep track of the minimum
-      -- (i.e., 3 unless Druid is the only thing selected, but this method is flexible in case another spec gets added to another class)
       if(trigger.use_class == false and trigger.class and trigger.class.multi) then
         local num_classes = 0;
         for class in pairs(trigger.class.multi) do
           single_class = class;
-          -- If any checked class has only 3 specs, min_specs will become 3
-          min_specs = 3
           num_classes = num_classes + 1;
         end
         if(num_classes ~= 1) then

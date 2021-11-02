@@ -1107,6 +1107,446 @@ Private.orientation_with_circle_types = {
   ANTICLOCKWISE = L["Anticlockwise"]
 }
 
+
+Private.class_ids = {
+  ["WARRIOR"] = 1,
+  ["PALADIN"] = 2,
+  ["HUNTER"] = 3,
+  ["ROGUE"] = 4,
+  ["PRIEST"] = 5,
+  ["DEATHKNIGHT"] = 6,
+  ["SHAMAN"] = 7,
+  ["MAGE"] = 8,
+  ["WARLOCK"]= 9,
+  ["DRUID"] = 11,
+}
+
+Private.spec_ids = {
+	["MAGE"] = {62, 63, 64},
+	["PRIEST"] = {256, 257, 258},
+	["ROGUE"] = {259, 260, 261},
+	["WARLOCK"] = {265, 266, 267},
+	["WARRIOR"] = {71, 72, 73},
+	["PALADIN"] = {65, 66, 70},
+	["DEATHKNIGHT"] = {250, 251, 252},
+	["DRUID"] = {102, 103, 105},
+	["HUNTER"] = {253, 254, 255},
+	["SHAMAN"] = {262, 263, 264},
+}
+
+Private.spec_info = {
+	--MAGE
+		--arcane
+		[62]	= {
+			[1]=62,
+			[2]="Arcane",
+			[3]=[[Manipulates raw Arcane magic, destroying enemies with overwhelming power.
+			
+			Preferred Weapon: Staff, Wand, Dagger, Sword]],
+			[4]=[[Interface\ICONS\spell_holy_magicalsentry]],
+			[5]="DAMAGER",
+			[6]="MAGE",
+			[7]="Mage"
+		},
+		--fire
+		[63] = {
+			[1]=63,
+			[2]="Fire",
+			[3]=[[Focuses the pure essence of Fire magic, assaulting enemies with combustive flames.
+			
+			Preferred Weapon: Staff, Wand, Dagger, Sword]],
+			[4]=[[Interface\ICONS\spell_fire_firebolt02]],
+			[5]="DAMAGER",
+			[6]="MAGE",
+			[7]="Mage"
+		},
+		--frost
+		[64] = {
+			[1]=64,
+			[2]="Frost",
+			[3]=[[Freezes enemies in their tracks and shatters them with Frost magic.
+			
+			Preferred Weapon: Staff, Wand, Dagger, Sword]],
+			[4]=[[Interface\ICONS\spell_frost_frostbolt02]],
+			[5]="DAMAGER",
+			[6]="MAGE",
+			[7]="Mage"
+		},
+
+	--PRIEST
+		--discipline
+		[256] = {
+			[1]=256,
+			[2]="Discipline",
+			[3]=[[Uses magic to shield allies from taking damage as well as heal their wounds.
+			
+			Preferred Weapon: Staff, Wand, Dagger, Mace]],
+			[4]=[[Interface\ICONS\spell_holy_powerwordshield]],
+			[5]="HEALER",
+			[6]="PRIEST",
+			[7]="Priest"
+		},
+		--holy
+		[257] = {
+			[1]=257,
+			[2]="Holy",
+			[3]=[[A versatile healer who can reverse damage on individuals or groups and even heal from beyond the grave.
+			
+			Preferred Weapon: Staff, Wand, Dagger, Mace]],
+			[4]=[[Interface\ICONS\spell_holy_guardianspirit]],
+			[5]="HEALER",
+			[6]="PRIEST",
+			[7]="Priest"
+		},
+		--shadow priest
+		[258] = {
+			[1]=258,
+			[2]="Shadow",
+			[3]=[[Uses sinister Shadow magic and terrifying Void magic to eradicate enemies.
+			
+			Preferred Weapon: Staff, Wand, Dagger, Mace]],
+			[4]=[[Interface\ICONS\spell_shadow_shadowwordpain]],
+			[5]="DAMAGER",
+			[6]="PRIEST",
+			[7]="Priest"
+		},
+
+	--ROGUE
+		--assassination
+		[259] = {
+			[1]=259,
+			[2]="Assassination",
+			[3]=[[A deadly master of poisons who dispatches victims with vicious dagger strikes.
+			
+			Preferred Weapons: Daggers]],
+			[4]=[[Interface\ICONS\ability_rogue_eviscerate]],
+			[5]="DAMAGER",
+			[6]="ROGUE",
+			[7]="Rogue"
+		},
+		--combat
+		[260] = {
+			[1]=260,
+			[2]="Combat",
+			[3]=[[A swashbuckler who uses agility and guile to stand toe-to-toe with enemies.
+			
+			Preferred Weapons: Daggers]],
+			[4]=[[Interface\ICONS\ability_backstab]],
+			[5]="DAMAGER",
+			[6]="ROGUE",
+			[7]="Rogue"
+		},
+		--subtlety
+		[261] = {
+			[1]=261,
+			[2]="Subtlety",
+			[3]=[[A dark stalker who leaps from the shadows to ambush his unsuspecting prey.
+			
+			Preferred Weapons: Daggers]],
+			[4]=[[Interface\ICONS\ability_stealth]],
+			[5]="DAMAGER",
+			[6]="ROGUE",
+			[7]="Rogue"
+		},
+
+	--WARLOCK
+		--affliction
+		[265] = {
+			[1]=265,
+			[2]="Affliction",
+			[3]=[[A master of shadow magic who specializes in drains and damage-over-time spells.
+			
+			Preferred Weapon: Staff, Wand, Dagger, Sword]],
+			[4]=[[Interface\ICONS\spell_shadow_deathcoil]],
+			[5]="DAMAGER",
+			[6]="WARLOCK",
+			[7]="Warlock"
+		},
+		--demo
+		[266] = {
+			[1]=266,
+			[2]="Demonology",
+			[3]=[[A commander of demons who twists the souls of his army into devastating power.
+			
+			Preferred Weapon: Staff, Wand, Dagger, Sword]],
+			[4]=[[Interface\ICONS\spell_shadow_metamorphosis]],
+			[5]="DAMAGER",
+			[6]="WARLOCK",
+			[7]="Warlock"
+		},
+		--destro
+		[267] = {
+			[1]=267,
+			[2]="Destruction",
+			[3]=[[A master of chaos who calls down fire to burn and demolish enemies.
+			
+			Preferred Weapon: Staff, Wand, Dagger, Sword]],
+			[4]=[[Interface\ICONS\spell_shadow_rainoffire]],
+			[5]="DAMAGER",
+			[6]="WARLOCK",
+			[7]="Warlock"
+		},
+
+	--WARRIOR
+		--Arms
+		[71] = {
+			[1]=71,
+			[2]="Arms",
+			[3]=[[A battle-hardened master of weapons, using mobility and overpowering attacks to strike his opponents down.
+			
+			Preferred Weapon: Two-Handed Axe, Mace, Sword]],
+			[4]=[[Interface\ICONS\ability_warrior_savageblow]],
+			[5]="DAMAGER",
+			[6]="WARRIOR",
+			[7]="Warrior"
+		},
+		--Fury
+		[72] = {
+			[1]=72,
+			[2]="Fury",
+			[3]=[[A furious berserker unleashing a flurry of attacks to carve his opponents to pieces.
+			
+			Preferred Weapons: Dual Axes, Maces, Swords]],
+			[4]=[[Interface\ICONS\ability_warrior_innerrage]],
+			[5]="DAMAGER",
+			[6]="WARRIOR",
+			[7]="Warrior"
+		},
+		--Protection
+		[73] = {
+			[1]=73,
+			[2]="Protection",
+			[3]=[[A stalwart protector who uses a shield to safeguard himself and his allies.
+			
+			Preferred Weapon: Axe, Mace, Sword, and Shield]],
+			[4]=[[Interface\ICONS\ability_warrior_defensivestance]],
+			[5]="TANK",
+			[6]="WARRIOR",
+			[7]="Warrior"
+		},
+
+	--PALADIN
+		--holy
+		[65] = {
+			[1]=65,
+			[2]="Holy",
+			[3]=[[Invokes the power of the Light to heal and protect allies and vanquish evil from the darkest corners of the world.\r\
+			
+			Preferred Weapon: Sword, Mace, and Shield]],
+			[4]=[[Interface\ICONS\spell_holy_holybolt]],
+			[5]="HEALER",
+			[6]="PALADIN",
+			[7]="Paladin"
+		},
+
+		--protection
+		[66] = {
+			[1]=66,
+			[2]="Protection",
+			[3]=[[Uses Holy magic to shield himself and defend allies from attackers.
+			
+			Preferred Weapon: Sword, Mace, Axe, and Shield]],
+			[4]=[[Interface\ICONS\ability_paladin_shieldofthetemplar]],
+			[5]="TANK",
+			[6]="PALADIN",
+			[7]="Paladin"
+		},
+
+		--retribution
+		[70] = {
+			[1]=70,
+			[2]="Retribution",
+			[3]=[[A righteous crusader who judges and punishes opponents with weapons and Holy magic.
+			
+			Preferred Weapon: Two-Handed Sword, Mace, Axe]],
+			[4]=[[Interface\ICONS\spell_holy_auraoflight]],
+			[5]="DAMAGER",
+			[6]="PALADIN",
+			[7]="Paladin"
+		},
+
+	--DEATH KNIGHT
+		--unholy
+		[252] = {
+			[1]=252,
+			[2]="Unholy",
+			[3]=[[A master of death and decay, spreading infection and controlling undead minions to do his bidding.
+			
+			Preferred Weapon: Two-Handed Axe, Mace, Sword]],
+			[4]=[[Interface\ICONS\Spell_Deathknight_UnholyPresence]],
+			[5]="DAMAGER",
+			[6]="DEATHKNIGHT",
+			[7]="Death Knight"
+		},
+		--frost
+		[251] = {
+			[1]=251,
+			[2]="Frost",
+			[3]=[[An icy harbinger of doom, channeling runic power and delivering vicious weapon strikes.
+			
+			Preferred Weapons: Dual Axes, Maces, Swords]],
+			[4]=[[Interface\ICONS\Spell_Deathknight_FrostPresence]],
+			[5]="DAMAGER",
+			[6]="DEATHKNIGHT",
+			[7]="Death Knight"
+		},
+		--blood
+		[250] = {
+			[1]=250,
+			[2]="Blood",
+			[3]=[[A dark guardian who manipulates and corrupts life energy to sustain himself in the face of an enemy onslaught.
+			
+			Preferred Weapon: Two-Handed Axe, Mace, Sword]],
+			[4]=[[Interface\ICONS\Spell_Deathknight_BloodPresence]],
+			[5]="TANK",
+			[6]="DEATHKNIGHT",
+			[7]="Death Knight"
+		},
+
+	--DRUID
+		--balance
+		[102] = {
+			[1]=102,
+			[2]="Balance",
+			[3]=[[Can shapeshift into a powerful Moonkin, balancing the power of Arcane and Nature magic to destroy enemies.
+			
+			Preferred Weapon: Staff, Dagger, Mace]],
+			[4]=[[Interface\ICONS\spell_nature_starfall]],
+			[5]="DAMAGER",
+			[6]="DRUID",
+			[7]="Druid"
+		},
+		--feral
+		[103] = {
+			[1]=103,
+			[2]="Feral",
+			[3]=[[Takes on the form of a great cat to deal damage with bleeds and bites.
+			
+			Preferred Weapon: Staff, Polearm]],
+			[4]=[[Interface\Icons\Ability_Racial_BearForm]],
+			[5]="DAMAGER",
+			[6]="DRUID",
+			[7]="Druid"
+		},
+		--restoration
+		[105] = {
+			[1]=105,
+			[2]="Restoration",
+			[3]=[[Channels powerful Nature magic to regenerate and revitalize allies.
+			
+			Preferred Weapon: Staff, Dagger, Mace]],
+			[4]=[[Interface\ICONS\spell_nature_healingtouch]],
+			[5]="HEALER",
+			[6]="DRUID",
+			[7]="Druid"
+		},
+
+	--HUNTER
+		--beast mastery
+		[253] = {
+			[1]=253,
+			[2]="Beast Mastery",
+			[3]=[[A master of the wild who can tame a wide variety of beasts to assist him in combat.
+			
+			Preferred Weapon: Bow, Crossbow, Gun]],
+			[4]=[[Interface\ICONS\ability_hunter_bestialdiscipline]],
+			[5]="DAMAGER",
+			[6]="HUNTER",
+			[7]="Hunter"
+		},
+		--marksmanship
+		[254] = {
+			[1]=254,
+			[2]="Marksmanship",
+			[3]=[[A master sharpshooter who excels in bringing down enemies from afar.
+			
+			Preferred Weapon: Bow, Crossbow, Gun]],
+			[4]=[[Interface\ICONS\ability_hunter_focusedaim]],
+			[5]="DAMAGER",
+			[6]="HUNTER",
+			[7]="Hunter"
+		},
+		--survival
+		[255] = {
+			[1]=255,
+			[2]="Survival",
+			[3]=[[An adaptive ranger who favors using explosives, animal venom, and coordinated attacks with their bonded beast.
+			
+			Preferred Weapon: Polearm, Staff]],
+			[4]=[[Interface\ICONS\ability_hunter_camouflage]],
+			[5]="DAMAGER",
+			[6]="HUNTER",
+			[7]="Hunter"
+		},
+
+	--SHAMAN
+		--elemental
+		[262] = {
+			[1]=262,
+			[2]="Elemental",
+			[3]=[[A spellcaster who harnesses the destructive forces of nature and the elements.
+			
+			Preferred Weapon: Mace, Dagger, and Shield]],
+			[4]=[[Interface\ICONS\spell_nature_lightning]],
+			[5]="DAMAGER",
+			[6]="SHAMAN",
+			[7]="Shaman"
+		},
+		--enhancement
+		[263] = {
+			[1]=263,
+			[2]="Enhancement",
+			[3]=[[A totemic warrior who strikes foes with weapons imbued with elemental power.
+			
+			Preferred Weapons: Dual Axes, Maces, Fist Weapons]],
+			[4]=[[Interface\ICONS\spell_nature_lightningshield]],
+			[5]="DAMAGER",
+			[6]="SHAMAN",
+			[7]="Shaman"
+		},
+		--restoration
+		[264] = {
+			[1]=264,
+			[2]="Restoration",
+			[3]=[[A healer who calls upon ancestral spirits and the cleansing power of water to mend allies' wounds.
+			
+			Preferred Weapon: Mace, Dagger, and Shield]],
+			[4]=[[Interface\ICONS\spell_nature_magicimmunity]],
+			[5]="HEALER",
+			[6]="SHAMAN",
+			[7]="Shaman"
+		},
+}
+
+local function GetSpecializationInfoByID (specId, ...)
+	return unpack(Private.spec_info[specId] or {})
+end
+
+local function GetClassNameByID(classID)
+  for className, v in pairs(Private.class_ids) do
+    if v == classID then
+      return className
+    end
+  end
+end
+
+local function GetSpecializationInfoForClassID(classID, tabIndex)
+  local className = GetClassNameByID(classID)
+  local specId = Private.spec_ids[className][tabIndex]
+  return GetSpecializationInfoByID(specId)
+end
+
+WeakAuras.spec_types_specific = {}
+for classFileName, classID in pairs(Private.class_ids) do
+  WeakAuras.spec_types_specific[classFileName] = {}
+  for i=1, 3 do
+    local specId, tabName, _, icon = GetSpecializationInfoForClassID(classID, i);
+    if tabName then
+      tinsert(WeakAuras.spec_types_specific[classFileName], "|T"..(icon or "error")..":0|t "..(tabName or "error"));
+    end
+  end
+end
+
 Private.talent_types = {}
 for tab = 1, 5 do
   for num_talent = 1, MAX_NUM_TALENTS do

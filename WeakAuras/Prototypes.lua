@@ -700,12 +700,44 @@ function WeakAuras.IsSpellKnownIncludingPet(spell)
 end
 
 local function valuesForSpecFunction(trigger)
-  local spec_types = {}
-  for k, v in pairs({"First", "Second", "Third"}) do
-      local _, tabName = GetTalentTabInfo(k)
-      tinsert(spec_types, L[v.." Tree"]..(tabName and " ("..tabName..")" or ""))
-  end
-  return spec_types
+    return function()
+      local single_class;
+      local min_specs = 3;
+      -- First check to use if the class load is on multi-select with only one class selected
+      -- Also check the number of specs for each class selected in the multi-select and keep track of the minimum
+      -- (i.e., 3 unless Druid is the only thing selected, but this method is flexible in case another spec gets added to another class)
+      if(trigger.use_class == false and trigger.class and trigger.class.multi) then
+        local num_classes = 0;
+        for class in pairs(trigger.class.multi) do
+          single_class = class;
+          -- If any checked class has only 3 specs, min_specs will become 3
+          min_specs = 3
+          num_classes = num_classes + 1;
+        end
+        if(num_classes ~= 1) then
+          single_class = nil;
+        end
+      end
+      -- If that is not the case, see if it is on single-select
+      if((not single_class) and trigger.use_class and trigger.class and trigger.class.single) then
+        single_class = trigger.class.single
+      end
+
+      if (trigger.use_class == nil) then -- no class selected, fallback to current class
+        single_class = select(2, UnitClass("player"));
+      end
+
+      -- If a single specific class was found, load the specific list for it
+      if(single_class) then
+        return WeakAuras.spec_types_specific[single_class];
+      else
+        local spec_types = {}
+        for i = 1, 3 do
+          spec_types[i] = L["Specialization"] .. " " .. i
+        end
+        return spec_types
+      end
+    end
 end
 
 local function valuesForTalentFunction(trigger)

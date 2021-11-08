@@ -1,3 +1,7 @@
+if ObjectPoolMixin then
+	return
+end
+
 local assert = assert
 local ipairs = ipairs
 local next = next

@@ -882,7 +882,6 @@ Private.load_prototype = {
       display = L["Talent Specialization"],
       type = "multiselect",
       values = valuesForSpecFunction,
-      test = "WeakAuras.CheckSpecByIndex(%d)",
       init = "arg",
       events = {"PLAYER_TALENT_UPDATE", "SPELL_UPDATE_USABLE"}
     },

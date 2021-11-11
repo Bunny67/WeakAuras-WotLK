@@ -1195,6 +1195,7 @@ local function scanForLoadsImpl(toCheck, event, arg1, ...)
 
   local player, realm, zone = UnitName("player"), GetRealmName(), GetRealZoneText();
   local faction = UnitFactionGroup("player")
+  local spec = GetPrimaryTalentTree()
   local zoneId = GetCurrentMapAreaID()
 
   local _, class = UnitClass("player");
@@ -1218,8 +1219,8 @@ local function scanForLoadsImpl(toCheck, event, arg1, ...)
     if (data and not data.controlledChildren) then
       local loadFunc = loadFuncs[id];
       local loadOpt = loadFuncsForOptions[id];
-      shouldBeLoaded = loadFunc and loadFunc("ScanForLoads_Auras", inCombat, alive, pvp, vehicle, vehicleUi, group, player, realm, class, faction, playerLevel, zone, zoneId, size, difficulty);
-      couldBeLoaded =  loadOpt and loadOpt("ScanForLoads_Auras",   inCombat, alive, pvp, vehicle, vehicleUi, group, player, realm, class, faction, playerLevel, zone, zoneId, size, difficulty);
+      shouldBeLoaded = loadFunc and loadFunc("ScanForLoads_Auras", inCombat, alive, pvp, vehicle, vehicleUi, group, player, realm, class, spec, faction, playerLevel, zone, zoneId, size, difficulty);
+      couldBeLoaded =  loadOpt and loadOpt("ScanForLoads_Auras",   inCombat, alive, pvp, vehicle, vehicleUi, group, player, realm, class, spec, faction, playerLevel, zone, zoneId, size, difficulty);
 
       if(shouldBeLoaded and not loaded[id]) then
         changed = changed + 1;

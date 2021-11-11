@@ -545,10 +545,6 @@ function WeakAuras.CheckTalentByIndex(index)
   return rank and rank > 0;
 end
 
-function WeakAuras.CheckSpecByIndex(index)
-  return GetPrimaryTalentTree() == index
-end
-
 function WeakAuras.CheckNumericIds(loadids, currentId)
   if (not loadids or not currentId) then
     return false;

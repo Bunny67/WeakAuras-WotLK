@@ -147,7 +147,7 @@ function WeakAuras.GetHSVTransition(perc, r1, g1, b1, a1, r2, g2, b2, a2)
 end
 
 function WeakAuras.GetFactionInfoByName(searchName)
-  for factionID = 1, 2000 do
+  for factionID = 1, 1266 do
       local name, description, standingID, barMin, barMax, barValue, atWarWith, canToggleAtWar, isHeader, isCollapsed, hasRep, isWatched, isChild = GetFactionInfoByID(factionID)
       if name == searchName then
         return name, description, standingID, barMin, barMax, barValue, atWarWith, canToggleAtWar, isHeader, isCollapsed, hasRep, isWatched, isChild, factionID

@@ -146,6 +146,14 @@ function WeakAuras.GetHSVTransition(perc, r1, g1, b1, a1, r2, g2, b2, a2)
   return r, g, b, a
 end
 
+function WeakAuras.GetFactionInfoByName(searchName)
+  for factionID = 1, 2000 do
+      local name, description, standingID, barMin, barMax, barValue, atWarWith, canToggleAtWar, isHeader, isCollapsed, hasRep, isWatched, isChild = GetFactionInfoByID(factionID)
+      if name == searchName then
+        return name, description, standingID, barMin, barMax, barValue, atWarWith, canToggleAtWar, isHeader, isCollapsed, hasRep, isWatched, isChild, factionID
+      end
+  end
+end
 
 Private.anim_function_strings = {
 straight = [[
@@ -1087,7 +1095,7 @@ Private.event_prototypes = {
         "UNIT_COMBO_POINTS",
         "PLAYER_TARGET_CHANGED",
         "PLAYER_FOCUS_CHANGED"
-       }
+      }
     },
     force_events = "UNIT_COMBO_POINTS",
     name = L["Combo Points"],
@@ -1299,6 +1307,115 @@ Private.event_prototypes = {
         hidden = true,
         test = "WeakAuras.UnitExistsFixed(unit, smart) and specificUnitCheck"
       }
+    },
+    automaticrequired = true
+  },
+  ["Faction Reputation"] = {
+    type = "unit",
+    canHaveDuration = false,
+    events = {
+      ["events"] = {
+        "UPDATE_FACTION",
+      }
+    },
+    internal_events = {"WA_DELAYED_PLAYER_ENTERING_WORLD"},
+    force_events = "UPDATE_FACTION",
+    name = L["Faction Reputation"],
+    init = function(trigger)
+      local ret = [=[
+        local factionID = %q
+        local name, description, standingId, bottomValue, topValue, earnedValue, _, _, isHeader = GetFactionInfoByID(factionID)
+        local standing
+        if tonumber(standingId) then
+           standing = getglobal("FACTION_STANDING_LABEL"..standingId)
+        end
+        print(standing)
+      ]=]
+      return ret:format(trigger.factionID or 0)
+    end,
+    statesParameter = "one",
+    args = {
+      {
+        name = "factionID",
+        display = L["Faction"],
+        required = true,
+        type = "select",
+        values = function()
+          local ret = {}
+          for i = 1, GetNumFactions() do
+            local name, _, _, _, _, _, _, _, isHeader = GetFactionInfo(i)
+            if not isHeader and name then
+              local factionID = select(14, WeakAuras.GetFactionInfoByName(name))
+              if factionID then
+                ret[factionID] = name
+              end
+            end
+          end
+          return ret
+        end,
+        conditionType = "select",
+        test = "true"
+      },
+      {
+        name = "name",
+        display = L["Faction Name"],
+        type = "string",
+        store = "true",
+        hidden = "true",
+        init = "name",
+        test = "true"
+      },
+      {
+        name = "total",
+        display = L["Total"],
+        type = "number",
+        store = true,
+        init = [[topValue - bottomValue]],
+        hidden = true,
+        test = "true",
+        conditionType = "number",
+      },
+      {
+        name = "value",
+        display = L["Value"],
+        type = "number",
+        store = true,
+        init = [[earnedValue - bottomValue]],
+        hidden = true,
+        test = "true",
+        conditionType = "number",
+      },
+      {
+        name = "standingId",
+        display = L["Standing"],
+        type = "select",
+        values = function()
+          local ret = {}
+          for i = 0, 8 do
+            ret[i] = getglobal("FACTION_STANDING_LABEL"..i)
+          end
+          return ret
+        end,
+        init = "standingId",
+        store = "true",
+        conditionType = "select",
+      },
+      {
+        name = "standing",
+        display = L["Standing"],
+        type = "string",
+        init = "standing",
+        store = "true",
+        hidden = "true",
+        test = "true"
+      },
+      {
+        name = "progressType",
+        hidden = true,
+        init = "'static'",
+        store = true,
+        test = "true"
+      },
     },
     automaticrequired = true
   },

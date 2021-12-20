@@ -1224,6 +1224,18 @@ Private.event_prototypes = {
         conditionType = "select"
       },
       {
+        name = "role",
+        display = L["Assigned Role"],
+        type = "select",
+        init = "UnitGroupRolesAssigned(unit)",
+        values = "role_types",
+        store = true,
+        conditionType = "select",
+        enable = function(trigger)
+          return (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")
+        end
+      },
+      {
         name = "ignoreSelf",
         display = L["Ignore Self"],
         type = "toggle",

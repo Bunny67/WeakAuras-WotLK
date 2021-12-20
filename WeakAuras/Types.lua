@@ -1036,6 +1036,12 @@ Private.power_types = {
   [SPELL_POWER_HOLY_POWER] = HOLY_POWER,
 }
 
+Private.role_types = {
+  TANK = INLINE_TANK_ICON.." "..TANK,
+  DAMAGER = INLINE_DAMAGER_ICON.." "..DAMAGER,
+  HEALER = INLINE_HEALER_ICON.." "..HEALER
+}
+
 Private.miss_types = {
   ABSORB = L["Absorb"],
   BLOCK = L["Block"],

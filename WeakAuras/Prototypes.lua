@@ -553,6 +553,11 @@ function WeakAuras.CheckTalentByIndex(index)
   return rank and rank > 0;
 end
 
+function WeakAuras.CheckRoleForSpec(roles, currentRole)
+  if not roles or not currentRole then return false end
+  return currentRole[roles]
+end
+
 function WeakAuras.CheckNumericIds(loadids, currentId)
   if (not loadids or not currentId) then
     return false;
@@ -977,6 +982,15 @@ Private.load_prototype = {
       values = "difficulty_types",
       init = "arg",
       events = {"PLAYER_DIFFICULTY_CHANGED", "ZONE_CHANGED", "ZONE_CHANGED_INDOORS", "ZONE_CHANGED_NEW_AREA"}
+    },
+    {
+      name = "role",
+      display = L["Spec Role"],
+      type = "multiselect",
+      values = "role_types",
+      test = "WeakAuras.CheckRoleForSpec(%s, role)",
+      init = "arg",
+      events = {"PLAYER_ROLES_ASSIGNED", "PLAYER_TALENT_UPDATE"}
     },
     {
       name = "itemequiped",

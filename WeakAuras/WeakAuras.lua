@@ -1206,6 +1206,12 @@ local function scanForLoadsImpl(toCheck, event, arg1, ...)
   local vehicle = UnitInVehicle("player") or UnitOnTaxi("player")
   local vehicleUi = UnitHasVehicleUI("player")
 
+  local role1, role2 = GetTalentTreeRoles(spec)
+  local specRole = {[role1] = true}
+  if role2 then
+    specRole[role2] = true
+  end
+
   local size, difficulty, instanceType = GetInstanceTypeAndSize()
   local group = WeakAuras.GroupType()
 
@@ -1219,8 +1225,8 @@ local function scanForLoadsImpl(toCheck, event, arg1, ...)
     if (data and not data.controlledChildren) then
       local loadFunc = loadFuncs[id];
       local loadOpt = loadFuncsForOptions[id];
-      shouldBeLoaded = loadFunc and loadFunc("ScanForLoads_Auras", inCombat, alive, pvp, vehicle, vehicleUi, group, player, realm, class, spec, faction, playerLevel, zone, zoneId, size, difficulty);
-      couldBeLoaded =  loadOpt and loadOpt("ScanForLoads_Auras",   inCombat, alive, pvp, vehicle, vehicleUi, group, player, realm, class, spec, faction, playerLevel, zone, zoneId, size, difficulty);
+      shouldBeLoaded = loadFunc and loadFunc("ScanForLoads_Auras", inCombat, alive, pvp, vehicle, vehicleUi, group, player, realm, class, spec, faction, playerLevel, zone, zoneId, size, difficulty, specRole);
+      couldBeLoaded =  loadOpt and loadOpt("ScanForLoads_Auras",   inCombat, alive, pvp, vehicle, vehicleUi, group, player, realm, class, spec, faction, playerLevel, zone, zoneId, size, difficulty. specRole);
 
       if(shouldBeLoaded and not loaded[id]) then
         changed = changed + 1;

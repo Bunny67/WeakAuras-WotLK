@@ -1735,6 +1735,7 @@ Private.event_prototypes = {
       local unit = trigger.unit
       local result = {}
       AddUnitEventForEvents(result, unit, "UNIT_POWER")
+      AddUnitEventForEvents(result, unit, "UNIT_POWER_FREQUENT")
       AddUnitEventForEvents(result, unit, "UNIT_MAXPOWER")
       AddUnitEventForEvents(result, unit, "UNIT_DISPLAYPOWER")
       AddUnitEventForEvents(result, unit, "UNIT_NAME_UPDATE")
@@ -2661,7 +2662,8 @@ Private.event_prototypes = {
         conditionEvents = {
           "SPELL_UPDATE_USABLE",
           "PLAYER_TARGET_CHANGED",
-          "UNIT_POWER"
+          "UNIT_POWER",
+          "UNIT_POWER_FREQUENT"
         },
       },
       {
@@ -2676,7 +2678,8 @@ Private.event_prototypes = {
         conditionEvents = {
           "SPELL_UPDATE_USABLE",
           "PLAYER_TARGET_CHANGED",
-          "UNIT_POWER"
+          "UNIT_POWER",
+          "UNIT_POWER_FREQUENT"
         }
       },
       {

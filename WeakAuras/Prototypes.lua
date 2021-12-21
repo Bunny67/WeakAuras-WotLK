@@ -3944,7 +3944,7 @@ Private.event_prototypes = {
         "RUNE_TYPE_UPDATE",
       },
       ["unit_events"] = {
-        ["player"] = { "UNIT_POWER" }
+        ["player"] = { "UNIT_POWER", "UNIT_POWER_FREQUENT" }
       }
     },
     internal_events = {

@@ -1206,13 +1206,15 @@ local function scanForLoadsImpl(toCheck, event, arg1, ...)
   local vehicle = UnitInVehicle("player") or UnitOnTaxi("player")
   local vehicleUi = UnitHasVehicleUI("player")
 
-  local role1, role2 = GetTalentTreeRoles(spec)
   local specRole = {}
-  if role1 then
-    specRole[role1] = true
-  end
-  if role2 then
-    specRole[role2] = true
+  if spec then
+    local role1, role2 = GetTalentTreeRoles(spec)
+    if role1 then
+      specRole[role1] = true
+    end
+    if role2 then
+      specRole[role2] = true
+    end
   end
 
   local size, difficulty, instanceType = GetInstanceTypeAndSize()

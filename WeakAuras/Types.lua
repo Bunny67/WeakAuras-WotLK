@@ -1524,11 +1524,11 @@ Private.spec_info = {
 		},
 }
 
-local function GetSpecializationInfoByID (specId, ...)
+Private.GetSpecializationInfoByID = function(specId, ...)
 	return unpack(Private.spec_info[specId] or {})
 end
 
-local function GetClassNameByID(classID)
+Private.GetClassNameByID = function(classID)
   for className, v in pairs(Private.class_ids) do
     if v == classID then
       return className
@@ -1536,17 +1536,21 @@ local function GetClassNameByID(classID)
   end
 end
 
-local function GetSpecializationInfoForClassID(classID, tabIndex)
-  local className = GetClassNameByID(classID)
+Private.GetSpecializationInfoForClass = function(className, tabIndex)
   local specId = Private.spec_ids[className][tabIndex]
-  return GetSpecializationInfoByID(specId)
+  return Private.GetSpecializationInfoByID(specId)
+end
+
+Private.GetSpecializationInfoForClassID = function(classID, tabIndex)
+  local className = Private.GetClassNameByID(classID)
+  return Private.GetSpecializationInfoForClass(className, tabIndex)
 end
 
 WeakAuras.spec_types_specific = {}
 for classFileName, classID in pairs(Private.class_ids) do
   WeakAuras.spec_types_specific[classFileName] = {}
   for i=1, 3 do
-    local specId, tabName, _, icon = GetSpecializationInfoForClassID(classID, i);
+    local specId, tabName, _, icon = Private.GetSpecializationInfoForClassID(classID, i);
     if tabName then
       tinsert(WeakAuras.spec_types_specific[classFileName], "|T"..(icon or "error")..":0|t "..(tabName or "error"));
     end

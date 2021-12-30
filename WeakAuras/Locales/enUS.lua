@@ -4,10 +4,10 @@ local L = WeakAuras.L
 L["   • %d auras added"] = "   • %d auras added"
 L["   • %d auras deleted"] = "   • %d auras deleted"
 L["   • %d auras modified"] = "   • %d auras modified"
-L[ [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'.
+L[ [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'. 
 
 Supports multiple entries, separated by commas
-]=] ] = [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'.
+]=] ] = [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'. 
 
 Supports multiple entries, separated by commas
 ]=]
@@ -343,8 +343,8 @@ L["Equipped"] = "Equipped"
 L["Error"] = "Error"
 L["Error Frame"] = "Error Frame"
 L["Error not receiving display information from %s"] = "Error not receiving display information from %s"
-L[ [=['ERROR: Anchoring %s':
-]=] ] = [=['ERROR: Anchoring %s':
+L[ [=['ERROR: Anchoring %s': 
+]=] ] = [=['ERROR: Anchoring %s': 
 ]=]
 L["Evade"] = "Evade"
 L["Event"] = "Event"
@@ -451,7 +451,7 @@ L["Hostility"] = "Hostility"
 L["Humanoid"] = "Humanoid"
 L["Hybrid"] = "Hybrid"
 L["Icon"] = "Icon"
-L["If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/UXSc7nt!"] = "If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/UXSc7nt!"
+L["If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/weakauras!"] = "If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/weakauras!"
 L["Ignore Dead"] = "Ignore Dead"
 L["Ignore Disconnected"] = "Ignore Disconnected"
 L["Ignore Rune CD"] = "Ignore Rune CD"

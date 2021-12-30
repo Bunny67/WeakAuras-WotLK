@@ -8,7 +8,7 @@ local L = WeakAuras.L
 L["   • %d auras added"] = "• %d auras agregados"
 L["   • %d auras deleted"] = "• %d auras quitados"
 L["   • %d auras modified"] = "• %d auras modificados"
-L[ [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'. 
+L[ [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'.
 
 Supports multiple entries, separated by commas
 ]=] ] = "Formatos de filtro: 'Nombre', 'Nombre-Reino', '-Reino'. Admite múltiples entradas, separadas por comas"
@@ -483,8 +483,8 @@ L["Error Frame"] = "Error Frame"
 --[[Translation missing --]]
 L["Error not receiving display information from %s"] = "Error not receiving display information from %s"
 --[[Translation missing --]]
-L[ [=['ERROR: Anchoring %s': 
-]=] ] = [=['ERROR: Anchoring %s': 
+L[ [=['ERROR: Anchoring %s':
+]=] ] = [=['ERROR: Anchoring %s':
 ]=]
 L["Evade"] = "Evadir"
 L["Event"] = "Event"
@@ -650,7 +650,7 @@ L["Hybrid"] = "Híbrido"
 --[[Translation missing --]]
 L["Icon"] = "Icon"
 --[[Translation missing --]]
-L["If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/weakauras!"] = "If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/weakauras!"
+L["If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/UXSc7nt!"] = "If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/UXSc7nt!"
 --[[Translation missing --]]
 L["Ignore Dead"] = "Ignore Dead"
 --[[Translation missing --]]

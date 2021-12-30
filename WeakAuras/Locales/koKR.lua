@@ -8,7 +8,7 @@ local L = WeakAuras.L
 L["   • %d auras added"] = "• %d 효과 추가됨"
 L["   • %d auras deleted"] = "• %d 효과 삭제됨"
 L["   • %d auras modified"] = "• %d 효과 수정됨"
-L[ [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'. 
+L[ [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'.
 
 Supports multiple entries, separated by commas
 ]=] ] = "필터 형식: '이름', '이름-서버', '-서버'. 쉼표로 구분된 여러 항목 지원합니다"
@@ -376,8 +376,8 @@ L["Error"] = "오류"
 L["Error Frame"] = "오류창"
 L["Error not receiving display information from %s"] = "%s 에서 표시 정보를 받지 못하는 오류"
 --[[Translation missing --]]
-L[ [=['ERROR: Anchoring %s': 
-]=] ] = [=['ERROR: Anchoring %s': 
+L[ [=['ERROR: Anchoring %s':
+]=] ] = [=['ERROR: Anchoring %s':
 ]=]
 L["Evade"] = "벗어남"
 L["Event"] = "이벤트"
@@ -500,7 +500,7 @@ L["Hostility"] = "적대성"
 L["Humanoid"] = "인간형"
 L["Hybrid"] = "복합"
 L["Icon"] = "아이콘"
-L["If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/weakauras!"] = "추가 지원이 필요한 경우, GitHub에서 티켓을 열거나 Discord( https://discord.gg/weakauras )를 방문해 주세요!"
+L["If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/UXSc7nt!"] = "추가 지원이 필요한 경우, GitHub에서 티켓을 열거나 Discord( https://discord.gg/UXSc7nt )를 방문해 주세요!"
 L["Ignore Dead"] = "죽음 무시"
 L["Ignore Disconnected"] = "연결 끊김 무시"
 L["Ignore Rune CD"] = "룬 재사용 대기시간 무시"

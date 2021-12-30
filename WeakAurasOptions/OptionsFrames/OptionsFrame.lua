@@ -476,7 +476,7 @@ function OptionsPrivate.CreateFrame()
     tipFrame:AddChild(button)
   end
 
-  addFooter(L["Get Help"], [[Interface\AddOns\WeakAuras\Media\Textures\discord.tga]], "https://discord.gg/weakauras",
+  addFooter(L["Get Help"], [[Interface\AddOns\WeakAuras\Media\Textures\discord.tga]], "https://discord.gg/UXSc7nt",
             L["Chat with WeakAuras experts on our Discord server."])
 
   addFooter(L["Documentation"], [[Interface\AddOns\WeakAuras\Media\Textures\GitHub.tga]], "https://github.com/WeakAuras/WeakAuras2/wiki",
@@ -490,7 +490,7 @@ function OptionsPrivate.CreateFrame()
             L["Keep your Wago imports up to date with the Companion App."])
   end
 
-  addFooter(L["Found a Bug?"], [[Interface\AddOns\WeakAuras\Media\Textures\bug_report.tga]], "https://github.com/WeakAuras/WeakAuras2/issues/new?assignees=&labels=%F0%9F%90%9B+Bug&template=bug_report.md&title=",
+  addFooter(L["Found a Bug?"], [[Interface\AddOns\WeakAuras\Media\Textures\bug_report.tga]], "https://github.com/Bunny67/WeakAuras-WotLK/issues/new?assignees=&labels=bug&template=bug_report.md&title=",
             L["Report bugs on our issue tracker."])
 
   -- Disable for now

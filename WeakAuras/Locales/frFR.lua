@@ -9,10 +9,10 @@ L["   • %d auras added"] = "• %d auras ajoutés"
 L["   • %d auras deleted"] = "• %d auras supprimés"
 L["   • %d auras modified"] = "• %d auras modifiés"
 --[[Translation missing --]]
-L[ [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'.
+L[ [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'. 
 
 Supports multiple entries, separated by commas
-]=] ] = [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'.
+]=] ] = [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'. 
 
 Supports multiple entries, separated by commas
 ]=]
@@ -184,7 +184,7 @@ L["Bar Color"] = "Couleur de barre"
 --[[Translation missing --]]
 L["Baron Geddon"] = "Baron Geddon"
 L["Battle.net Whisper"] = "Message Battle.net"
-L["Battleground"] = [=[Champ De Bataille
+L["Battleground"] = [=[Champ De Bataille 
 ]=]
 --[[Translation missing --]]
 L["Battleguard Sartura"] = "Battleguard Sartura"
@@ -427,8 +427,8 @@ L["Error"] = "Erreur"
 L["Error Frame"] = "Error Frame"
 L["Error not receiving display information from %s"] = "Erreur de non-réception d'informations d'affichage de %s"
 --[[Translation missing --]]
-L[ [=['ERROR: Anchoring %s':
-]=] ] = [=['ERROR: Anchoring %s':
+L[ [=['ERROR: Anchoring %s': 
+]=] ] = [=['ERROR: Anchoring %s': 
 ]=]
 L["Evade"] = "Evite"
 L["Event"] = "Evènement"
@@ -576,7 +576,7 @@ L["Humanoid"] = "Humanoïde"
 L["Hybrid"] = "Hybride"
 L["Icon"] = "Icône"
 --[[Translation missing --]]
-L["If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/UXSc7nt!"] = "If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/UXSc7nt!"
+L["If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/weakauras!"] = "If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/weakauras!"
 --[[Translation missing --]]
 L["Ignore Dead"] = "Ignore Dead"
 --[[Translation missing --]]

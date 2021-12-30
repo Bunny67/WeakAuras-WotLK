@@ -8,7 +8,7 @@ local L = WeakAuras.L
 L["   • %d auras added"] = "   • %d aure aggiunte"
 L["   • %d auras deleted"] = " • %d aure cancellate"
 L["   • %d auras modified"] = "• %d aure modificate"
-L[ [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'.
+L[ [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'. 
 
 Supports multiple entries, separated by commas
 ]=] ] = [=[Formattazione filtro: 'Nome', 'Nome-Reame', '-Reame'.
@@ -512,8 +512,8 @@ L["Error Frame"] = "Error Frame"
 --[[Translation missing --]]
 L["Error not receiving display information from %s"] = "Error not receiving display information from %s"
 --[[Translation missing --]]
-L[ [=['ERROR: Anchoring %s':
-]=] ] = [=['ERROR: Anchoring %s':
+L[ [=['ERROR: Anchoring %s': 
+]=] ] = [=['ERROR: Anchoring %s': 
 ]=]
 --[[Translation missing --]]
 L["Evade"] = "Evade"
@@ -724,7 +724,7 @@ L["Hybrid"] = "Hybrid"
 --[[Translation missing --]]
 L["Icon"] = "Icon"
 --[[Translation missing --]]
-L["If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/UXSc7nt!"] = "If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/UXSc7nt!"
+L["If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/weakauras!"] = "If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/weakauras!"
 --[[Translation missing --]]
 L["Ignore Dead"] = "Ignore Dead"
 --[[Translation missing --]]

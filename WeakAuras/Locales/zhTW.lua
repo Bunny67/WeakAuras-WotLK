@@ -8,7 +8,7 @@ local L = WeakAuras.L
 L["   • %d auras added"] = "   • 已新增 %d 個提醒效果"
 L["   • %d auras deleted"] = "   • 已刪除 %d 個提醒效果"
 L["   • %d auras modified"] = "   • 已修改 %d 個提醒效果"
-L[ [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'. 
+L[ [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'.
 
 Supports multiple entries, separated by commas
 ]=] ] = "過濾格式: '名字', '名字-伺服器', '-伺服器'。支援多個項目，使用逗號分隔。"
@@ -343,7 +343,7 @@ L["Equipped"] = "已裝備"
 L["Error"] = "錯誤"
 L["Error Frame"] = "錯誤訊息框架"
 L["Error not receiving display information from %s"] = "錯誤：無法收到來自 %s 的顯示資訊"
-L[ [=['ERROR: Anchoring %s': 
+L[ [=['ERROR: Anchoring %s':
 ]=] ] = "'錯誤: 對齊 %s': "
 L["Evade"] = "閃躲"
 L["Event"] = "事件"
@@ -450,7 +450,7 @@ L["Hostility"] = "敵對"
 L["Humanoid"] = "人形態"
 L["Hybrid"] = "混合"
 L["Icon"] = "圖示"
-L["If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/weakauras!"] = "如果你需要其他協助，請在 GitHub 新增問題，或拜訪我們的 Discord https://discord.gg/weakauras!"
+L["If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/UXSc7nt!"] = "如果你需要其他協助，請在 GitHub 新增問題，或拜訪我們的 Discord https://discord.gg/UXSc7nt!"
 L["Ignore Dead"] = "忽略死者"
 L["Ignore Disconnected"] = "忽略離線者"
 L["Ignore Rune CD"] = "忽略符文冷卻"

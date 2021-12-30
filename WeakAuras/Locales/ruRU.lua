@@ -8,7 +8,7 @@ local L = WeakAuras.L
 L["   • %d auras added"] = "   • %d |4индикация добавлена:индикации добавлены:индикаций добавлено;"
 L["   • %d auras deleted"] = "   • %d |4индикация удалена:индикации удалены:индикаций удалено;"
 L["   • %d auras modified"] = "   • %d |4индикация изменена:индикации изменены:индикаций изменено;"
-L[ [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'. 
+L[ [=[ Filter formats: 'Name', 'Name-Realm', '-Realm'.
 
 Supports multiple entries, separated by commas
 ]=] ] = [=[Формат записи: Имя, Имя-Игровой мир, -Игровой мир.
@@ -350,9 +350,9 @@ L["Equipment Slot"] = "Ячейка экипировки"
 L["Equipped"] = "Надето"
 L["Error"] = "Ошибка"
 L["Error Frame"] = "Область вывода ошибок"
-L["Error not receiving display information from %s"] = [=[Ошибка при получении информации об индикации 
+L["Error not receiving display information from %s"] = [=[Ошибка при получении информации об индикации
 от %s]=]
-L[ [=['ERROR: Anchoring %s': 
+L[ [=['ERROR: Anchoring %s':
 ]=] ] = [=['Ошибка при креплении %s':
 ]=]
 L["Evade"] = "Избегание"
@@ -460,7 +460,7 @@ L["Hostility"] = "Враждебность"
 L["Humanoid"] = "Гуманоид"
 L["Hybrid"] = "Гибридная"
 L["Icon"] = "Иконка"
-L["If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/weakauras!"] = "Если вам необходима дополнительная помощь, пожалуйста, откройте запрос на GitHub или посетите наш сервер в Discord по адресу https://discord.gg/weakauras."
+L["If you require additional assistance, please open a ticket on GitHub or visit our Discord at https://discord.gg/UXSc7nt!"] = "Если вам необходима дополнительная помощь, пожалуйста, откройте запрос на GitHub или посетите наш сервер в Discord по адресу https://discord.gg/UXSc7nt."
 L["Ignore Dead"] = "Не учитывать мёртвые цели"
 L["Ignore Disconnected"] = "Не учитывать игроков не в сети"
 L["Ignore Rune CD"] = "Игнорировать задержку от рун"
@@ -977,7 +977,7 @@ L["This aura was created with the retail version of World of Warcraft."] = "Ин
 L["This is a modified version of your aura, |cff9900FF%s.|r"] = [=[Это модифицированная версия вашей индикации:
 |cff9900FF%s|r.
 ]=]
-L["This is a modified version of your group, |cff9900FF%s.|r"] = [=[Это модифицированная версия группы ваших   
+L["This is a modified version of your group, |cff9900FF%s.|r"] = [=[Это модифицированная версия группы ваших
 индикаций: |cff9900FF%s|r.]=]
 L["Threat Percent"] = "Процент угрозы"
 L["Threat Situation"] = "Положение в списке угроз"

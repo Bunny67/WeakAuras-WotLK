@@ -1647,6 +1647,14 @@ Private.event_prototypes = {
         conditionType = "number"
       },
       {
+        name = "healprediction",
+        type = "number",
+        display = L["Incoming Heal"],
+        init = "UnitGetIncomingHeals(unit)",
+        store = true,
+        conditionType = "number",
+      },
+      {
         name = "name",
         display = L["Unit Name"],
         type = "string",

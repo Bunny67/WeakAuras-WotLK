@@ -1339,7 +1339,7 @@ local function FeedOptions(appName, options,container,rootframe,path,group,inlin
 							elseif width == "half" then
 								check:SetWidth(width_multiplier / 2)
 							elseif (type(width) == "number") then
-								control:SetWidth(width_multiplier * width)
+								check:SetWidth(width_multiplier * width)
 							elseif width == "full" then
 								check.width = "fill"
 							else

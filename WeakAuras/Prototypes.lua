@@ -5639,7 +5639,7 @@ Private.event_prototypes = {
         "PLAYER_TARGET_CHANGED"
       },
       ["unit_events"] = {
-        ["player"] = {"UNIT_STATS"}
+        ["player"] = {"UNIT_STATS", "UNIT_ATTACK_POWER", "UNIT_RANGED_ATTACK_POWER", "UNIT_AURA", "PLAYER_DAMAGE_DONE_MODS", "UNIT_RESISTANCES"}
       }
     },
     internal_events = function(trigger, untrigger)
@@ -5698,6 +5698,23 @@ Private.event_prototypes = {
         conditionType = "number"
       },
       {
+        name = "masteryrating",
+        display = L["Mastery Rating"],
+        type = "number",
+        init = "GetCombatRating(CR_MASTERY)",
+        store = true,
+        conditionType = "number",
+      },
+      {
+        name = "expertiserating",
+        display = L["Expertise Rating"],
+        type = "number",
+        init = "GetCombatRating(CR_EXPERTISE)",
+        store = true,
+        conditionType = "number",
+      },
+      
+      {
         name = "meleecriticalrating",
         display = L["Melee Critical Rating"],
         type = "number",
@@ -5723,7 +5740,7 @@ Private.event_prototypes = {
       },
       {
         name = "meleecriticalpercent",
-        display = L["Mele Critical (%)"],
+        display = L["Melee Critical (%)"],
         type = "number",
         init = "GetCritChance()",
         store = true,
@@ -5742,6 +5759,14 @@ Private.event_prototypes = {
         display = L["Spell Critical (%)"],
         type = "number",
         init = "WeakAuras.GetSpellCritChance()",
+        store = true,
+        conditionType = "number"
+      },
+      {
+        name = "hitrating",
+        display = L["Hit Rating"],
+        type = "number",
+        init = "max(GetCombatRating(CR_HIT_MELEE), GetCombatRating(CR_HIT_RANGED), GetCombatRating(CR_HIT_SPELL))",
         store = true,
         conditionType = "number"
       },
@@ -5885,6 +5910,14 @@ Private.event_prototypes = {
         display = L["Armor (%)"],
         type = "number",
         init = "PaperDollFrame_GetArmorReduction(select(2, UnitArmor('player')), UnitLevel('player'))",
+        store = true,
+        conditionType = "number"
+      },
+      {
+        name = "resilience",
+        display = L["Resilience"],
+        type = "number",
+        init = "GetCombatRating(COMBAT_RATING_RESILIENCE_PLAYER_DAMAGE_TAKEN)",
         store = true,
         conditionType = "number"
       },

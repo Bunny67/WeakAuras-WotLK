@@ -4760,6 +4760,53 @@ Private.event_prototypes = {
     },
     timedrequired = true
   },
+  ["Spell Cast Succeeded"] = {
+    type = "event",
+    events = {
+      ["events"] = {"UNIT_SPELLCAST_SUCCEEDED"}
+    },
+    name = L["Spell Cast Succeeded"],
+    statesParameter = "one",
+    args = {
+      {
+        name = "unit",
+        init = "arg",
+        display = L["Caster Unit"],
+        type = "unit",
+        test = "UnitIsUnit(unit or '', %q)",
+        values = "actual_unit_types_with_specific",
+        store = true,
+        conditionType = "select",
+        conditionTest = function(state, needle, op)
+          return state and state.show and (UnitIsUnit(needle, state.unit or '') == (op == "=="))
+        end
+      },
+      {
+        name = "spellName",
+        display = L["Spell"],
+        type = "string",
+        init = "arg",
+      },
+      {}, -- spell rank (unused in cata)
+      {}, -- spell lineid
+      {
+        name = "spellId",
+        display = L["Spell Id"],
+        type = "spell",
+        init = "arg",
+        store = true,
+        conditionType = "number"
+      },
+      {
+        name = "icon",
+        hidden = true,
+        init = "spellId and select(3, GetSpellInfo(spellId)) or 'Interface\\\\Icons\\\\INV_Misc_QuestionMark'",
+        store = true,
+        test = "true"
+      },
+    },
+    timedrequired = true
+  },
   ["Ready Check"] = {
     type = "event",
     events = {

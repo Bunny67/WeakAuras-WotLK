@@ -816,7 +816,12 @@ local funcs = {
       progress = 1 - progress;
     end
 
-    self.bar:SetValue(progress);
+    if (self.smoothProgress) then
+      self.bar.targetValue = progress
+      self.bar:SetSmoothedValue(progress);
+    else
+      self.bar:SetValue(progress);
+    end
   end,
   SetTime = function(self, duration, expirationTime, inverse)
     local remaining = expirationTime - GetTime();
@@ -829,20 +834,39 @@ local funcs = {
     then
       progress = 1 - progress;
     end
-    self.bar:SetValue(progress);
+    if (self.smoothProgress) then
+      self.bar.targetValue = progress
+      self.bar:SetSmoothedValue(progress);
+    else
+      self.bar:SetValue(progress);
+    end
   end,
   SetInverse = function(self, inverse)
     if (self.inverseDirection == inverse) then
       return;
     end
     self.inverseDirection = inverse;
-    self.bar:SetValue(1 - self.bar:GetValue());
+    if (self.smoothProgress) then
+      if (self.bar.targetValue) then
+        self.bar.targetValue = 1 - self.bar.targetValue
+        self.bar:SetSmoothedValue(self.bar.targetValue);
+      end
+    else
+      self.bar:SetValue(1 - self.bar:GetValue());
+    end
+    self.bar:SetAdditionalBarsInverse(not self.bar:GetAdditionalBarsInverse())
     self.subRegionEvents:Notify("InverseChanged")
   end,
   SetOrientation = function(self, orientation)
     self.orientation = orientation
     self:UpdateEffectiveOrientation()
-    self.bar:SetValue(self.bar:GetValue());
+    if (self.smoothProgress) then
+      if self.bar.targetValue then
+        self.bar:SetSmoothedValue(self.bar.targetValue);
+      end
+    else
+      self.bar:SetValue(self.bar:GetValue());
+    end
   end,
 
   SetIconVisible = function(self, iconVisible)
@@ -965,6 +989,7 @@ local function create(parent)
 
   -- Create statusbar (inherit prototype)
   local bar = CreateFrame("FRAME", nil, region);
+  WeakAuras.Mixin(bar, SmoothStatusBarMixin);
   local fg = bar:CreateTexture(nil, "BORDER");
   local bg = bar:CreateTexture(nil, "BACKGROUND");
   bg:SetAllPoints();
@@ -1265,8 +1290,16 @@ local function modify(parent, region, data)
     region:UpdateEffectiveOrientation()
   end
   --  region:Scale(1.0, 1.0);
+  if data.smoothProgress then
+    region.PreShow = function()
+      region.bar:ResetSmoothedValue();
+    end
+  else
+    region.PreShow = nil
+  end
 
-  -- Update internal bar alignment
+  region.smoothProgress = data.smoothProgress
+  --- Update internal bar alignment
   region.bar:Update();
 
   WeakAuras.regionPrototype.modifyFinish(parent, region, data);

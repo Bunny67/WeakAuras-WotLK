@@ -4679,7 +4679,7 @@ Private.event_prototypes = {
       {
         name = "name",
         hidden = true,
-        init = "spell",
+        init = "name",
         test = "true",
         store = true
       },

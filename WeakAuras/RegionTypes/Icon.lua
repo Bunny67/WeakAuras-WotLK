@@ -349,6 +349,8 @@ local function modify(parent, region, data)
   region.zoom = data.zoom;
   region:UpdateSize()
 
+  icon:SetDesaturated(data.desaturate);
+
   local tooltipType = Private.CanHaveTooltip(data);
   if(tooltipType and data.useTooltip) then
     if not region.tooltipFrame then
@@ -433,7 +435,6 @@ local function modify(parent, region, data)
 
     iconPath = iconPath or self.displayIcon or "Interface\\Icons\\INV_Misc_QuestionMark"
     icon:SetTexture(iconPath)
-    icon:SetDesaturated(data.desaturate)
   end
 
   function region:Scale(scalex, scaley)

@@ -473,6 +473,7 @@ function RealTimeProfilingWindow:GetBar(name)
   else
     local bar = CreateFrame("FRAME", nil, self.barsFrame)
     self.bars[name] = bar
+    WeakAuras.Mixin(bar, SmoothStatusBarMixin)
     bar.name = name
     bar.parent = self
     bar:SetSize(self.width, self.barHeight)
@@ -522,7 +523,7 @@ function RealTimeProfilingWindow:GetBar(name)
 
     function bar:SetProgress(value)
       self.value = value
-      self:SetValue(value)
+      self:SetSmoothedValue(value)
     end
 
     function bar:SetPosition(pos)

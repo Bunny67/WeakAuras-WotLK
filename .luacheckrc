@@ -48,6 +48,13 @@ globals = {
 	"IsInRaid",
 	"GetNumSubgroupMembers",
 	"GetNumGroupMembers",
+	"noop",
+	"Lerp",
+	"Clamp",
+	"Saturate",
+	"DeltaLerp",
+	"FrameDeltaLerp",
+	"SmoothStatusBarMixin",
 
 	"nop",
 	"ActorPoolMixin",

@@ -284,7 +284,6 @@ function OptionsPrivate.CreateFrame()
       self.loadProgress:Hide()
       self.toolbarContainer.frame:Hide()
       self.filterInput:Hide();
-      self.filterInputClear:Hide();
       self.tipFrame.frame:Hide()
       self.bottomLeftResizer:Hide()
       self.bottomRightResizer:Hide()
@@ -353,18 +352,16 @@ function OptionsPrivate.CreateFrame()
           self.loadProgress:Show()
           self.toolbarContainer.frame:Hide()
           self.filterInput:Hide();
-          self.filterInputClear:Hide();
         else
           self.loadProgress:Hide()
           self.toolbarContainer.frame:Show()
           self.filterInput:Show();
-          self.filterInputClear:Show();
+          --self.filterInputClear:Show();
         end
       else
         self.loadProgress:Hide()
         self.toolbarContainer.frame:Hide()
         self.filterInput:Hide();
-        self.filterInputClear:Hide();
       end
     end
   end
@@ -476,7 +473,7 @@ function OptionsPrivate.CreateFrame()
     tipFrame:AddChild(button)
   end
 
-  addFooter(L["Get Help"], [[Interface\AddOns\WeakAuras\Media\Textures\discord.tga]], "https://discord.gg/weakauras",
+  addFooter(L["Get Help"], [[Interface\AddOns\WeakAuras\Media\Textures\discord.tga]], "https://discord.gg/UXSc7nt",
             L["Chat with WeakAuras experts on our Discord server."])
 
   addFooter(L["Documentation"], [[Interface\AddOns\WeakAuras\Media\Textures\GitHub.tga]], "https://github.com/WeakAuras/WeakAuras2/wiki",
@@ -490,7 +487,7 @@ function OptionsPrivate.CreateFrame()
             L["Keep your Wago imports up to date with the Companion App."])
   end
 
-  addFooter(L["Found a Bug?"], [[Interface\AddOns\WeakAuras\Media\Textures\bug_report.tga]], "https://github.com/WeakAuras/WeakAuras2/issues/new?assignees=&labels=%F0%9F%90%9B+Bug&template=bug_report.md&title=",
+  addFooter(L["Found a Bug?"], [[Interface\AddOns\WeakAuras\Media\Textures\bug_report.tga]], "https://github.com/Bunny67/WeakAuras-WotLK/issues/new?assignees=&labels=bug&template=bug_report.md&title=",
             L["Report bugs on our issue tracker."])
 
   -- Disable for now
@@ -541,34 +538,73 @@ function OptionsPrivate.CreateFrame()
   -- filter line
   local filterInput = CreateFrame("editbox", "WeakAurasFilterInput", frame, "InputBoxTemplate")
   filterInput:SetAutoFocus(false)
-  filterInput:SetScript("OnTextChanged", function(...) WeakAuras.SortDisplayButtons(filterInput:GetText()) end)
-  filterInput:SetScript("OnEnterPressed", function(...) filterInput:ClearFocus() end)
-  filterInput:SetScript("OnEscapePressed", function(...) filterInput:SetText("") filterInput:ClearFocus() end)
+  filterInput:SetTextInsets(16, 20, 0, 0)
+
+  filterInput.Instructions = filterInput:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
+  filterInput.Instructions:SetText(SEARCH)
+  filterInput.Instructions:SetPoint("TOPLEFT", filterInput, "TOPLEFT", 16, 0)
+  filterInput.Instructions:SetPoint("BOTTOMRIGHT", filterInput, "BOTTOMRIGHT", -20, 0)
+  filterInput.Instructions:SetTextColor(0.35, 0.35, 0.35)
+  filterInput.Instructions:SetJustifyH("LEFT")
+  filterInput.Instructions:SetJustifyV("MIDDLE")
+
+  filterInput.searchIcon = filterInput:CreateTexture(nil, "OVERLAY")
+  filterInput.searchIcon:SetTexture("Interface\\Common\\UI-Searchbox-Icon")
+  filterInput.searchIcon:SetVertexColor(0.6, 0.6, 0.6)
+  filterInput.searchIcon:SetSize(14, 14)
+  filterInput.searchIcon:SetPoint("LEFT", 0, -2)
+
+  filterInput.clearButton = CreateFrame("Button", nil, filterInput)
+  filterInput.clearButton:SetSize(14, 14)
+  filterInput.clearButton:SetPoint("RIGHT", -3, 0)
+
+  filterInput.clearButton.texture = filterInput.clearButton:CreateTexture()
+  filterInput.clearButton.texture:SetTexture("Interface\\FriendsFrame\\ClearBroadcastIcon")
+  filterInput.clearButton.texture:SetAlpha(0.5)
+  filterInput.clearButton.texture:SetSize(17, 17)
+  filterInput.clearButton.texture:SetPoint("CENTER", 0, 0)
+
+  filterInput.clearButton:SetScript("OnEnter", function(self) self.texture:SetAlpha(1.0) end)
+  filterInput.clearButton:SetScript("OnLeave", function(self) self.texture:SetAlpha(0.5) end)
+  filterInput.clearButton:SetScript("OnMouseDown", function(self) if self:IsEnabled() then self.texture:SetPoint("CENTER", 1, -1) end end)
+  filterInput.clearButton:SetScript("OnMouseUp", function(self) self.texture:SetPoint("CENTER") end)
+  filterInput.clearButton:SetScript("OnClick", function(self)
+    local editBox = self:GetParent()
+    editBox:SetText("")
+    editBox:ClearFocus()
+  end)
+  filterInput:SetScript("OnEditFocusLost", function(self)
+    if self:GetText() == "" then
+      self.searchIcon:SetVertexColor(0.6, 0.6, 0.6)
+      self.clearButton:Hide()
+    end
+  end)
+  filterInput:SetScript("OnEditFocusGained", function(self)
+    self.searchIcon:SetVertexColor(1.0, 1.0, 1.0)
+    self.clearButton:Show()
+  end)
+  filterInput:HookScript("OnTextChanged", function(self)
+    if not self:HasFocus() and self:GetText() == "" then
+      self.searchIcon:SetVertexColor(0.6, 0.6, 0.6)
+      self.clearButton:Hide()
+    else
+      self.searchIcon:SetVertexColor(1.0, 1.0, 1.0)
+      self.clearButton:Show()
+    end
+    if self:GetText() == "" then
+      self.Instructions:Show()
+    else
+      self.Instructions:Hide()
+    end
+    WeakAuras.SortDisplayButtons(filterInput:GetText())
+  end)
   filterInput:SetHeight(15)
   filterInput:SetPoint("TOP", frame, "TOP", 0, -44)
   filterInput:SetPoint("LEFT", frame, "LEFT", 24, 0)
   filterInput:SetPoint("RIGHT", container.frame, "LEFT", -5, 0)
-  filterInput:SetTextInsets(16, 16, 0, 0)
-
-  local searchIcon = filterInput:CreateTexture(nil, "overlay")
-  searchIcon:SetTexture("Interface\\Common\\UI-Searchbox-Icon")
-  searchIcon:SetVertexColor(0.6, 0.6, 0.6)
-  searchIcon:SetWidth(14)
-  searchIcon:SetHeight(14)
-  searchIcon:SetPoint("left", filterInput, "left", 2, -2)
   filterInput:SetFont(STANDARD_TEXT_FONT, 10)
   frame.filterInput = filterInput
   filterInput:Hide()
-
-  local filterInputClear = CreateFrame("BUTTON", nil, filterInput)
-  frame.filterInputClear = filterInputClear
-  filterInputClear:SetWidth(12)
-  filterInputClear:SetHeight(12)
-  filterInputClear:SetPoint("RIGHT", filterInput, "RIGHT", -4, -1)
-  filterInputClear:SetNormalTexture("Interface\\Common\\VoiceChat-Muted")
-  filterInputClear:SetHighlightTexture("Interface\\BUTTONS\\UI-Panel-MinimizeButton-Highlight.blp")
-  filterInputClear:SetScript("OnClick", function() filterInput:SetText("") filterInput:ClearFocus() end)
-  filterInputClear:Hide()
 
   -- Left Side Container
   local buttonsContainer = AceGUI:Create("InlineGroup")

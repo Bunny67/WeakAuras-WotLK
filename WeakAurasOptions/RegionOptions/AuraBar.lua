@@ -67,6 +67,13 @@ local function createOptions(id, data)
       name = L["Inverse"],
       order = 35
     },
+    smoothProgress = {
+      type = "toggle",
+      width = WeakAuras.normalWidth,
+      name = L["Smooth Progress"],
+      desc = L["Animates progress changes"],
+      order = 37
+    },
     useTooltip = {
       type = "toggle",
       width = WeakAuras.normalWidth,
@@ -621,6 +628,7 @@ local templates = {
       height = 30,
       barColor = { 0, 1, 0, 1},
       inverse = true,
+      smoothProgress = true,
     }
   },
   {
@@ -631,6 +639,7 @@ local templates = {
       barColor = { 0, 1, 0, 1},
       orientation = "VERTICAL_INVERSE",
       inverse = true,
+      smoothProgress = true,
     }
   },
 }

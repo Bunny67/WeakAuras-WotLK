@@ -596,7 +596,7 @@ function OptionsPrivate.CreateFrame()
     else
       self.Instructions:Hide()
     end
-    OptionsPrivate.SortDisplayButtons(filterInput:GetText())
+    WeakAuras.SortDisplayButtons(filterInput:GetText())
   end)
   filterInput:SetHeight(15)
   filterInput:SetPoint("TOP", frame, "TOP", 0, -44)

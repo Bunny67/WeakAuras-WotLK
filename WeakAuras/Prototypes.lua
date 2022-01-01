@@ -1639,6 +1639,14 @@ Private.event_prototypes = {
         conditionType = "number"
       },
       {
+        name = "deficit",
+        display = L["Health Deficit"],
+        type = "number",
+        init = "total - value",
+        store = true,
+        conditionType = "number"
+      },
+      {
         name = "name",
         display = L["Unit Name"],
         type = "string",
@@ -1859,6 +1867,14 @@ Private.event_prototypes = {
         display = L["Power (%)"],
         type = "number",
         init = "total ~= 0 and (value / total) * 100",
+        store = true,
+        conditionType = "number"
+      },
+      {
+        name = "deficit",
+        display = L["Power Deficit"],
+        type = "number",
+        init = "total - value",
         store = true,
         conditionType = "number"
       },

@@ -1808,9 +1808,6 @@ do
 
   local spellCds = CreateSpellCDHandler();
   local spellCdsRune = CreateSpellCDHandler();
-  local spellCdsOnlyCooldown = CreateSpellCDHandler();
-  local spellCdsOnlyCooldownRune = CreateSpellCDHandler();
-  local spellCdsCharges = CreateSpellCDHandler();
 
   local spellIds = {}
 
@@ -1866,17 +1863,9 @@ do
     end
   end
 
-  function WeakAuras.GetSpellCooldown(id, ignoreRuneCD, showgcd, track)
+  function WeakAuras.GetSpellCooldown(id, ignoreRuneCD, showgcd)
     local startTime, duration, gcdCooldown, readyTime
-    if track == "charges" then
-      startTime, duration, readyTime = spellCdsCharges:FetchSpellCooldown(id)
-    elseif track == "cooldown" then
-      if ignoreRuneCD then
-        startTime, duration, readyTime = spellCdsOnlyCooldownRune:FetchSpellCooldown(id)
-      else
-        startTime, duration, readyTime = spellCdsOnlyCooldown:FetchSpellCooldown(id)
-      end
-    elseif (ignoreRuneCD) then
+    if (ignoreRuneCD) then
       startTime, duration, readyTime = spellCdsRune:FetchSpellCooldown(id)
     else
       startTime, duration, readyTime = spellCds:FetchSpellCooldown(id)
@@ -2036,7 +2025,7 @@ do
     end
 
     -- Default to GetSpellCharges
-    local unifiedCooldownBecauseRune, cooldownBecauseRune = false, false;
+    local cooldownBecauseRune = false;
     if (enabled == 0) then
       startTimeCooldown, durationCooldown = 0, 0
     end
@@ -2044,10 +2033,9 @@ do
     local onNonGCDCD = durationCooldown and startTimeCooldown and durationCooldown > 0 and (durationCooldown ~= gcdDuration or startTimeCooldown ~= gcdStart);
     if (onNonGCDCD) then
       cooldownBecauseRune = runeDuration and durationCooldown and abs(durationCooldown - runeDuration) < 0.001;
-      unifiedCooldownBecauseRune = cooldownBecauseRune
     end
 
-    return startTimeCooldown, durationCooldown, unifiedCooldownBecauseRune, cooldownBecauseRune, GetSpellCount(id);
+    return startTimeCooldown, durationCooldown, cooldownBecauseRune, GetSpellCount(id);
   end
 
   function Private.CheckSpellKnown()
@@ -2063,7 +2051,7 @@ do
   end
 
   function Private.CheckSpellCooldown(id, runeDuration)
-    local startTimeCooldown, durationCooldown, unifiedCooldownBecauseRune, cooldownBecauseRune, spellCount = WeakAuras.GetSpellCooldownUnified(id, runeDuration);
+    local startTimeCooldown, durationCooldown, cooldownBecauseRune, spellCount = WeakAuras.GetSpellCooldownUnified(id, runeDuration);
 
     local time = GetTime();
     local remaining = startTimeCooldown + durationCooldown - time;
@@ -2079,14 +2067,10 @@ do
       chargesChanged = true
     end
 
-    changed = spellCds:HandleSpell(id, startTimeCooldown, durationCooldown) or changed
-    if not unifiedCooldownBecauseRune then
-      changed = spellCdsRune:HandleSpell(id, startTimeCooldown, durationCooldown) or changed
-    end
-    local cdChanged, nowReady = spellCdsOnlyCooldown:HandleSpell(id, startTimeCooldown, durationCooldown)
+    local cdChanged, nowReady = spellCds:HandleSpell(id, startTimeCooldown, durationCooldown)
     changed = cdChanged or changed
     if not cooldownBecauseRune then
-      changed = spellCdsOnlyCooldownRune:HandleSpell(id, startTimeCooldown, durationCooldown) or changed
+      changed = spellCdsRune:HandleSpell(id, startTimeCooldown, durationCooldown) or changed
     end
 
     if not WeakAuras.IsPaused() then
@@ -2292,15 +2276,11 @@ do
     spellIds[id] = id
     spellKnown[id] = WeakAuras.IsSpellKnownIncludingPet(id);
 
-    local startTimeCooldown, durationCooldown, unifiedCooldownBecauseRune, cooldownBecauseRune, spellCount = WeakAuras.GetSpellCooldownUnified(id, GetRuneDuration());
+    local startTimeCooldown, durationCooldown, cooldownBecauseRune, spellCount = WeakAuras.GetSpellCooldownUnified(id, GetRuneDuration());
     spellCounts[id] = spellCount
     spellCds:HandleSpell(id, startTimeCooldown, durationCooldown)
-    if not unifiedCooldownBecauseRune then
-      spellCdsRune:HandleSpell(id, startTimeCooldown, durationCooldown)
-    end
-    spellCdsOnlyCooldown:HandleSpell(id, startTimeCooldown, durationCooldown)
     if not cooldownBecauseRune then
-      spellCdsOnlyCooldownRune:HandleSpell(id, startTimeCooldown, durationCooldown)
+      spellCdsRune:HandleSpell(id, startTimeCooldown, durationCooldown)
     end
   end
 

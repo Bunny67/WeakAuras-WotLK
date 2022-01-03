@@ -2459,8 +2459,7 @@ Private.event_prototypes = {
         local spellname = %s
         local ignoreRuneCD = %s
         local showgcd = %s;
-        local track = %q
-        local startTime, duration, gcdCooldown = WeakAuras.GetSpellCooldown(spellname, ignoreRuneCD, showgcd, track);
+        local startTime, duration, gcdCooldown = WeakAuras.GetSpellCooldown(spellname, ignoreRuneCD, showgcd);
         local spellCount = WeakAuras.GetSpellCharges(spellname);
         local stacks = (spellCount and spellCount > 0 and spellCount) or nil;
         local genericShowOn = %s
@@ -2483,68 +2482,21 @@ Private.event_prototypes = {
       ret = ret:format(spellName,
         (trigger.use_matchedRune and "true" or "false"),
         (trigger.use_showgcd and "true" or "false"),
-        (trigger.track or "auto"),
         showOnCheck
       );
 
-      if (not trigger.use_trackcharge or not trigger.trackcharge) then
-        ret = ret .. [=[
-          if (state.expirationTime ~= expirationTime) then
-            state.expirationTime = expirationTime;
-            state.changed = true;
-          end
-          if (state.duration ~= duration) then
-            state.duration = duration;
-            state.changed = true;
-          end
-          state.progressType = 'timed';
-        ]=];
-      else
-        local ret2 = [=[
-          local trackedCharge = %s
-          if (charges < trackedCharge) then
-            if (state.value ~= duration) then
-              state.value = duration;
-              state.changed = true;
-            end
-            if (state.total ~= duration) then
-              state.total = duration;
-              state.changed = true;
-            end
+      ret = ret .. [=[
+        if (state.expirationTime ~= expirationTime) then
+          state.expirationTime = expirationTime;
+          state.changed = true;
+        end
+        if (state.duration ~= duration) then
+          state.duration = duration;
+          state.changed = true;
+        end
+        state.progressType = 'timed';
+      ]=];
 
-            state.expirationTime = nil;
-            state.duration = nil;
-            state.progressType = 'static';
-          elseif (charges > trackedCharge) then
-            if (state.expirationTime ~= 0) then
-              state.expirationTime = 0;
-              state.changed = true;
-            end
-            if (state.duration ~= 0) then
-              state.duration = 0;
-              state.changed = true;
-            end
-            state.value = nil;
-            state.total = nil;
-            state.progressType = 'timed';
-          else
-            if (state.expirationTime ~= expirationTime) then
-              state.expirationTime = expirationTime;
-              state.changed = true;
-              state.changed = true;
-            end
-            if (state.duration ~= duration) then
-              state.duration = duration;
-              state.changed = true;
-            end
-            state.value = nil;
-            state.total = nil;
-            state.progressType = 'timed';
-          end
-        ]=];
-        local trackedCharge = tonumber(trigger.trackcharge or 1) or 1;
-        ret = ret .. ret2:format(trackedCharge - 1);
-      end
       if(trigger.use_remaining and trigger.genericShowOn ~= "showOnReady") then
         local ret2 = [[
           local remaining = 0;
@@ -2579,11 +2531,6 @@ Private.event_prototypes = {
         display = function(trigger)
           return function()
             local text = "";
-            if trigger.track == "charges" then
-              text = L["Tracking Charge CDs"]
-            elseif trigger.track == "cooldown" then
-              text = L["Tracking Only Cooldown"]
-            end
             if trigger.use_showgcd then
               if text ~= "" then text = text .. "; " end
               text = text .. L["Show GCD"]
@@ -2594,12 +2541,6 @@ Private.event_prototypes = {
               text = text ..L["Ignore Rune CDs"]
             end
 
-            if trigger.genericShowOn ~= "showOnReady" and trigger.track ~= "cooldown" then
-              if trigger.use_trackcharge and trigger.trackcharge then
-                if text ~= "" then text = text .. "; " end
-                text = text .. L["Tracking Charge %i"]:format(trigger.trackcharge)
-              end
-            end
             if text == "" then
               return L["|cFFffcc00Extra Options:|r None"]
             end
@@ -2607,16 +2548,6 @@ Private.event_prototypes = {
           end
         end,
         type = "collapse",
-      },
-      {
-        name = "track",
-        display = L["Track Cooldowns"],
-        type = "select",
-        values = "cooldown_types",
-        collapse = "extra Cooldown Progress (Spell)",
-        test = "true",
-        required = true,
-        default = "auto"
       },
       {
         name = "showgcd",
@@ -2630,17 +2561,6 @@ Private.event_prototypes = {
         display = L["Ignore Rune CD"],
         type = "toggle",
         test = "true",
-        collapse = "extra Cooldown Progress (Spell)"
-      },
-      {
-        name = "trackcharge",
-        display = L["Show CD of Charge"],
-        type = "number",
-        enable = function(trigger)
-          return (trigger.genericShowOn ~= "showOnReady") and trigger.track ~= "cooldown"
-        end,
-        test = "true",
-        noOperator = true,
         collapse = "extra Cooldown Progress (Spell)"
       },
       {

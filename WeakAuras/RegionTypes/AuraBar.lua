@@ -930,6 +930,7 @@ local funcs = {
 
     iconPath = iconPath or self.displayIcon or "Interface\\Icons\\INV_Misc_QuestionMark"
     self.icon:SetTexture(iconPath)
+    self.icon:SetDesaturated(self.desaturateIcon);
   end,
   SetOverlayColor = function(self, id, r, g, b, a)
     self.bar:SetAdditionalBarColor(id, { r, g, b, a});
@@ -1134,7 +1135,6 @@ local function modify(parent, region, data)
     region.bar.iconHeight = iconsize
     local texWidth = 0.25 * data.zoom;
     icon:SetTexCoord(GetTexCoordZoom(texWidth))
-    icon:SetDesaturated(data.desaturate);
     icon:SetVertexColor(data.icon_color[1], data.icon_color[2], data.icon_color[3], data.icon_color[4]);
 
     -- Update icon visibility

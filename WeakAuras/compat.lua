@@ -145,21 +145,3 @@ if not SmoothStatusBarMixin then
 	end
 end
 
-do
-	local texture_mt = getmetatable(CreateFrame("Frame"):CreateTexture()).__index
-
-	local setDesaturated = texture_mt.SetDesaturated
-	texture_mt.SetDesaturated = function(self, desaturated, ...)
-		self._isDesaturated = desaturated
-		return setDesaturated(self, desaturated, ...)
-	end
-
-	local setTexture = texture_mt.SetTexture
-	texture_mt.SetTexture = function(self, ...)
-		local isDesaturated = self._isDesaturated
-		local apply = setTexture(self, ...)
-		self:SetDesaturated(isDesaturated)
-		return apply
-	end
-end
-

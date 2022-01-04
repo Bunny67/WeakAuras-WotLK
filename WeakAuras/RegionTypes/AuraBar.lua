@@ -986,7 +986,7 @@ end
 local function setTexture(self, ...)
   local apply = self._SetTexture(self, ...)
   if self.isDesaturated ~= nil then
-    self:SetDesaturated(self.isDesaturated)
+    self:_SetDesaturated(self.isDesaturated)
   end
   return apply
 end

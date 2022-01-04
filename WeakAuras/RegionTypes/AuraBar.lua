@@ -978,6 +978,19 @@ local funcs = {
   end
 }
 
+local function setDesaturated(self, desaturated, ...)
+  self.isDesaturated = desaturated and 1 or 0
+  return self._SetDesaturated(self, desaturated, ...)
+end
+
+local function setTexture(self, ...)
+  local apply = self._SetTexture(self, ...)
+  if self.isDesaturated ~= nil then
+    self._SetDesaturated(self, self._isDesaturated)
+  end
+  return apply
+end
+
 -- Called when first creating a new region/display
 local function create(parent)
   -- Create overall region (containing everything else)
@@ -1012,6 +1025,11 @@ local function create(parent)
   local icon = iconFrame:CreateTexture(nil, "OVERLAY");
   region.icon = icon;
   icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark");
+
+  icon._SetDesaturated = self.SetDesaturated
+  icon.SetDesaturated = setDesaturated
+  icon._SetTexture = self._SetTexture
+  icon.SetTexture = setTexture
 
   -- Region variables
   region.values = {};

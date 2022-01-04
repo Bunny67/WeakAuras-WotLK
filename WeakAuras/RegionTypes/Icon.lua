@@ -174,6 +174,19 @@ local function AnchorSubRegion(self, subRegion, anchorType, selfPoint, anchorPoi
   end
 end
 
+local function setDesaturated(self, desaturated, ...)
+  self.isDesaturated = desaturated and 1 or 0
+  return self._SetDesaturated(self, desaturated, ...)
+end
+
+local function setTexture(self, ...)
+  local apply = self._SetTexture(self, ...)
+  if self.isDesaturated ~= nil then
+    self._SetDesaturated(self, self._isDesaturated)
+  end
+  return apply
+end
+
 local function create(parent, data)
   local font = "GameFontHighlight";
 
@@ -225,6 +238,11 @@ local function create(parent, data)
   end
   region.icon = icon;
   icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark");
+
+  icon._SetDesaturated = self.SetDesaturated
+  icon.SetDesaturated = setDesaturated
+  icon._SetTexture = self._SetTexture
+  icon.SetTexture = setTexture
 
   --This section creates a unique frame id for the cooldown frame so that it can be created with a global reference
   --The reason is so that WeakAuras cooldown frames can interact properly with OmniCC (i.e., put on its ignore list for timer overlays)

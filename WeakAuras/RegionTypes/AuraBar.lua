@@ -986,7 +986,7 @@ end
 local function setTexture(self, ...)
   local apply = self._SetTexture(self, ...)
   if self.isDesaturated ~= nil then
-    self._SetDesaturated(self, self._isDesaturated)
+    self:SetDesaturated(self.isDesaturated)
   end
   return apply
 end
@@ -1026,9 +1026,9 @@ local function create(parent)
   region.icon = icon;
   icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark");
 
-  icon._SetDesaturated = self.SetDesaturated
+  icon._SetDesaturated = icon.SetDesaturated
   icon.SetDesaturated = setDesaturated
-  icon._SetTexture = self._SetTexture
+  icon._SetTexture = icon.SetTexture
   icon.SetTexture = setTexture
 
   -- Region variables

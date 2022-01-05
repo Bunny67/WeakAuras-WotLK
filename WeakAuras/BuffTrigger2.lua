@@ -468,7 +468,7 @@ local function UpdateStateWithMatch(time, bestMatch, triggerStates, cloneId, mat
       tooltip3 = bestMatch.tooltip3,
       affected = affected,
       unaffected = unaffected,
-      role = role,
+      role = role and _G[role],
       roleIcon = role and roleIcons[role],
       raidMark = raidMark,
       totalStacks = totalStacks,
@@ -494,8 +494,9 @@ local function UpdateStateWithMatch(time, bestMatch, triggerStates, cloneId, mat
       changed = true
     end
 
-    if state.role ~= role then
-      state.role = role
+    local localeRole = role and _G[role]
+    if localeRole and state.role ~= localeRole then
+      state.role = localeRole
       state.roleIcon = roleIcons[role]
       changed = true
     end
@@ -669,7 +670,7 @@ local function UpdateStateWithNoMatch(time, triggerStates, triggerInfo, cloneId,
       name = fallbackName,
       icon = fallbackIcon,
       totalStacks = totalStacks,
-      role = role,
+      role = role and _G[role],
       roleIcon = role and roleIcons[role],
       raidMark = raidMark,
     }
@@ -725,8 +726,9 @@ local function UpdateStateWithNoMatch(time, triggerStates, triggerInfo, cloneId,
       changed = true
     end
 
-    if state.role ~= role then
-      state.role = role
+    local localeRole = role and _G[role]
+    if state.role ~= localeRole then
+      state.role = localeRole
       state.roleIcon = roleIcons[role]
       changed = true
     end

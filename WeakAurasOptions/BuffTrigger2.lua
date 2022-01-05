@@ -490,6 +490,24 @@ local function GetBuffTriggerOptions(data, triggernum)
       order = 61.7,
       hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and not trigger.useTotal) end
     },
+    fetchRole = {
+      type = "toggle",
+      name = L["Add Role Information"],
+      desc = L["This adds %role, %roleIcon as text replacements."],
+      order = 61.8,
+      width = WeakAuras.doubleWidth,
+      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi") end
+    },
+    fetchRaidMark = {
+      type = "toggle",
+      name = L["Add Raid Mark Information"],
+      desc = L["This adds %raidMark as text replacements."],
+      order = 61.9,
+      width = WeakAuras.doubleWidth,
+      hidden = function()
+        return not (trigger.type == "aura2" and trigger.unit ~= "multi")
+      end
+    },
     fetchTooltip = {
       type = "toggle",
       name = L["Use Tooltip Information"],
@@ -636,10 +654,34 @@ local function GetBuffTriggerOptions(data, triggernum)
       order = 66,
       hidden = function() return not trigger.type == "aura2" end
     },
+    useGroupRole = {
+      type = "toggle",
+      width = WeakAuras.normalWidth,
+      name = L["Filter by Group Role"],
+      order = 67.1,
+      hidden = function() return
+        not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party"))
+      end
+    },
+    group_role = {
+      type = "multiselect",
+      width = WeakAuras.normalWidth,
+      name = L["Group Role"],
+      values = OptionsPrivate.Private.role_types,
+      hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party") and trigger.useGroupRole) end,
+      order = 67.2
+    },
+    group_roleSpace = {
+      type = "description",
+      name = "",
+      order = 67.2,
+      width = WeakAuras.normalWidth,
+      hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party") and not trigger.useGroupRole) end
+    },
     ignoreSelf = {
       type = "toggle",
       name = L["Ignore Self"],
-      order = 67.3,
+      order = 67.8,
       width = WeakAuras.doubleWidth,
       hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")) end
     },

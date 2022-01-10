@@ -2572,7 +2572,7 @@ Private.event_prototypes = {
         display = L["Spell"],
         type = "spell",
         test = "true",
-        forceExactOption = true,
+        showExactOption = true,
       },
       {
         name = "extra Cooldown Progress (Spell)",
@@ -4054,8 +4054,8 @@ Private.event_prototypes = {
         required = true,
         type = "spell",
         test = "true",
+        showExactOption = true,
         store = true,
-        conditionType = "string"
       },
       -- This parameter uses the IsSpellInRange API function, but it does not check spell range at all
       -- IsSpellInRange returns nil for invalid targets, 0 for out of range, 1 for in range (0 and 1 are both "positive" values)
@@ -6183,7 +6183,7 @@ Private.event_prototypes = {
         type = "spell",
         test = "true",
         conditionType = "number",
-        forceExactOption = true
+        showExactOption = true
       },
       {
         name = "petspell",

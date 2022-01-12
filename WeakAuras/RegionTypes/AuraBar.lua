@@ -854,7 +854,6 @@ local funcs = {
     else
       self.bar:SetValue(1 - self.bar:GetValue());
     end
-    self.bar:SetAdditionalBarsInverse(not self.bar:GetAdditionalBarsInverse())
     self.subRegionEvents:Notify("InverseChanged")
   end,
   SetOrientation = function(self, orientation)

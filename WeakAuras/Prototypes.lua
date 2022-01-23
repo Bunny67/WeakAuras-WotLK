@@ -1560,11 +1560,15 @@ Private.event_prototypes = {
       AddUnitEventForEvents(result, unit, "UNIT_DISPLAYPOWER")
       AddUnitEventForEvents(result, unit, "UNIT_HAPPINESS")
       AddUnitEventForEvents(result, unit, "UNIT_NAME_UPDATE")
-
       if trigger.use_ignoreDead or trigger.use_ignoreDisconnected then
         AddUnitEventForEvents(result, unit, "UNIT_FLAGS")
       end
-
+      if unit and not Private.multiUnitUnits[unit] then
+        if not result.events then
+          result.events = {}
+        end
+        tinsert(result.events, "FRAME_UPDATE")
+      end
       return result;
     end,
     internal_events = function(trigger)

@@ -563,6 +563,8 @@ local function RunTriggerFunc(allStates, data, id, triggernum, event, arg1, arg2
         else
           arg1 = data.trigger.unit
         end
+      elseif event == "FRAME_UPDATE" and not Private.multiUnitUnits[data.trigger.unit] then
+        arg1 = data.trigger.unit
       end
       if arg1 then
         if Private.multiUnitUnits[data.trigger.unit] then

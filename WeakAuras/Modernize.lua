@@ -990,6 +990,8 @@ function Private.Modernize(data)
       ["Crowd Controlled"] = "unit",
       ["Cooldown Progress (Equipment Slot)"] = "item",
       ["Combat Events"] = "event",
+      ["Eclipse Direction"] = "unit",
+      ["Faction Reputation"] = "unit",
       ["Combo Points"] = "unit",
     }
 

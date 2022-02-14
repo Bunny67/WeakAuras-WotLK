@@ -5056,6 +5056,28 @@ Private.event_prototypes = {
     end,
     automaticrequired = true,
   },
+  ["Eclipse Direction"] = {
+    type = "unit",
+    events = {
+      ["unit_events"] = {
+        ["player"] = { "UNIT_POWER_FREQUENT" }
+      }
+    },
+    internal_events = { "WA_DELAYED_PLAYER_ENTERING_WORLD" },
+    force_events = "WA_DELAYED_PLAYER_ENTERING_WORLD",
+    name = L["Eclipse Direction"],
+    args = {
+      {
+        name = "eclipse_direction",
+        -- required = true,
+        display = L["Eclipse Direction"],
+        type = "select",
+        values = "eclipse_types",
+        init = "GetEclipseDirection()",
+      }
+    },
+    automaticrequired = true
+  },
   ["Item Equipped"] = {
     type = "item",
     events = {

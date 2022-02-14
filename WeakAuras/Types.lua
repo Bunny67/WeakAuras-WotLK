@@ -784,6 +784,11 @@ Private.actual_unit_types_cast = {
   member = L["Specific Unit"],
 }
 
+Private.eclipse_types = {
+  moon = L["Lunar"],
+  sun = L["Solar"]
+};
+
 Private.actual_unit_types = { -- TODO
   player = L["Player"],
   target = L["Target"],

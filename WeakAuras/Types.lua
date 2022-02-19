@@ -3070,6 +3070,30 @@ Private.reset_ranged_swing_spells = {
   [GetSpellInfo(75)] = true, -- Auto Shot
 }
 
+
+Private.item_weapon_types = {}
+
+local skippedWeaponTypes = {
+  [268] = true, -- misc
+  [513] = true, -- misc
+  [514] = true, -- cloth
+  [515] = true, -- leather
+  [516] = true, -- mail
+  [517] = true, -- plate
+}
+
+for classId = 1, 2 do
+  for i, subClass in ipairs({GetAuctionItemSubClasses(classId)}) do
+    local weaponStoreId = classId * 256 + i
+    if not skippedWeaponTypes[weaponStoreId] then
+      Private.item_weapon_types[weaponStoreId] = subClass
+    end
+  end
+end
+
+WeakAuras.item_weapon_types = Private.item_weapon_types
+
+
 WeakAuras.StopMotion = {}
 WeakAuras.StopMotion.texture_types = {
 }

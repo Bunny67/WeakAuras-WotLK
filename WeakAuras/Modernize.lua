@@ -976,6 +976,7 @@ function Private.Modernize(data)
       ["BigWigs Timer"] = "addons",
       ["DBM Timer"] = "addons",
       ["Item Equipped"] = "item",
+      ["Item Type Equipped"] = "item",
       ["DBM Announce"] = "addons",
       ["Swing Timer"] = "unit",
       ["Totem"] = "spell",

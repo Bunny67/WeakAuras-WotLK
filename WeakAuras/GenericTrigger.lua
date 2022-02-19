@@ -2981,6 +2981,12 @@ do
   end
 end
 
+WeakAuras.GetItemSubClassInfo = function(i)
+  local subClassId = i % 256
+  local classId = (i - subClassId) / 256
+  return select(subClassId, GetAuctionItemSubClasses(classId))
+end
+
 -- Pets
 do
   local petFrame = nil

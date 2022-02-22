@@ -2114,7 +2114,8 @@ Private.string_operator_types = {
 
 Private.weapon_types = {
   ["main"] = MAINHANDSLOT,
-  ["off"] = SECONDARYHANDSLOT
+  ["off"] = SECONDARYHANDSLOT,
+  ["thrown"] = RANGEDSLOT,
 }
 
 Private.swing_types = {

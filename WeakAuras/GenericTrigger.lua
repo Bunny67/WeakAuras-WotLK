@@ -2893,12 +2893,16 @@ end
 do
   local mh = GetInventorySlotInfo("MainHandSlot")
   local oh = GetInventorySlotInfo("SecondaryHandSlot")
+  local th = GetInventorySlotInfo("RangedSlot")
 
   local mh_name, mh_shortenedName, mh_exp, mh_dur, mh_charges;
   local mh_icon = GetInventoryItemTexture("player", mh) or "Interface\\Icons\\INV_Misc_QuestionMark"
 
   local oh_name, oh_shortenedName, oh_exp, oh_dur, oh_charges;
   local oh_icon = GetInventoryItemTexture("player", oh) or "Interface\\Icons\\INV_Misc_QuestionMark"
+
+  local th_name, th_shortenedName, th_exp, th_dur, th_charges;
+  local th_icon = GetInventoryItemTexture("player", th) or "Interface\\Icons\\INV_Misc_QuestionMark"
 
   local tenchFrame = nil
   WeakAuras.frames["Temporary Enchant Handler"] = tenchFrame;
@@ -2931,11 +2935,12 @@ do
 
       local function tenchUpdate()
         Private.StartProfileSystem("generictrigger");
-        local _, mh_rem, oh_rem
-        _, mh_rem, mh_charges, _, oh_rem, oh_charges = GetWeaponEnchantInfo();
+        local mh_rem, oh_rem, th_rem
+        _, mh_rem, mh_charges, _, oh_rem, oh_charges, _, th_rem, th_charges = GetWeaponEnchantInfo();
         local time = GetTime();
         local mh_exp_new = mh_rem and (time + (mh_rem / 1000));
         local oh_exp_new = oh_rem and (time + (oh_rem / 1000));
+        local th_exp_new = th_rem and (time + (th_rem / 1000));
         if(math.abs((mh_exp or 0) - (mh_exp_new or 0)) > 1) then
           mh_exp = mh_exp_new;
           mh_dur = mh_rem and mh_rem / 1000;
@@ -2955,6 +2960,16 @@ do
             oh_name, oh_shortenedName = "None", "None"
           end
           oh_icon = GetInventoryItemTexture("player", oh)
+        end
+        if(math.abs((th_exp or 0) - (th_exp_new or 0)) > 1) then
+          th_exp = th_exp_new;
+          th_dur = th_rem and th_rem / 1000;
+          if th_exp then
+            th_name, th_shortenedName = getTenchName(th)
+          else
+            th_name, th_shortenedName = "None", "None"
+          end
+          th_icon = GetInventoryItemTexture("player", th)
         end
         WeakAuras.ScanEvents("TENCH_UPDATE");
         Private.StopProfileSystem("generictrigger");
@@ -2978,6 +2993,10 @@ do
 
   function WeakAuras.GetOHTenchInfo()
     return oh_exp, oh_dur, oh_name, oh_shortenedName, oh_icon, oh_charges;
+  end
+
+  function WeakAuras.GetTHTenchInfo()
+    return th_exp, th_dur, th_name, th_shortenedName, th_icon, th_charges;
   end
 end
 

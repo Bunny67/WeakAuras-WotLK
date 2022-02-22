@@ -4611,8 +4611,10 @@ Private.event_prototypes = {
 
         if triggerWeaponType == "main" then
           expirationTime, duration, name, shortenedName, icon, stacks = WeakAuras.GetMHTenchInfo()
-        else
+        elseif triggerWeaponType == "off" then
           expirationTime, duration, name, shortenedName, icon, stacks = WeakAuras.GetOHTenchInfo()
+        else
+          expirationTime, duration, name, shortenedName, icon, stacks = WeakAuras.GetTHTenchInfo()
         end
 
         local remaining = expirationTime and expirationTime - GetTime()

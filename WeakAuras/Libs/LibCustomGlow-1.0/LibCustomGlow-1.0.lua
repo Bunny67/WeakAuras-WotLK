@@ -623,14 +623,14 @@ local function configureButtonGlow(f, alpha)
 	f.spark = f:CreateTexture(nil, "BACKGROUND")
 	f.spark:SetPoint("CENTER")
 	f.spark:SetAlpha(0)
-	f.spark:SetTexture([[Interface\AddOns\WeakAuras\Libs\LibCustomGlow-1.0\IconAlert]])
+	f.spark:SetTexture([[Interface\SpellActivationOverlay\IconAlert]])
 	f.spark:SetTexCoord(0.00781250, 0.61718750, 0.00390625, 0.26953125)
 
 	-- inner glow
 	f.innerGlow = f:CreateTexture()
 	f.innerGlow:SetPoint("CENTER")
 	f.innerGlow:SetAlpha(0)
-	f.innerGlow:SetTexture([[Interface\AddOns\WeakAuras\Libs\LibCustomGlow-1.0\IconAlert]])
+	f.innerGlow:SetTexture([[Interface\SpellActivationOverlay\IconAlert]])
 	f.innerGlow:SetTexCoord(0.00781250, 0.50781250, 0.27734375, 0.52734375)
 	f.innerGlow:Show()
 
@@ -639,14 +639,14 @@ local function configureButtonGlow(f, alpha)
 	f.innerGlowOver:SetPoint("TOPLEFT", f.innerGlow, "TOPLEFT")
 	f.innerGlowOver:SetPoint("BOTTOMRIGHT", f.innerGlow, "BOTTOMRIGHT")
 	f.innerGlowOver:SetAlpha(0)
-	f.innerGlowOver:SetTexture([[Interface\AddOns\WeakAuras\Libs\LibCustomGlow-1.0\IconAlert]])
+	f.innerGlowOver:SetTexture([[Interface\SpellActivationOverlay\IconAlert]])
 	f.innerGlowOver:SetTexCoord(0.00781250, 0.50781250, 0.53515625, 0.78515625)
 
 	-- outer glow
 	f.outerGlow = f:CreateTexture()
 	f.outerGlow:SetPoint("CENTER")
 	f.outerGlow:SetAlpha(0)
-	f.outerGlow:SetTexture([[Interface\AddOns\WeakAuras\Libs\LibCustomGlow-1.0\IconAlert]])
+	f.outerGlow:SetTexture([[Interface\SpellActivationOverlay\IconAlert]])
 	f.outerGlow:SetTexCoord(0.00781250, 0.50781250, 0.27734375, 0.52734375)
 
 	-- outer glow over
@@ -654,14 +654,14 @@ local function configureButtonGlow(f, alpha)
 	f.outerGlowOver:SetPoint("TOPLEFT", f.outerGlow, "TOPLEFT")
 	f.outerGlowOver:SetPoint("BOTTOMRIGHT", f.outerGlow, "BOTTOMRIGHT")
 	f.outerGlowOver:SetAlpha(0)
-	f.outerGlowOver:SetTexture([[Interface\AddOns\WeakAuras\Libs\LibCustomGlow-1.0\IconAlert]])
+	f.outerGlowOver:SetTexture([[Interface\SpellActivationOverlay\IconAlert]])
 	f.outerGlowOver:SetTexCoord(0.00781250, 0.50781250, 0.53515625, 0.78515625)
 
 	-- ants
 	f.ants = f:CreateTexture(nil, "OVERLAY")
 	f.ants:SetPoint("CENTER")
 	f.ants:SetAlpha(0)
-	f.ants:SetTexture([[Interface\AddOns\WeakAuras\Libs\LibCustomGlow-1.0\IconAlertAnts]])
+	f.ants:SetTexture([[Interface\SpellActivationOverlay\IconAlertAnts]])
 
 	f.animIn = f:CreateAnimationGroup()
 	f.animIn.appear = {}

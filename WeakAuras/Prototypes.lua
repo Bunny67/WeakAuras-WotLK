@@ -1380,7 +1380,6 @@ Private.event_prototypes = {
         if tonumber(standingId) then
            standing = getglobal("FACTION_STANDING_LABEL"..standingId)
         end
-        print(standing)
       ]=]
       return ret:format(trigger.factionID or 0)
     end,

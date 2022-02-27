@@ -2382,7 +2382,8 @@ function WeakAuras.WatchUnitChange(unit)
     watchUnitChange:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT");
     watchUnitChange:RegisterEvent("PARTY_MEMBERS_CHANGED");
     watchUnitChange:RegisterEvent("RAID_ROSTER_UPDATE");
-    watchUnitChange:RegisterEvent("PLAYER_ENTERING_WORLD")
+    watchUnitChange:RegisterEvent("PLAYER_ENTERING_WORLD");
+    watchUnitChange:RegisterEvent("PLAYER_ROLES_ASSIGNED");
 
     watchUnitChange:SetScript("OnEvent", function(self, event, unit)
       Private.StartProfileSystem("generictrigger unit change");
@@ -2397,6 +2398,12 @@ function WeakAuras.WatchUnitChange(unit)
           -- If in raid changed we send a UNIT_CHANGED for the group units
           if inRaid ~= watchUnitChange.inRaid then
             WeakAuras.ScanEvents("UNIT_CHANGED_" .. unit, unit)
+          else
+            local newRole = UnitGroupRolesAssigned(unit)
+            if watchUnitChange.unitRoles[unit] ~= newRole then
+              watchUnitChange.unitRoles[unit] = newRole
+              WeakAuras.ScanEvents("UNIT_ROLE_CHANGED_" .. unit, unit)
+            end
           end
         end
       end

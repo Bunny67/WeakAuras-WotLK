@@ -1034,6 +1034,20 @@ local function AddUnitChangeInternalEvents(triggerUnit, t)
   end
 end
 
+local function AddUnitRoleChangeInternalEvents(triggerUnit, t)
+  if (triggerUnit == nil) then
+    return
+  end
+
+  if Private.multiUnitUnits[triggerUnit] then
+    for unit in pairs(Private.multiUnitUnits[triggerUnit]) do
+      tinsert(t, "UNIT_ROLE_CHANGED_" .. string.lower(unit))
+    end
+  else
+    tinsert(t, "UNIT_ROLE_CHANGED_" .. string.lower(triggerUnit))
+  end
+end
+
 local function AddUnitEventForEvents(result, unit, event)
   if unit then
     if not result.unit_events then
@@ -1157,6 +1171,7 @@ Private.event_prototypes = {
       if trigger.unitisunit then
         AddUnitChangeInternalEvents(trigger.unitisunit, result)
       end
+      AddUnitRoleChangeInternalEvents(unit, result)
       return result
     end,
     force_events = unitHelperFunctions.UnitChangedForceEvents,
@@ -1583,6 +1598,7 @@ Private.event_prototypes = {
       local unit = trigger.unit
       local result = {}
       AddUnitChangeInternalEvents(unit, result)
+      AddUnitRoleChangeInternalEvents(unit, result)
       return result
     end,
     force_events = unitHelperFunctions.UnitChangedForceEvents,
@@ -1791,6 +1807,7 @@ Private.event_prototypes = {
       local unit = trigger.unit
       local result = {}
       AddUnitChangeInternalEvents(unit, result)
+      AddUnitRoleChangeInternalEvents(unit, result)
 
       return result
     end,
@@ -5402,6 +5419,7 @@ Private.event_prototypes = {
       local unit = trigger.unit
       local result = {"CAST_REMAINING_CHECK_" .. string.lower(unit)}
       AddUnitChangeInternalEvents(unit, result)
+      AddUnitRoleChangeInternalEvents(unit, result)
       return result
     end,
     loadFunc = function(trigger)

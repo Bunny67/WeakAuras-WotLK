@@ -218,7 +218,7 @@ end
 
 local function Diff(ours, theirs)
   if not ignoredForDiffChecking then
-    ignoredForDiffChecking = CreateFromMixins(OptionsPrivate.Private.internal_fields,
+    ignoredForDiffChecking = WeakAuras.Mixin({}, OptionsPrivate.Private.internal_fields,
     OptionsPrivate.Private.non_transmissable_fields)
   end
 

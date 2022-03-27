@@ -15,24 +15,21 @@ local hiddenAll = OptionsPrivate.commonOptions.CreateHiddenAll("region")
 local getAll = OptionsPrivate.commonOptions.CreateGetAll("region")
 local setAll = OptionsPrivate.commonOptions.CreateSetAll("region", getAll)
 
-local function AddSubRegionImpl(data, subRegionName)
-  data.subRegions = data.subRegions or {}
-  if OptionsPrivate.Private.subRegionTypes[subRegionName] and OptionsPrivate.Private.subRegionTypes[subRegionName] then
-    if OptionsPrivate.Private.subRegionTypes[subRegionName].supports(data.regionType) then
-      local default = OptionsPrivate.Private.subRegionTypes[subRegionName].default
-      local subRegionData = type(default) == "function" and default(data.regionType) or CopyTable(default)
-      subRegionData.type = subRegionName
-      tinsert(data.subRegions, subRegionData)
-      WeakAuras.Add(data)
-      WeakAuras.ClearAndUpdateOptions(data.id)
+local function AddSubRegion(data, subRegionName)
+  for data in OptionsPrivate.Private.TraverseLeafsOrAura(data) do
+    data.subRegions = data.subRegions or {}
+    if OptionsPrivate.Private.subRegionTypes[subRegionName] and OptionsPrivate.Private.subRegionTypes[subRegionName] then
+      if OptionsPrivate.Private.subRegionTypes[subRegionName].supports(data.regionType) then
+        local default = OptionsPrivate.Private.subRegionTypes[subRegionName].default
+        local subRegionData = type(default) == "function" and default(data.regionType) or CopyTable(default)
+        subRegionData.type = subRegionName
+        tinsert(data.subRegions, subRegionData)
+        WeakAuras.Add(data)
+        OptionsPrivate.ClearOptions(data.id)
+      end
     end
   end
-end
-
-local function AddSubRegion(data, subRegionName)
-  if (OptionsPrivate.Private.ApplyToDataOrChildData(data, AddSubRegionImpl, subRegionName)) then
-    WeakAuras.ClearAndUpdateOptions(data.id)
-  end
+  WeakAuras.ClearAndUpdateOptions(data.id)
 end
 
 local function AddOptionsForSupportedSubRegion(regionOption, data, supported)
@@ -183,12 +180,7 @@ function OptionsPrivate.GetDisplayOptions(data)
         end
         WeakAuras.Add(data);
         WeakAuras.UpdateThumbnail(data);
-        if(data.parent) then
-          local parentData = WeakAuras.GetData(data.parent);
-          if(parentData) then
-            WeakAuras.Add(parentData);
-          end
-        end
+        OptionsPrivate.Private.AddParents(data)
         OptionsPrivate.ResetMoverSizer();
       end,
       args = options
@@ -209,33 +201,32 @@ function OptionsPrivate.GetDisplayOptions(data)
     local supportedSubRegions = {}
     local hasSubElements = false
 
-    for index, childId in ipairs(data.controlledChildren) do
-      local childData = WeakAuras.GetData(childId);
-      if childData and not handledRegionTypes[childData.regionType] then
-        handledRegionTypes[childData.regionType] = true;
-        if regionOptions[childData.regionType] then
-          allOptions = union(allOptions, regionOptions[childData.regionType].create(id, data));
+    for child in OptionsPrivate.Private.TraverseLeafs(data) do
+      if child and not handledRegionTypes[child.regionType] then
+        handledRegionTypes[child.regionType] = true;
+        if regionOptions[child.regionType] then
+          allOptions = union(allOptions, regionOptions[child.regionType].create(id, data));
         else
           unsupportedCount = unsupportedCount + 1
           allOptions["__unsupported" .. unsupportedCount] =  {
-            __title = "|cFFFFFF00" .. childData.regionType,
+            __title = "|cFFFFFF00" .. child.regionType,
             __order = 1,
             warning = {
               type = "description",
-              name = L["Regions of type \"%s\" are not supported."]:format(childData.regionType),
+              name = L["Regions of type \"%s\" are not supported."]:format(child.regionType),
               order = 1
             },
           }
         end
         for subRegionName, subRegionType in pairs(OptionsPrivate.Private.subRegionTypes) do
-          if subRegionType.supports(childData.regionType) then
+          if subRegionType.supports(child.regionType) then
             supportedSubRegions[subRegionName] = true
           end
         end
       end
-      if childData.subRegions then
+      if child.subRegions then
         local subIndex = {}
-        for index, subRegionData in ipairs(childData.subRegions) do
+        for index, subRegionData in ipairs(child.subRegions) do
           local subRegionType = subRegionData.type
           local alreadyHandled = handledSubRegionTypes[index] and handledSubRegionTypes[index][subRegionType]
           if OptionsPrivate.Private.subRegionOptions[subRegionType] and not alreadyHandled then

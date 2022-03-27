@@ -8,7 +8,7 @@ WeakAuras.halfWidth = WeakAuras.normalWidth / 2
 WeakAuras.doubleWidth = WeakAuras.normalWidth * 2
 
 local versionStringFromToc = GetAddOnMetadata("WeakAuras", "Version")
-local versionString = "3.2.3"
+local versionString = "3.7.9"
 local buildTime = "20201210233053"
 
 WeakAuras.versionString = versionStringFromToc
@@ -24,8 +24,8 @@ function WeakAuras.IsCorrectVersion()
   return true
 end
 
-WeakAuras.prettyPrint = function(msg)
-  print("|cff9900ffWeakAuras:|r " .. msg)
+WeakAuras.prettyPrint = function(...)
+  print("|cff9900ffWeakAuras:|r ", ...)
 end
 
 if versionString ~= versionStringFromToc and versionStringFromToc ~= "Dev" then

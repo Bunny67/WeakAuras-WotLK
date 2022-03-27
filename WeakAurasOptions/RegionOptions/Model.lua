@@ -42,7 +42,7 @@ local function createOptions(id, data)
       width = WeakAuras.normalWidth,
       name = L["Animation Sequence"],
       min = 0,
-      max = 150,
+      softMax = 150,
       step = 1,
       bigStep = 1,
       order = 6,
@@ -106,7 +106,7 @@ local function createOptions(id, data)
   else
     options.model_path = {
       type = "input",
-      width = WeakAuras.doubleWidth,
+      width = WeakAuras.doubleWidth - 0.15,
       name = L["Model"],
       order = 1
     }

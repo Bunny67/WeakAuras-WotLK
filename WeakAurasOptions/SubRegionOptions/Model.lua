@@ -8,27 +8,7 @@ local function createOptions(parentData, data, index, subIndex)
   local options = {
     __title = L["Model %s"]:format(subIndex),
     __order = 1,
-    __up = function()
-      if (OptionsPrivate.Private.ApplyToDataOrChildData(parentData, OptionsPrivate.MoveSubRegionUp, index, "subbarmodel")) then
-        WeakAuras.ClearAndUpdateOptions(parentData.id)
-      end
-    end,
-    __down = function()
-      if (OptionsPrivate.Private.ApplyToDataOrChildData(parentData, OptionsPrivate.MoveSubRegionDown, index, "subbarmodel")) then
-        WeakAuras.ClearAndUpdateOptions(parentData.id)
-      end
-    end,
-    __duplicate = function()
-      if (OptionsPrivate.Private.ApplyToDataOrChildData(parentData, OptionsPrivate.DuplicateSubRegion, index, "subbarmodel")) then
-        WeakAuras.ClearAndUpdateOptions(parentData.id)
-      end
-    end,
-    __delete = function()
-      if (OptionsPrivate.Private.ApplyToDataOrChildData(parentData, WeakAuras.DeleteSubRegion, index, "subbarmodel")) then
-        WeakAuras.ClearAndUpdateOptions(parentData.id)
-      end
-    end,
-    bar_model_visible = {
+    model_visible = {
       type = "toggle",
       width = WeakAuras.doubleWidth,
       name = L["Show Model"],
@@ -36,27 +16,51 @@ local function createOptions(parentData, data, index, subIndex)
     },
     model_path = {
       type = "input",
-      width = WeakAuras.normalWidth,
+      width = WeakAuras.doubleWidth - 0.15,
       name = L["Model"],
-      order =  10
+      order =  10.5
     },
     chooseModel = {
       type = "execute",
-      width = WeakAuras.normalWidth,
+      width = 0.15,
       name = L["Choose"],
       order =  11,
       func = function()
-        OptionsPrivate.OpenModelPicker(data, parentData);
+        OptionsPrivate.OpenModelPicker(parentData, {"subRegions", index});
       end,
+      imageWidth = 24,
+      imageHeight = 24,
+      control = "WeakAurasIcon",
+      image = "Interface\\AddOns\\WeakAuras\\Media\\Textures\\browse",
     },
     bar_model_clip = {
       type = "toggle",
-      width = WeakAuras.normalWidth,
+      width = WeakAuras.doubleWidth,
       name = L["Clipped by Progress"],
       order = 12,
       hidden = function() return parentData.regionType ~= "aurabar" end
     },
-    bar_model_alpha = {
+    extra_width = {
+      type = "range",
+      width = WeakAuras.normalWidth,
+      name = L["Extra Width"],
+      order = 12.1,
+      softMin = -100,
+      softMax = 500,
+      step = 1,
+      hidden = function() return data.bar_model_clip and parentData.regionType == "aurabar" end
+    },
+    extra_height = {
+      type = "range",
+      width = WeakAuras.normalWidth,
+      name = L["Extra Height"],
+      order = 12.2,
+      softMin = -100,
+      softMax = 500,
+      step = 1,
+      hidden = function() return data.bar_model_clip and parentData.regionType == "aurabar" end
+    },
+    model_alpha = {
       type = "range",
       width = WeakAuras.normalWidth,
       name = L["Alpha"],
@@ -106,7 +110,10 @@ local function createOptions(parentData, data, index, subIndex)
       order = 45,
     },
   }
+
+  OptionsPrivate.AddUpDownDeleteDuplicate(options, parentData, index, "submodel")
+
   return options
 end
 
-WeakAuras.RegisterSubRegionOptions("subbarmodel", createOptions, L["Shows a model"]);
+WeakAuras.RegisterSubRegionOptions("submodel", createOptions, L["Shows a model"]);

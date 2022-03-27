@@ -1,10 +1,25 @@
 local ipairs = ipairs
 local pairs = pairs
-local ceil, floor = math.ceil, math.floor
+local abs, ceil, floor = math.abs, math.ceil, math.floor
 
 local GetInstanceInfo = GetInstanceInfo
 local GetNumPartyMembers = GetNumPartyMembers
 local GetNumRaidMembers = GetNumRaidMembers
+
+function noop()
+
+end
+
+function ipairs_reverse(table)
+	local function Enumerator(table, index)
+		index = index - 1;
+		local value = table[index];
+		if value ~= nil then
+			return index, value;
+		end
+	end
+	return Enumerator, table, #table + 1;
+end
 
 function tInvert(tbl)
 	local inverted = {};
@@ -89,7 +104,7 @@ if not SmoothStatusBarMixin then
 		local min, max = bar:GetMinMaxValues();
 		local range = max - min;
 		if range > 0 then
-			return math.abs((newValue - targetValue) / range) < .00001;
+			return abs((newValue - targetValue) / range) < .00001;
 		end
 
 		return true;

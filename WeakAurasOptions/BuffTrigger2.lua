@@ -76,7 +76,7 @@ local function CanHaveMatchCheck(trigger)
   return trigger.showClones
 end
 
-local function CreateNameOptions(aura_options, data, trigger, size, isExactSpellId, isIgnoreList, prefix, baseOrder, useKey, optionKey, name, desc)
+local function CreateNameOptions(aura_options, data, trigger, size, isExactSpellId, isIgnoreList, prefix, baseOrder, useKey, optionKey, name, desc, inverse)
   local spellCache = WeakAuras.spellCache
 
   for i = 1, size do
@@ -94,7 +94,7 @@ local function CreateNameOptions(aura_options, data, trigger, size, isExactSpell
     if i ~= 1 then
       aura_options[prefix .. "space" .. i] = {
         type = "execute",
-        name = L["or"],
+        name = inverse and L["and"] or L["or"],
         width = WeakAuras.normalWidth - 0.2,
         image = function() return "", 0, 0 end,
         order = baseOrder + i / 100 + 0.0001,
@@ -107,13 +107,13 @@ local function CreateNameOptions(aura_options, data, trigger, size, isExactSpell
       type = "execute",
       width = 0.2,
       order = baseOrder + i / 100 + 0.0002,
-      hidden = hiddenFunction
+      hidden = hiddenFunction,
+      control = "WeakAurasIcon"
     }
 
     if isExactSpellId then
-      aura_options[iconOption].name = ""
-      aura_options[iconOption].desc = function()
-        local name = GetSpellInfo(trigger[optionKey] and trigger[optionKey][i] or 0)
+      aura_options[iconOption].name = function()
+        local name = GetSpellInfo(WeakAuras.SafeToNumber(trigger[optionKey] and trigger[optionKey][i] or 0))
         return name
       end
       aura_options[iconOption].image = function()
@@ -191,7 +191,6 @@ local function CreateNameOptions(aura_options, data, trigger, size, isExactSpell
 
         WeakAuras.Add(data)
         WeakAuras.UpdateThumbnail(data)
-        WeakAuras.UpdateDisplayButton(data)
         WeakAuras.ClearAndUpdateOptions(data.id)
       end,
       validate = isExactSpellId and WeakAuras.ValidateNumeric or nil
@@ -230,7 +229,8 @@ local function GetBuffTriggerOptions(data, triggernum)
       values = function()
         return OptionsPrivate.Private.unit_types_bufftrigger_2
       end,
-      hidden = function() return not trigger.type == "aura2" end
+      hidden = function() return not trigger.type == "aura2" end,
+      desc = L["• |cff00ff00Player|r, |cff00ff00Target|r, |cff00ff00Focus|r, and |cff00ff00Pet|r correspond directly to those individual unitIDs.\n• |cff00ff00Specific Unit|r lets you provide a specific valid unitID to watch.\n|cffff0000Note|r: The game will not fire events for all valid unitIDs, making some untrackable by this trigger.\n• |cffffff00Party|r, |cffffff00Raid|r, |cffffff00Boss|r, |cffffff00Arena|r, and |cffffff00Nameplate|r can match multiple corresponding unitIDs.\n• |cffffff00Smart Group|r adjusts to your current group type, matching just the \"player\" when solo, \"party\" units (including \"player\") in a party or \"raid\" units in a raid.\n• |cffffff00Multi-target|r attempts to use the Combat Log events, rather than unitID, to track affected units.\n|cffff0000Note|r: Without a direct relationship to actual unitIDs, results may vary.\n\n|cffffff00*|r Yellow Unit settings can match multiple units and will default to being active even while no affected units are found without a Unit Count or Match Count setting."],
     },
     useSpecificUnit = {
       type = "toggle",
@@ -490,6 +490,16 @@ local function GetBuffTriggerOptions(data, triggernum)
       order = 61.7,
       hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and not trigger.useTotal) end
     },
+    fetchRaidMark = {
+      type = "toggle",
+      name = L["Add Raid Mark Information"],
+      desc = L["This adds %raidMark as text replacements."],
+      order = 61.9,
+      width = WeakAuras.doubleWidth,
+      hidden = function()
+        return not (trigger.type == "aura2" and trigger.unit ~= "multi")
+      end
+    },
     fetchTooltip = {
       type = "toggle",
       name = L["Use Tooltip Information"],
@@ -636,10 +646,37 @@ local function GetBuffTriggerOptions(data, triggernum)
       order = 66,
       hidden = function() return not trigger.type == "aura2" end
     },
+    use_includePets = {
+      type = "toggle",
+      width = WeakAuras.normalWidth,
+      name = WeakAuras.newFeatureString .. L["Include Pets"],
+      order = 66.1,
+      hidden = function() return
+        not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party"))
+      end
+    },
+    includePets = {
+      type = "select",
+      values = OptionsPrivate.Private.include_pets_types,
+      width = WeakAuras.normalWidth,
+      name = WeakAuras.newFeatureString .. L["Include Pets"],
+      order = 66.15,
+      hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party") and trigger.use_includePets) end,
+    },
+    includePetsSpace = {
+      type = "description",
+      name = "",
+      order = 66.16,
+      width = WeakAuras.normalWidth,
+      hidden = function()
+        return not (trigger.type == "aura2"
+                    and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party") and not trigger.use_includePets)
+      end
+    },
     ignoreSelf = {
       type = "toggle",
       name = L["Ignore Self"],
-      order = 67.3,
+      order = 67.5,
       width = WeakAuras.doubleWidth,
       hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")) end
     },
@@ -943,21 +980,25 @@ local function GetBuffTriggerOptions(data, triggernum)
   CreateNameOptions(aura_options, data, trigger, nameOptionSize,
                     false, false, "name", 12, "useName", "auranames",
                     L["Aura Name"],
-                    L["Enter an Aura Name, partial Aura Name, or Spell ID. A Spell ID will match any spells with the same name."])
+                    L["Enter an Aura Name, partial Aura Name, or Spell ID. A Spell ID will match any spells with the same name."],
+                    IsSingleMissing(trigger))
 
 
   CreateNameOptions(aura_options, data, trigger, spellOptionsSize,
                     true, false, "spellid", 22, "useExactSpellId", "auraspellids",
-                    L["Spell ID"], L["Enter a Spell ID"])
+                    L["Spell ID"], L["Enter a Spell ID"],
+                    IsSingleMissing(trigger))
 
   CreateNameOptions(aura_options, data, trigger, ignoreNameOptionSize,
                     false, true, "ignorename", 32, "useIgnoreName", "ignoreAuraNames",
                     L["Ignored Aura Name"],
-                    L["Enter an Aura Name, partial Aura Name, or Spell ID. A Spell ID will match any spells with the same name."])
+                    L["Enter an Aura Name, partial Aura Name, or Spell ID. A Spell ID will match any spells with the same name."],
+                    IsSingleMissing(trigger))
 
   CreateNameOptions(aura_options, data, trigger, ignoreSpellOptionsSize,
                     true, true, "ignorespellid", 42, "useIgnoreExactSpellId", "ignoreAuraSpellids",
-                    L["Ignored Spell ID"], L["Enter a Spell ID"])
+                    L["Ignored Spell ID"], L["Enter a Spell ID"],
+                    IsSingleMissing(trigger))
 
   OptionsPrivate.commonOptions.AddCommonTriggerOptions(aura_options, data, triggernum, true)
   OptionsPrivate.commonOptions.AddTriggerGetterSetter(aura_options, data, triggernum)

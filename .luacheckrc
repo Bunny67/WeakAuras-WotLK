@@ -41,6 +41,7 @@ ignore = {
 
 globals = {
 	-- compat
+	"ipairs_reverse",
 	"tInvert",
 	"Round",
 	"tIndexOf",

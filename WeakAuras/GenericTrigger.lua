@@ -197,11 +197,21 @@ function ConstructTest(trigger, arg)
       test = TestForMultiSelect(trigger, arg);
     elseif(arg.type == "toggle") then
       test = TestForToggle(trigger, arg);
+    elseif (arg.type == "spell") then
+      if arg.test then
+        if arg.showExactOption then
+          test = "("..arg.test:format(trigger[name], tostring(trigger["use_exact_" .. name]) or "false") ..")";
+        else
+          test = "("..arg.test:format(trigger[name])..")";
+        end
+      else
+        test = "(".. name .." and "..name.."==" ..(number or "\""..(trigger[name] or "").."\"")..")";
+      end
     elseif(arg.test) then
-      test = "("..arg.test:format(trigger[name])..")";
+      test = "("..arg.test:format(tostring(trigger[name]) or "")..")";
     elseif(arg.type == "longstring" and trigger[name.."_operator"]) then
       test = TestForLongString(trigger, arg);
-    elseif (arg.type == "string" or arg.type == "select" or arg.type == "spell" or arg.type == "item") then
+    elseif (arg.type == "string" or arg.type == "select" or arg.type == "item") then
       test = "(".. name .." and "..name.."==" ..(number or "\""..(trigger[name] or "").."\"")..")";
     else
       if(type(trigger[name]) == "table") then
@@ -540,6 +550,13 @@ local function RunTriggerFunc(allStates, data, id, triggernum, event, arg1, arg2
         errorHandler(returnValue)
       elseif ok and returnValue then
         updateTriggerState = true;
+      end
+      for key, state in pairs(allStates) do
+        if (type(state) ~= "table") then
+          errorHandler(string.format(L["Error in aura '%s' in %s. trigger. All States table contains a non table at key: '%s'."], id, triggernum, key))
+          wipe(allStates)
+          return
+        end
       end
     elseif (data.statesParameter == "all") then
       local ok, returnValue = pcall(data.triggerFunc, allStates, event, arg1, arg2, ...);
@@ -945,28 +962,62 @@ function GenericTrigger.Rename(oldid, newid)
   Private.EveryFrameUpdateRename(oldid, newid)
 end
 
-local function MultiUnitLoop(Func, unit, ...)
+local function MultiUnitLoop(Func, unit, includePets, ...)
   unit = string.lower(unit)
-  if unit == "boss" or unit == "arena" then
-    for i = 1, MAX_BOSS_FRAMES do
+  if unit == "boss" then
+    for i = 1, 4 do
+      Func(unit..i, ...)
+    end
+  elseif unit == "arena" then
+    for i = 1, 5 do
       Func(unit..i, ...)
     end
   elseif unit == "group" then
-    Func("player", ...)
+    if includePets ~= "PetsOnly" then
+      Func("player", ...)
+    end
+    if includePets ~= nil then
+      Func("pet", ...)
+    end
     for i = 1, 4 do
-      Func("party"..i, ...)
+      if includePets ~= "PetsOnly" then
+        Func("party"..i, ...)
+      end
+      if includePets ~= nil then
+        Func("partypet"..i, ...)
+      end
     end
     for i = 1, 40 do
-      Func("raid"..i, ...)
+      if includePets ~= "PetsOnly" then
+        Func("raid"..i, ...)
+      end
+      if includePets ~= nil then
+        Func("raidpet"..i, ...)
+      end
     end
   elseif unit == "party" then
-    Func("player", ...)
+    if includePets ~= "PetsOnly" then
+      Func("player", ...)
+    end
+    if includePets ~= nil then
+      Func("pet", ...)
+    end
     for i = 1, 4 do
-      Func("party"..i, ...)
+      if includePets ~= "PetsOnly" then
+        Func("party"..i, ...)
+      end
+      if includePets ~= nil then
+        Func("partypet"..i, ...)
+      end
     end
   elseif unit == "raid" then
     for i = 1, 40 do
-      Func("raid"..i, ...)
+      if includePets ~= "PetsOnly" then
+        Func("raid"..i, ...)
+      end
+      if includePets ~= nil then
+        Func("raidpet"..i, ...)
+      end
     end
   else
     Func(unit, ...)
@@ -997,16 +1048,17 @@ function LoadEvent(id, triggernum, data)
     end
   end
   if data.unit_events then
+    local includePets = data.includePets
     for unit, events in pairs(data.unit_events) do
       unit = string.lower(unit)
       for index, event in pairs(events) do
         MultiUnitLoop(
-          function(unit)
-            loaded_unit_events[unit] = loaded_unit_events[unit] or {};
-            loaded_unit_events[unit][event] = loaded_unit_events[unit][event] or {};
-            loaded_unit_events[unit][event][id] = loaded_unit_events[unit][event][id] or {}
-            loaded_unit_events[unit][event][id][triggernum] = data;
-          end, unit
+          function(u)
+            loaded_unit_events[u] = loaded_unit_events[u] or {};
+            loaded_unit_events[u][event] = loaded_unit_events[u][event] or {};
+            loaded_unit_events[u][event][id] = loaded_unit_events[u][event][id] or {}
+            loaded_unit_events[u][event][id][triggernum] = data;
+          end, unit, includePets
         )
       end
     end
@@ -1047,15 +1099,16 @@ function GenericTrigger.LoadDisplays(toLoad, loadEvent, ...)
           end
         end
         if data.unit_events then
+          local includePets = data.includePets
           for unit, events in pairs(data.unit_events) do
             for index, event in pairs(events) do
               MultiUnitLoop(
-                function (unit)
-                  if not (genericTriggerRegisteredUnitEvents[unit] and genericTriggerRegisteredUnitEvents[unit][event]) then
-                    unitEventsToRegister[unit] = unitEventsToRegister[unit] or {}
-                    unitEventsToRegister[unit][event] = true
+                function (u)
+                  if not (genericTriggerRegisteredUnitEvents[u] and genericTriggerRegisteredUnitEvents[u][event]) then
+                    unitEventsToRegister[u] = unitEventsToRegister[u] or {}
+                    unitEventsToRegister[u][event] = true
                   end
-                end, unit
+                end, unit, includePets
               )
             end
           end
@@ -1127,6 +1180,7 @@ function GenericTrigger.Add(data, region)
         local trigger_events = {};
         local internal_events = {};
         local trigger_unit_events = {};
+        local includePets
         local trigger_subevents = {};
         local force_events = false;
         local durationFunc, overlayFuncs, nameFunc, iconFunc, textureFunc, stacksFunc, loadFunc;
@@ -1216,6 +1270,11 @@ function GenericTrigger.Add(data, region)
               if (type(force_events) == "function") then
                 force_events = force_events(trigger, untrigger)
               end
+
+
+              if prototype.includePets then
+                includePets = trigger.use_includePets == true and trigger.includePets or nil
+              end
             end
           end
         else -- CUSTOM
@@ -1280,13 +1339,18 @@ function GenericTrigger.Add(data, region)
                     hasParam = true
                   end
                 elseif trueEvent:match("^UNIT_") then
-                  MultiUnitLoop(
-                    function(unit)
-                      trigger_unit_events[unit] = trigger_unit_events[unit] or {}
-                      tinsert(trigger_unit_events[unit], trueEvent)
-                      isUnitEvent = true
-                    end, i
-                  )
+                  isUnitEvent = true
+
+                  if string.lower(strsub(i, #i - 3)) == "pets" then
+                    i = strsub(i, 1, #i-4)
+                    includePets = "PlayersAndPets"
+                  elseif string.lower(strsub(i, #i - 7)) == "petsonly" then
+                    includePets = "PetsOnly"
+                    i = strsub(i, 1, #i - 8)
+                  end
+
+                  trigger_unit_events[i] = trigger_unit_events[i] or {}
+                  tinsert(trigger_unit_events[i], trueEvent)
                 end
               end
               if isCLEU then
@@ -1330,6 +1394,7 @@ function GenericTrigger.Add(data, region)
           internal_events = internal_events,
           force_events = force_events,
           unit_events = trigger_unit_events,
+          includePets = includePets,
           inverse = trigger.use_inverse,
           subevents = trigger_subevents,
           durationFunc = durationFunc,
@@ -1688,7 +1753,7 @@ do
     if(duration and duration > 0) then
       if not(gcdStart) then
         event = "GCD_START";
-      elseif(gcdStart ~= startTime) then
+      elseif(gcdStart ~= startTime or gcdDuration ~= duration) then
         event = "GCD_CHANGE";
       end
       gcdStart, gcdDuration = startTime, duration;
@@ -1705,7 +1770,7 @@ do
       gcdSpellName, gcdSpellIcon = nil, nil;
       gcdEndCheck = 0;
     end
-    if(event) then
+    if(event and not WeakAuras.IsPaused()) then
       WeakAuras.ScanEvents(event);
     end
   end
@@ -1811,7 +1876,7 @@ do
   local spellCds = CreateSpellCDHandler();
   local spellCdsRune = CreateSpellCDHandler();
 
-  local spellIds = {}
+  local spellDetails = {}
 
   function WeakAuras.InitCooldownReady()
     cdReadyFrame = CreateFrame("FRAME");
@@ -2026,7 +2091,6 @@ do
       startTimeCooldown = startTimeCooldown - 2^32 / 1000
     end
 
-    -- Default to GetSpellCharges
     local cooldownBecauseRune = false;
     if (enabled == 0) then
       startTimeCooldown, durationCooldown = 0, 0
@@ -2043,11 +2107,24 @@ do
   function Private.CheckSpellKnown()
     for id, _ in pairs(spells) do
       local known = WeakAuras.IsSpellKnownIncludingPet(id);
+      local changed = false
       if (known ~= spellKnown[id]) then
         spellKnown[id] = known
-        if not WeakAuras.IsPaused() then
-          WeakAuras.ScanEvents("SPELL_COOLDOWN_CHANGED", id)
-        end
+        changed = true
+      end
+
+      local name, _, icon = GetSpellInfo(id)
+      if spellDetails[id].name ~= name then
+        spellDetails[id].name = name
+        changed = true
+      end
+      if spellDetails[id].icon ~= icon then
+        spellDetails[id].icon = icon
+        changed = true
+      end
+
+      if changed and not WeakAuras.IsPaused() then
+        WeakAuras.ScanEvents("SPELL_COOLDOWN_CHANGED", id)
       end
     end
   end
@@ -2063,11 +2140,6 @@ do
     spellCounts[id] = spellCount
 
     local changed = false
-    if spellIds[id] ~= id then
-      spellIds[id] = id
-      changed = true
-      chargesChanged = true
-    end
 
     local cdChanged, nowReady = spellCds:HandleSpell(id, startTimeCooldown, durationCooldown)
     changed = cdChanged or changed
@@ -2275,7 +2347,11 @@ do
       return;
     end
     spells[id] = true;
-    spellIds[id] = id
+    local name, _, icon = GetSpellInfo(id)
+    spellDetails[id] = {
+      name = name,
+      icon = icon
+    }
     spellKnown[id] = WeakAuras.IsSpellKnownIncludingPet(id);
 
     local startTimeCooldown, durationCooldown, cooldownBecauseRune, spellCount = WeakAuras.GetSpellCooldownUnified(id, GetRuneDuration());
@@ -2356,6 +2432,7 @@ function WeakAuras.WatchUnitChange(unit)
     watchUnitChange.unitChangeGUIDS = {}
     watchUnitChange.unitRoles = {}
     watchUnitChange.inRaid = IsInRaid()
+    watchUnitChange.raidmark = {}
 
     WeakAuras.frames["Unit Change Frame"] = watchUnitChange;
     watchUnitChange:RegisterEvent("PLAYER_TARGET_CHANGED")
@@ -2365,29 +2442,54 @@ function WeakAuras.WatchUnitChange(unit)
     watchUnitChange:RegisterEvent("PARTY_MEMBERS_CHANGED");
     watchUnitChange:RegisterEvent("RAID_ROSTER_UPDATE");
     watchUnitChange:RegisterEvent("PLAYER_ENTERING_WORLD")
+    watchUnitChange:RegisterEvent("UNIT_PET")
+    watchUnitChange:RegisterEvent("RAID_TARGET_UPDATE")
 
     watchUnitChange:SetScript("OnEvent", function(self, event, unit)
       Private.StartProfileSystem("generictrigger unit change");
-      local inRaid = IsInRaid()
-
-      for unit, guid in pairs(watchUnitChange.unitChangeGUIDS) do
-        local newGuid = WeakAuras.UnitExistsFixed(unit) and UnitGUID(unit) or ""
-        if guid ~= newGuid or event == "PLAYER_ENTERING_WORLD" then
-          WeakAuras.ScanEvents("UNIT_CHANGED_" .. unit, unit)
-          watchUnitChange.unitChangeGUIDS[unit] = newGuid
-        elseif Private.multiUnitUnits.group[unit] then
-          -- If in raid changed we send a UNIT_CHANGED for the group units
-          if inRaid ~= watchUnitChange.inRaid then
+      if event == "UNIT_PET" then
+        local pet = WeakAuras.unitToPetUnit[unit]
+        if pet then
+          WeakAuras.ScanEvents("UNIT_CHANGED_" .. pet, pet)
+        end
+      elseif event == "RAID_TARGET_UPDATE" then
+        for unit, marker in pairs(watchUnitChange.raidmark) do
+          local newMarker = GetRaidTargetIndex(unit) or 0
+          if marker ~= newMarker then
+            watchUnitChange.raidmark[unit] = newMarker
             WeakAuras.ScanEvents("UNIT_CHANGED_" .. unit, unit)
           end
         end
+      else
+        local inRaid = IsInRaid()
+        local inRaidChanged = inRaid ~= watchUnitChange.inRaid
+
+        for unit, guid in pairs(watchUnitChange.unitChangeGUIDS) do
+          local newGuid = WeakAuras.UnitExistsFixed(unit) and UnitGUID(unit) or ""
+          local newMarker = GetRaidTargetIndex(unit) or 0
+          if guid ~= newGuid
+          or newMarker ~= watchUnitChange.raidmark[unit]
+          or event == "PLAYER_ENTERING_WORLD"
+          then
+            WeakAuras.ScanEvents("UNIT_CHANGED_" .. unit, unit)
+            watchUnitChange.unitChangeGUIDS[unit] = newGuid
+            watchUnitChange.raidmark[unit] = newMarker
+          elseif Private.multiUnitUnits.group[unit] then
+            -- If in raid changed we send a UNIT_CHANGED for the group units
+            if inRaidChanged then
+              WeakAuras.ScanEvents("UNIT_CHANGED_" .. unit, unit)
+            end
+          end
+        end
+        watchUnitChange.inRaid = inRaid
       end
-      watchUnitChange.inRaid = inRaid
       Private.StopProfileSystem("generictrigger unit change");
     end)
   end
   watchUnitChange.unitChangeGUIDS = watchUnitChange.unitChangeGUIDS or {}
   watchUnitChange.unitChangeGUIDS[unit] = UnitGUID(unit) or ""
+  watchUnitChange.raidmark = watchUnitChange.raidmark or {}
+  watchUnitChange.raidmark[unit] = GetRaidTargetIndex(unit) or 0
 end
 
 local equipmentItemIDs, equipmentSetItemIDs = {}, {}
@@ -2990,9 +3092,7 @@ do
       castLatencyFrame = CreateFrame("Frame")
       castLatencyFrame:RegisterEvent("CURRENT_SPELL_CAST_CHANGED")
       castLatencyFrame:SetScript("OnEvent", function(event)
-        Private.StartProfileSystem("generictrigger")
-        WeakAuras.ScanEvents("CAST_LATENCY_UPDATE", "player")
-        Private.StopProfileSystem("generictrigger")
+        Private.LAST_CURRENT_SPELL_CAST_CHANGED = GetTime()
       end)
     end
   end
@@ -3395,7 +3495,7 @@ function GenericTrigger.SetToolTip(trigger, state)
       local lines = { strsplit("\n", state.tooltip) };
       GameTooltip:ClearLines();
       for i, line in ipairs(lines) do
-        GameTooltip:AddLine(line);
+        GameTooltip:AddLine(line, nil, nil, nil, state.tooltipWrap);
       end
       return true
     elseif (state.spellId) then
@@ -3455,6 +3555,19 @@ function GenericTrigger.GetAdditionalProperties(data, triggernum)
 
       if (found) then
         ret = ret .. additional;
+      end
+    end
+  else
+    if (trigger.custom_type == "stateupdate") then
+      local variables = events[data.id][triggernum].tsuConditionVariables();
+      if (type(variables) == "table") then
+        for var, varData in pairs(variables) do
+          if (type(varData) == "table") then
+            if varData.display then
+              ret = ret .. "|cFFFF0000%".. triggernum .. "." .. var .. "|r - " .. varData.display .. "\n"
+            end
+          end
+        end
       end
     end
   end

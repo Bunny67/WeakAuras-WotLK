@@ -177,18 +177,17 @@ local funcs = {
     if MSQ and self.parentType == "icon" then
       if (visible) then
         self.__MSQ_Shape = self:GetParent().button.__MSQ_Shape
+        self:Show()
         glowStart(self, self, color);
       else
         self.glowStop(self);
+        self:Hide()
       end
     elseif (visible) then
+      self:Show()
       glowStart(self, self, color);
     else
       self.glowStop(self);
-    end
-    if visible then
-      self:Show()
-    else
       self:Hide()
     end
   end,

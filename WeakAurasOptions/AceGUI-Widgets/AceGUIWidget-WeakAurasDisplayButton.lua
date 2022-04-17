@@ -765,7 +765,7 @@ local methods = {
       if not self.dragging then return end
       local target, area = select(2, GetDropTarget())
       local action = GetAction(target, area)
-      OptionsPrivate.Drop(self.data, target, action)
+      OptionsPrivate.Drop(self.data, target, action, area)
     end
 
     function self.callbacks.OnKeyDown(self, key)
@@ -1184,6 +1184,9 @@ local methods = {
       end
     end
     self:DropEnd()
+  end,
+  ["IsDragging"] = function(self)
+    return self.dragging
   end,
   ["DragReset"] = function(self)
     self:DropEnd()

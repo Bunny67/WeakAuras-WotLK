@@ -497,6 +497,8 @@ end
 -- SetDurationInfo
 
 function WeakAuras.regionPrototype.modify(parent, region, data)
+  region.state = nil
+  region.states = nil
   region.subRegionEvents:ClearSubscribers()
 
   local defaultsForRegion = WeakAuras.regionTypes[data.regionType] and WeakAuras.regionTypes[data.regionType].default;

@@ -1120,7 +1120,6 @@ function OptionsPrivate.SortDisplayButtons(filter, overrideReset, id)
       aurasMatchingFilter[id] = true
     end
 
-
     if not child:GetGroup() then
       -- Top Level aura
       if OptionsPrivate.Private.loaded[child.data.id] ~= nil then
@@ -1360,7 +1359,62 @@ function OptionsPrivate.DragReset()
   OptionsPrivate.UpdateButtonsScroll()
 end
 
-function OptionsPrivate.Drop(mainAura, target, action)
+local function CompareButtonOrder(a, b)
+  if (a.data.parent == b.data.parent) then
+    if (a.data.parent) then
+      return a:GetGroupOrder() < b:GetGroupOrder()
+    else
+      return a.data.id < b.data.id
+    end
+  end
+
+  -- Different parents, so find common parent by first
+  -- going up a's hierarchy
+
+  local parents = {}
+
+  local aNode = a.data.id
+  local lastAParent = aNode
+
+  while(aNode) do
+    local parent = WeakAuras.GetData(aNode).parent
+    if (parent) then
+      parents[parent] = aNode
+      lastAParent = parent
+    end
+    aNode = parent
+  end
+
+  local bNode = b.data.id
+  local lastBParent = bNode
+
+  while(bNode) do
+    local parent = WeakAuras.GetData(bNode).parent
+    if parent then
+      if (parents[parent]) then
+        -- We have found the common parent, the last node in the chain is
+        -- Compare the previous nodes GroupOrder
+        local aButton = WeakAuras.GetDisplayButton(parents[parent])
+        local bButton = WeakAuras.GetDisplayButton(bNode)
+        return aButton:GetGroupOrder() < bButton:GetGroupOrder()
+      end
+      lastBParent = parent
+    end
+    bNode = parent
+  end
+
+  -- If we are here there was no common parent
+  local aButton = WeakAuras.GetDisplayButton(lastAParent)
+  local bButton = WeakAuras.GetDisplayButton(lastBParent)
+
+  return aButton.data.id < bButton.data.id
+end
+
+local function CompareButtonOrderReverse(a, b)
+  return CompareButtonOrder(b, a)
+end
+
+function OptionsPrivate.Drop(mainAura, target, action, area)
   WeakAuras_DropDownMenu:Hide()
 
   local mode = ""
@@ -1372,8 +1426,31 @@ function OptionsPrivate.Drop(mainAura, target, action)
     mode = "SINGLE"
   end
 
+  local buttonsToSort = {}
+
   for id, button in pairs(displayButtons) do
-    button:Drop(mode, mainAura, target, action);
+    if button:IsDragging() then
+      tinsert(buttonsToSort, button)
+    else
+      button:Drop(mode, mainAura, target, action);
+    end
+  end
+
+  if mode == "MULTI" then
+    -- If we are dragging and dropping multiple auras at once, the order in which we drop is important
+    -- We want to preserve the top-down order
+    -- Depending on how exactly we find the insert position, we need to use the right order of insertions
+    if area == "GROUP" then
+      table.sort(buttonsToSort, CompareButtonOrderReverse)
+    elseif area == "BEFORE" then
+      table.sort(buttonsToSort, CompareButtonOrder)
+    else -- After
+      table.sort(buttonsToSort, CompareButtonOrderReverse)
+    end
+  end
+
+  for index, button in ipairs(buttonsToSort) do
+    button:Drop(mode, mainAura, target, action)
   end
 
   -- Update offset, this is a bit wasteful to do for every aura
@@ -1506,7 +1583,7 @@ function OptionsPrivate.OpenModelPicker(baseObject, path)
     local loaded, reason = LoadAddOn("WeakAurasModelPaths");
     if not(loaded) then
       reason = string.lower("|cffff2020" .. _G["ADDON_" .. reason] .. "|r.")
-      WeakAuras.prettyPrint("ModelPaths could not be loaded, the addon is " .. reason);
+      WeakAuras.prettyPrint(string.format(L["ModelPaths could not be loaded, the addon is %s"], reason));
       WeakAuras.ModelPaths = {};
     end
     frame.modelPicker.modelTree:SetTree(WeakAuras.ModelPaths);
@@ -1523,7 +1600,7 @@ function OptionsPrivate.OpenTriggerTemplate(data, targetId)
     local loaded, reason = LoadAddOn("WeakAurasTemplates");
     if not(loaded) then
       reason = string.lower("|cffff2020" .. _G["ADDON_" .. reason] .. "|r.")
-      WeakAuras.prettyPrint("Templates could not be loaded, the addon is " .. reason);
+      WeakAuras.prettyPrint(string.format(L["Templates could not be loaded, the addon is %s"], reason));
       return;
     end
     frame.newView = WeakAuras.CreateTemplateView(OptionsPrivate.Private, frame);

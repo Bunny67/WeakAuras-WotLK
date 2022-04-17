@@ -367,7 +367,7 @@ local function createSpinner(parent, layer, frameLevel)
   local scrollframe = CreateFrame("ScrollFrame", nil, parent)
   scrollframe:SetPoint("BOTTOMLEFT", parent, "CENTER")
   scrollframe:SetPoint("TOPRIGHT")
-  scrollframe:SetFrameLevel(parent:GetFrameLevel() + frameLevel);
+  scrollframe:SetFrameLevel(frameLevel);
 
   local scrollchild = CreateFrame("Frame", nil, scrollframe)
   scrollframe:SetScrollChild(scrollchild)
@@ -437,8 +437,8 @@ local function create(parent)
   local foreground = region:CreateTexture(nil, "ARTWORK");
   region.foreground = foreground;
 
-  region.foregroundSpinner = createSpinner(region, "ARTWORK", 2);
-  region.backgroundSpinner = createSpinner(region, "BACKGROUND", 1);
+  region.foregroundSpinner = createSpinner(region, "ARTWORK", parent:GetFrameLevel() + 2);
+  region.backgroundSpinner = createSpinner(region, "BACKGROUND", parent:GetFrameLevel() + 1);
 
   region.extraTextures = {};
   region.extraSpinners = {};

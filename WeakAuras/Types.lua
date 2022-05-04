@@ -817,10 +817,10 @@ Private.unit_types_range_check = {
 
 Private.unit_threat_situation_types = {
   [-1] = L["Not On Threat Table"],
-  [0] = "|cFFB0B0B0"..L["Lower Than Tank"],
-  [1] = "|cFFFFFF77"..L["Higher Than Tank"],
-  [2] = "|cFFFF9900"..L["Tanking But Not Highest"],
-  [3] = "|cFFFF0000"..L["Tanking And Highest"]
+  [0] = "|cFFB0B0B0"..L["Lower Than Tank"].."|r",
+  [1] = "|cFFFFFF77"..L["Higher Than Tank"].."|r",
+  [2] = "|cFFFF9900"..L["Tanking But Not Highest"].."|r",
+  [3] = "|cFFFF0000"..L["Tanking And Highest"].."|r"
 }
 
 WeakAuras.class_types = {}
@@ -1888,9 +1888,22 @@ Private.instance_types = {
   arena = L["Arena"]
 }
 
+Private.TocToExpansion = {
+   [1] = L["Classic"],
+   [2] = L["Burning Crusade"],
+   [3] = L["Wrath of the Lich King"],
+   [4] = L["Cataclysm"],
+   [5] = L["Mists of Pandaria"],
+   [6] = L["Warlords of Draenor"],
+   [7] = L["Legion"],
+   [8] = L["Battle for Azeroth"],
+   [9] = L["Shadowlands"],
+  [10] = L["Dragonflight"]
+}
+
 Private.group_types = {
   solo = L["Not in Group"],
-  group = L["In Group"],
+  group = L["In Party"],
   raid = L["In Raid"]
 }
 

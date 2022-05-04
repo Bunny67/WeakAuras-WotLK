@@ -275,11 +275,17 @@ local function GetBuffTriggerOptions(data, triggernum)
       values = OptionsPrivate.Private.debuff_types,
       hidden = function() return not trigger.type == "aura2" end
     },
+    spell_filters_header = {
+      type = "header",
+      name = L["Spell Selection Filters"],
+      order = 11.15,
+    },
     use_debuffClass = {
       type = "toggle",
       width = WeakAuras.normalWidth,
       name = L["Debuff Type"],
       order = 11.2,
+      desc = L["Filter to only dispellable de/buffs of the given type(s)"],
       hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger)) end
     },
     debuffClass = {
@@ -366,6 +372,7 @@ local function GetBuffTriggerOptions(data, triggernum)
       type = "toggle",
       width = WeakAuras.normalWidth,
       name = L["Name Pattern Match"],
+      desc = L["Filter based on the spell Name string."],
       order = 55,
       hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi") end
     },
@@ -390,6 +397,11 @@ local function GetBuffTriggerOptions(data, triggernum)
       width = WeakAuras.doubleWidth,
       order = 55.2,
       hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and trigger.useNamePattern) end
+    },
+    aura_filters_header = {
+      type = "header",
+      name = L["Active Aura Filters and Info"],
+      order = 59.9,
     },
     useStacks = {
       type = "toggle",
@@ -490,100 +502,13 @@ local function GetBuffTriggerOptions(data, triggernum)
       order = 61.7,
       hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and not trigger.useTotal) end
     },
-    fetchRaidMark = {
-      type = "toggle",
-      name = L["Add Raid Mark Information"],
-      desc = L["This adds %raidMark as text replacements."],
-      order = 61.9,
-      width = WeakAuras.doubleWidth,
-      hidden = function()
-        return not (trigger.type == "aura2" and trigger.unit ~= "multi")
-      end
-    },
-    fetchTooltip = {
-      type = "toggle",
-      name = L["Use Tooltip Information"],
-      desc = L["This adds %tooltip, %tooltip1, %tooltip2, %tooltip3 as text replacements."],
-      order = 62,
-      width = WeakAuras.doubleWidth,
-      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and not IsSingleMissing(trigger)) end
-    },
-    use_tooltip = {
-      type = "toggle",
-      width = WeakAuras.normalWidth,
-      name = L["Tooltip Pattern Match"],
-      order = 62.1,
-      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and trigger.fetchTooltip) end
-    },
-    use_tooltipSpace = {
-      type = "description",
-      name = "",
-      order = 62.2,
-      width = WeakAuras.normalWidth,
-      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and not trigger.use_tooltip and trigger.fetchTooltip) end
-    },
-    tooltip_operator = {
-      type = "select",
-      width = WeakAuras.normalWidth,
-      name = L["Operator"],
-      order = 62.3,
-      disabled = function() return not trigger.use_tooltip end,
-      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and trigger.use_tooltip and trigger.fetchTooltip) end,
-      values = OptionsPrivate.Private.string_operator_types
-    },
-    tooltip = {
-      type = "input",
-      name = L["Tooltip Content"],
-      width = WeakAuras.doubleWidth,
-      order = 62.4,
-      disabled = function() return not trigger.use_tooltip end,
-      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and trigger.use_tooltip and trigger.fetchTooltip) end
-    },
-    use_tooltipValue = {
-      type = "toggle",
-      width = WeakAuras.normalWidth,
-      name = L["Tooltip Value"],
-      order = 63.1,
-      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and trigger.fetchTooltip) end
-    },
-    tooltipValueNumber = {
-      type = "select",
-      width = WeakAuras.normalWidth,
-      name = L["Tooltip Value #"],
-      order = 63.2,
-      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and trigger.use_tooltipValue and trigger.fetchTooltip) end,
-      values = OptionsPrivate.Private.tooltip_count
-    },
-    use_tooltipValueSpace = {
-      type = "description",
-      name = "",
-      order = 63.2,
-      width = WeakAuras.normalWidth,
-      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and not trigger.use_tooltipValue and trigger.fetchTooltip) end
-    },
-    tooltipValue_operator = {
-      type = "select",
-      width = WeakAuras.normalWidth,
-      name = L["Operator"],
-      order = 63.3,
-      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and trigger.use_tooltipValue and trigger.fetchTooltip) end,
-      values = OptionsPrivate.Private.operator_types
-    },
-    tooltipValue = {
-      type = "input",
-      name = L["Tooltip"],
-      width = WeakAuras.normalWidth,
-      validate = ValidateNumeric,
-      order = 63.4,
-      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and trigger.use_tooltipValue and trigger.fetchTooltip) end
-    },
     use_stealable = {
       type = "toggle",
       name = function(input)
         local value = trigger.use_stealable
         if value == nil then return L["Is Stealable"]
-        elseif value == false then return "|cFFFF0000 "..L["Negator"].." "..L["Is Stealable"]
-        else return "|cFF00FF00"..L["Is Stealable"] end
+        elseif value == false then return "|cFFFF0000 " .. L["Negator"] .. " " .. L["Is Stealable"] .. "|r"
+        else return "|cFF00FF00" .. L["Is Stealable"] .. "|r" end
       end,
       width = WeakAuras.doubleWidth,
       order = 64,
@@ -605,21 +530,14 @@ local function GetBuffTriggerOptions(data, triggernum)
         WeakAuras.Add(data)
       end
     },
-    useAffected = {
-      type = "toggle",
-      name = L["Fetch Affected/Unaffected Names"],
-      width = WeakAuras.doubleWidth,
-      order = 65,
-      hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")) end
-    },
     ownOnly = {
       type = "toggle",
       width = WeakAuras.doubleWidth,
       name = function()
         local value = trigger.ownOnly
         if value == nil then return L["Own Only"]
-        elseif value == false then return "|cFFFF0000 "..L["Negator"].." "..L["Own Only"]
-        else return "|cFF00FF00"..L["Own Only"] end
+        elseif value == false then return "|cFFFF0000 " .. L["Negator"] .. " " .. L["Own Only"] .. "|r"
+        else return "|cFF00FF00" .. L["Own Only"] .. "|r" end
       end,
       desc = function()
         local value = trigger.ownOnly
@@ -643,8 +561,109 @@ local function GetBuffTriggerOptions(data, triggernum)
         end
         WeakAuras.Add(data)
       end,
-      order = 66,
+      order = 64.3,
       hidden = function() return not trigger.type == "aura2" end
+    },
+
+    fetchTooltip = {
+      type = "toggle",
+      name = L["Fetch Tooltip Information"],
+      desc = L["This adds %tooltip, %tooltip1, %tooltip2, %tooltip3 as text replacements and also allows filtering based on the tooltip content/values."],
+      order = 64.5,
+      width = WeakAuras.doubleWidth,
+      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and not IsSingleMissing(trigger)) end
+    },
+    use_tooltip = {
+      type = "toggle",
+      width = WeakAuras.normalWidth,
+      name = L["Tooltip Pattern Match"],
+      order = 64.51,
+      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and trigger.fetchTooltip) end
+    },
+    use_tooltipSpace = {
+      type = "description",
+      name = "",
+      order = 64.52,
+      width = WeakAuras.normalWidth,
+      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and not trigger.use_tooltip and trigger.fetchTooltip) end
+    },
+    tooltip_operator = {
+      type = "select",
+      width = WeakAuras.normalWidth,
+      name = L["Operator"],
+      order = 64.53,
+      disabled = function() return not trigger.use_tooltip end,
+      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and trigger.use_tooltip and trigger.fetchTooltip) end,
+      values = OptionsPrivate.Private.string_operator_types
+    },
+    tooltip = {
+      type = "input",
+      name = L["Tooltip Content"],
+      width = WeakAuras.doubleWidth,
+      order = 64.54,
+      disabled = function() return not trigger.use_tooltip end,
+      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and trigger.use_tooltip and trigger.fetchTooltip) end
+    },
+    use_tooltipValue = {
+      type = "toggle",
+      width = WeakAuras.normalWidth,
+      name = L["Tooltip Value"],
+      order = 64.55,
+      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and trigger.fetchTooltip) end
+    },
+    tooltipValueNumber = {
+      type = "select",
+      width = WeakAuras.normalWidth,
+      name = L["Tooltip Value #"],
+      order = 64.56,
+      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and trigger.use_tooltipValue and trigger.fetchTooltip) end,
+      values = OptionsPrivate.Private.tooltip_count
+    },
+    use_tooltipValueSpace = {
+      type = "description",
+      name = "",
+      order = 64.57,
+      width = WeakAuras.normalWidth,
+      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and not trigger.use_tooltipValue and trigger.fetchTooltip) end
+    },
+    tooltipValue_operator = {
+      type = "select",
+      width = WeakAuras.normalWidth,
+      name = L["Operator"],
+      order = 64.58,
+      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and trigger.use_tooltipValue and trigger.fetchTooltip) end,
+      values = OptionsPrivate.Private.operator_types
+    },
+    tooltipValue = {
+      type = "input",
+      name = L["Tooltip"],
+      width = WeakAuras.normalWidth,
+      validate = ValidateNumeric,
+      order = 64.59,
+      hidden = function() return not (trigger.type == "aura2" and trigger.unit ~= "multi" and CanHaveMatchCheck(trigger) and trigger.use_tooltipValue and trigger.fetchTooltip) end
+    },
+    unit_filters_header = {
+      type = "header",
+      name = L["Affected Unit Filters and Info"],
+      order = 65,
+      hidden = function() return trigger.unit == "multi" end,
+    },
+    useAffected = {
+      type = "toggle",
+      name = L["Fetch Affected/Unaffected Names"],
+      width = WeakAuras.doubleWidth,
+      order = 65.1,
+      hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")) end
+    },
+    fetchRaidMark = {
+      type = "toggle",
+      name = L["Fetch Raid Mark Information"],
+      desc = L["This adds %raidMark as text replacements."],
+      order = 65.3,
+      width = WeakAuras.doubleWidth,
+      hidden = function()
+        return not (trigger.type == "aura2" and trigger.unit ~= "multi")
+      end
     },
     use_includePets = {
       type = "toggle",
@@ -673,13 +692,6 @@ local function GetBuffTriggerOptions(data, triggernum)
                     and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party") and not trigger.use_includePets)
       end
     },
-    ignoreSelf = {
-      type = "toggle",
-      name = L["Ignore Self"],
-      order = 67.5,
-      width = WeakAuras.doubleWidth,
-      hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")) end
-    },
 
     useClass = {
       type = "toggle",
@@ -706,35 +718,11 @@ local function GetBuffTriggerOptions(data, triggernum)
       hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party") and not trigger.useClass) end
     },
 
-    ignoreDead = {
-      type = "toggle",
-      name = L["Ignore Dead"],
-      order = 68.7,
-      width = WeakAuras.doubleWidth,
-      hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")) end
-    },
-
-    ignoreDisconnected = {
-      type = "toggle",
-      name = L["Ignore Disconnected"],
-      order = 68.8,
-      width = WeakAuras.doubleWidth,
-      hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")) end
-    },
-    ignoreInvisible = {
-      type = "toggle",
-      name = L["Ignore out of checking range"],
-      desc = L["Uses UnitIsVisible() to check if in range. This is polled every second."],
-      order = 68.9,
-      width = WeakAuras.doubleWidth,
-      hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")) end
-    },
-
     useUnitName = {
       type = "toggle",
       width = WeakAuras.normalWidth,
-      name = L["UnitName Filter"],
-      order = 69.1,
+      name = L["Filter by Unit Name"],
+      order = 68.4,
       hidden = function() return
         not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party"))
       end
@@ -742,9 +730,9 @@ local function GetBuffTriggerOptions(data, triggernum)
     unitName = {
       type = "input",
       width = WeakAuras.normalWidth,
-      name = L["Unit Name Filter"],
+      name = L["Filter by Unit Name"],
       desc = L["Filter formats: 'Name', 'Name-Realm', '-Realm'.\n\nSupports multiple entries, separated by commas\n"],
-      order = 69.2,
+      order = 68.5,
       hidden = function()
         return not (trigger.type == "aura2"
                     and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party") and trigger.useUnitName)
@@ -753,7 +741,7 @@ local function GetBuffTriggerOptions(data, triggernum)
     unitNameSpace = {
       type = "description",
       name = "",
-      order = 69.3,
+      order = 68.5,
       width = WeakAuras.normalWidth,
       hidden = function()
         return not (trigger.type == "aura2"
@@ -761,7 +749,50 @@ local function GetBuffTriggerOptions(data, triggernum)
       end
     },
 
+    ignoreSelf = {
+      type = "toggle",
+      name = L["Ignore Self"],
+      order = 69.35,
+      width = WeakAuras.doubleWidth,
+      hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")) end
+    },
 
+    ignoreDead = {
+      type = "toggle",
+      name = L["Ignore Dead"],
+      order = 69.4,
+      width = WeakAuras.doubleWidth,
+      hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")) end
+    },
+
+    ignoreDisconnected = {
+      type = "toggle",
+      name = L["Ignore Disconnected"],
+      order = 69.8,
+      width = WeakAuras.doubleWidth,
+      hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")) end
+    },
+    ignoreInvisible = {
+      type = "toggle",
+      name = L["Ignore out of checking range"],
+      desc = L["Uses UnitIsVisible() to check if in range. This is polled every second."],
+      order = 69.9,
+      width = WeakAuras.doubleWidth,
+      hidden = function() return not (trigger.type == "aura2" and (trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party")) end
+    },
+
+    show_settings_header = {
+      type = "header",
+      name = L["Show and Clone Settings"],
+      order = 69.91,
+    },
+    multi_unit_hint = {
+      type = "description",
+      order = 69.92,
+      width = WeakAuras.doubleWidth,
+      hidden = function() return not (trigger.type == "aura2" and IsGroupTrigger(trigger)) end,
+      name = L["|cff999999Triggers tracking multiple units will default to being active even while no affected units are found without a Unit Count or Match Count setting applied.|r"],
+    },
     useGroup_count = {
       type = "toggle",
       width = WeakAuras.normalWidth,

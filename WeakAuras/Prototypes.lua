@@ -84,7 +84,7 @@ function WeakAuras.UnitDetailedThreatSituation(unit1, unit2)
 end
 
 local constants = {
-  nameRealmFilterDesc = L[" Filter formats: 'Name', 'Name-Realm', '-Realm'. \n\nSupports multiple entries, separated by commas\n"],
+  nameRealmFilterDesc = L[" Filter formats: 'Name', 'Name-Realm', '-Realm'. \n\nSupports multiple entries, separated by commas\nCan use \\ to escape -."],
 }
 
 function WeakAuras.SpellSchool(school)
@@ -809,7 +809,7 @@ Private.load_prototype = {
     },
     {
       name = "ingroup",
-      display = L["In Group"],
+      display = L["Group Type"],
       type = "multiselect",
       width = WeakAuras.normalWidth,
       init = "arg",
@@ -1125,6 +1125,7 @@ Private.event_prototypes = {
       AddUnitEventForEvents(result, unit, "UNIT_FACTION")
       AddUnitEventForEvents(result, unit, "UNIT_NAME_UPDATE")
       AddUnitEventForEvents(result, unit, "UNIT_FLAGS")
+      AddUnitEventForEvents(result, unit, "PLAYER_FLAGS_CHANGED")
       return result;
     end,
     internal_events = function(trigger)
@@ -1319,6 +1320,22 @@ Private.event_prototypes = {
         display = L["In Combat"],
         type = "tristate",
         init = "UnitAffectingCombat(unit) == 1 and true or false",
+        store = true,
+        conditionType = "bool"
+      },
+      {
+        name = "afk",
+        display = L["Afk"],
+        type = "tristate",
+        init = "UnitIsAFK(unit) == 1 and true or false",
+        store = true,
+        conditionType = "bool"
+      },
+      {
+        name = "dnd",
+        display = L["Do Not Disturb"],
+        type = "tristate",
+        init = "UnitIsDND(unit) == 1 and true or false",
         store = true,
         conditionType = "bool"
       },
@@ -5908,7 +5925,7 @@ Private.event_prototypes = {
       },
       {
         name = "ingroup",
-        display = L["In Group"],
+        display = L["Group Type"],
         type = "multiselect",
         values = "group_types",
         init = "WeakAuras.GroupType()",

@@ -134,6 +134,7 @@ local function ConstructTexturePicker(frame)
   dropdown:SetCallback("OnGroupSelected", texturePickerGroupSelected)
 
   function group.UpdateList(self)
+    dropdown.dropdown.pullout:Close()
     wipe(dropdown.list);
     for categoryName, category in pairs(self.textures) do
       local match = false;

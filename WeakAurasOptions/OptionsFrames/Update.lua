@@ -46,7 +46,7 @@ local function checkTrigger(codes, id, trigger, untrigger)
     addCode(codes, L["%s Stacks Function"]:format(id), trigger.customStacks)
     for i = 1, 7 do
       local property = "customOverlay" .. i;
-      addCode(codes, L["%s Overlay Function"]:format(id), trigger[property])
+      addCode(codes, L["%s %u. Overlay Function"]:format(id, i), trigger[property])
     end
   end
 end
@@ -95,15 +95,41 @@ local function scamCheck(codes, data)
           data.regionType == "dynamicgroup" and data.grow ~= "CUSTOM" and data.useAnchorPerUnit and data.anchorPerUnit == "CUSTOM")
 
   if (data.conditions) then
-    local i = 1
+    local customChat = 1
+    local customCode = 1
+    local customCheck = 1
     for _, condition in ipairs(data.conditions) do
-      if (condition and condition.changes) then
+      if (condition.changes) then
         for _, property in ipairs(condition.changes) do
-          if ((property.property == "chat" or property.property == "customcode") and type(property.value) == "table" and property.value.custom) then
-            addCode(codes, L["%s - Condition Custom Chat %s"]:format(data.id, i), property.value.custom);
-            i = i + 1
+          if type(property.value) == "table" and property.value.custom then
+            if property.property == "chat" then
+              addCode(codes, L["%s - Condition Custom Chat %s"]:format(data.id, customChat), property.value.custom);
+              customChat = customChat + 1
+            elseif property.property == "customcode" then
+              addCode(codes, L["%s - Condition Custom Code %s"]:format(data.id, customCode), property.value.custom);
+              customCode = customCode + 1
+            end
           end
         end
+      end
+
+      local function recurseAddCustomCheck(checks)
+        if not checks then return end
+        for _, check in pairs(checks) do
+          if check.trigger == -1 and check.variable == "customcheck" then
+            addCode(codes, L["%s - Condition Custom Check %s"]:format(data.id, customCheck), check.value);
+            customCheck = customCheck + 1
+          end
+          recurseAddCustomCheck(check.checks)
+        end
+      end
+
+      if condition.check then
+        if condition.check.trigger == -1 and condition.check.variable == "customcheck" then
+          addCode(codes, L["%s - Condition Custom Check %s"]:format(data.id, customCheck), condition.check.value);
+          customCheck = customCheck + 1
+        end
+        recurseAddCustomCheck(condition.check.checks)
       end
     end
   end
@@ -1215,6 +1241,7 @@ local methods = {
     self:AddBasicInformationWidgets(data, sender)
 
     local matchInfoResult = AceGUI:Create("Label")
+    matchInfoResult:SetFontObject(GameFontHighlight)
     matchInfoResult:SetFullWidth(true)
     self:AddChild(matchInfoResult)
 
@@ -1324,10 +1351,40 @@ local methods = {
       self:AddChild(AceGUI:Create("WeakAurasSpacer"))
 
       local scamCheckText = AceGUI:Create("Label")
+      scamCheckText:SetFontObject(GameFontHighlight)
       scamCheckText:SetFullWidth(true)
       scamCheckText:SetText(L["This aura contains custom Lua code.\nMake sure you can trust the person who sent it!"])
       scamCheckText:SetColor(1, 0, 0)
       self:AddChild(scamCheckText)
+    end
+
+    local highestVersion = data.internalVersion or 0
+    if children then
+      for _, child in ipairs(children) do
+        highestVersion = max(highestVersion, child.internalVersion or 0)
+      end
+    end
+
+    if (highestVersion > WeakAuras.InternalVersion()) then
+      local highestVersionWarning = AceGUI:Create("Label")
+      highestVersionWarning:SetFontObject(GameFontHighlight)
+      highestVersionWarning:SetFullWidth(true)
+      highestVersionWarning:SetText(L["This aura was created with a newer version of WeakAuras.\nIt might not work correctly with your version!"])
+      highestVersionWarning:SetColor(1, 0, 0)
+      self:AddChild(highestVersionWarning)
+    end
+
+
+    local currentBuild = floor(WeakAuras.BuildInfo / 10000)
+    local importBuild = data.tocversion and floor(data.tocversion / 10000)
+
+    if importBuild and currentBuild ~= importBuild then
+      local flavorWarning = AceGUI:Create("Label")
+      flavorWarning:SetFontObject(GameFontHighlight)
+      flavorWarning:SetFullWidth(true)
+      flavorWarning:SetText(L["This aura was created with a different version (%s) of World of Warcraft.\nIt might not work correctly!"]:format(OptionsPrivate.Private.TocToExpansion[importBuild]))
+      flavorWarning:SetColor(1, 0, 0)
+      self:AddChild(flavorWarning)
     end
 
     if (#scamCheckResult > 0) then
@@ -1374,6 +1431,7 @@ local methods = {
     area:AddChild(summaryHeader)
 
     local summary = AceGUI:Create("Label")
+    summary:SetFontObject(GameFontHighlight)
     summary:SetFullWidth(true)
     area:AddChild(summary)
     self.updateSummary= summary
@@ -1922,12 +1980,14 @@ local methods = {
     self:AddChild(title)
 
     local description = AceGUI:Create("Label")
+    description:SetFontObject(GameFontHighlight)
     description:SetFullWidth(true)
     description:SetText(data.desc or "")
     self:AddChild(description)
 
     if data.url and data.url ~= "" then
       local url = AceGUI:Create("Label")
+      url:SetFontObject(GameFontHighlight)
       url:SetFullWidth(true)
       url:SetText(L["Url: %s"]:format(data.url))
       self:AddChild(url)
@@ -1935,6 +1995,7 @@ local methods = {
 
     if data.semver or data.version then
       local version = AceGUI:Create("Label")
+      version:SetFontObject(GameFontHighlight)
       version:SetFullWidth(true)
       version:SetText(L["Version: %s"]:format(data.semver or data.version))
       self:AddChild(version)
@@ -1942,6 +2003,7 @@ local methods = {
 
     if sender then
       local senderLabel = AceGUI:Create("Label")
+      senderLabel:SetFontObject(GameFontHighlight)
       senderLabel:SetFullWidth(true)
       senderLabel:SetText(L["Aura received from: %s"]:format(sender))
       self:AddChild(senderLabel)

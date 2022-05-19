@@ -96,8 +96,33 @@ local methods = {
   ["SetViewClick"] = function(self, func)
     self.view:SetScript("OnClick", func);
   end,
-  ["SetViewTest"] = function(self, func)
-    self.view.func = func;
+  ["PriorityShow"] = function(self, priority)
+    if (not WeakAuras.IsOptionsOpen()) then
+      return;
+    end
+    if(priority >= self.view.visibility and self.view.visibility ~= priority) then
+      self.view.visibility = priority;
+      self:UpdateViewTexture()
+    end
+  end,
+  ["PriorityHide"] = function(self, priority)
+    if (not WeakAuras.IsOptionsOpen()) then
+      return;
+    end
+    if(priority >= self.view.visibility and self.view.visibility ~= 0) then
+      self.view.visibility = 0;
+      self:UpdateViewTexture()
+    end
+  end,
+  ["UpdateViewTexture"] = function(self)
+    local visibility = self.view.visibility
+    if(visibility == 2) then
+      self.view.texture:SetTexture("Interface\\LFGFrame\\BattlenetWorking0.blp");
+    elseif(visibility == 1) then
+      self.view.texture:SetTexture("Interface\\LFGFrame\\BattlenetWorking2.blp");
+    else
+      self.view.texture:SetTexture("Interface\\LFGFrame\\BattlenetWorking4.blp");
+    end
   end,
   ["SetViewDescription"] = function(self, desc)
     self.view.desc = desc;
@@ -163,16 +188,6 @@ local function Constructor()
   view:SetScript("OnEnter", function() Show_Tooltip(button, L["View"], view.desc) end);
   view:SetScript("OnLeave", Hide_Tooltip);
   view.visibility = 0;
-  view.func = function() return view.visibility end;
-  view:SetScript("OnUpdate", function()
-    if(view.func() == 2) then
-      view.texture:SetTexture("Interface\\LFGFrame\\BattlenetWorking0.blp");
-    elseif(view.func() == 1) then
-      view.texture:SetTexture("Interface\\LFGFrame\\BattlenetWorking2.blp");
-    else
-      view.texture:SetTexture("Interface\\LFGFrame\\BattlenetWorking4.blp");
-    end
-  end);
 
   local widget = {
     frame = button,

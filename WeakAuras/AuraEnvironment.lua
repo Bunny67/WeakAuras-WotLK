@@ -144,6 +144,7 @@ local blockedFunctions = {
   GuildUninvite = true,
   securecall = true,
   DeleteCursorItem = true,
+  ChatEdit_SendText = true
 }
 
 local blockedTables = {
@@ -151,6 +152,9 @@ local blockedTables = {
   SendMailMailButton = true,
   SendMailMoneyGold = true,
   MailFrameTab2 = true,
+  ChatFrame1 = true,
+  WeakAurasOptions = true,
+  WeakAurasOptionsSaved = true
 }
 
 local aura_environments = {}
@@ -303,13 +307,11 @@ local FakeWeakAurasMixin = {
     -- to discuss these. But Auras have no purpose for calling these
     Add = true,
     AddMany = true,
-    AddManyFromAddons = true,
     Delete = true,
     HideOptions = true,
     Rename = true,
     NewAura = true,
     OptionsFrame = true,
-    RegisterAddon = true,
     RegisterDisplay = true,
     RegisterRegionOptions = true,
     RegisterSubRegionOptions = true,
@@ -320,28 +322,18 @@ local FakeWeakAurasMixin = {
     ShowOptions = true,
     -- Note these shouldn't exist in the WeakAuras namespace, but moving them takes a bit of effort,
     -- so for now just block them and clean them up later
-    CollisionResolved = true,
     ClearAndUpdateOptions = true,
-    CloseCodeReview = true,
     CloseImportExport = true,
     CreateTemplateView = true,
-    DisplayToString = true,
     FillOptions = true,
     FindUnusedId = true,
     GetMoverSizerId = true,
     GetDisplayButton = true,
     Import = true,
     NewDisplayButton = true,
-    NewAura = true,
-    OpenTriggerTemplate = true,
-    OpenCodeReview = true,
     PickDisplay = true,
     SetMoverSizer = true,
-    SetImporting = true,
-    SortDisplayButtons = true,
-    ShowOptions = true,
     ToggleOptions = true,
-    UpdateDisplayButton = true,
     UpdateGroupOrders = true,
     UpdateThumbnail = true,
     validate = true,
@@ -362,9 +354,7 @@ local FakeWeakAurasMixin = {
     frames = true,
     loadFrame = true,
     unitLoadFrame = true,
-    importDisplayButtons = true,
     loaded = true
-
   },
   override = {
     me = UnitName("player"),
@@ -432,7 +422,7 @@ function WeakAuras.LoadFunction(string, id, inTrigger)
   if function_cache[string] then
     return function_cache[string]
   else
-    local loadedFunction, errorString = loadstring("--[==[ Error in '" .. (id or "Unknown") .. (inTrigger and ("':'".. inTrigger) or "") .."' ]==] " .. string)
+    local loadedFunction, errorString = loadstring(string, "Error in: " .. (id or "Unknown") .. (inTrigger and ("':'".. inTrigger) or ""))
     if errorString then
       print(errorString)
     else

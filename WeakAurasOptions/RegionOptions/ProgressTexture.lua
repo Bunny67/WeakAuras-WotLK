@@ -189,12 +189,6 @@ local function createOptions(id, data)
         data.crop_x = v;
         WeakAuras.Add(data);
         WeakAuras.UpdateThumbnail(data);
-        if(data.parent) then
-          local parentData = WeakAuras.GetData(data.parent);
-          if(parentData) then
-            WeakAuras.Add(parentData);
-          end
-        end
         OptionsPrivate.ResetMoverSizer();
       end,
     },
@@ -212,12 +206,6 @@ local function createOptions(id, data)
         data.crop_y = v;
         WeakAuras.Add(data);
         WeakAuras.UpdateThumbnail(data);
-        if(data.parent) then
-          local parentData = WeakAuras.GetData(data.parent);
-          if(parentData) then
-            WeakAuras.Add(parentData);
-          end
-        end
         OptionsPrivate.ResetMoverSizer();
       end,
     },
@@ -240,18 +228,25 @@ local function createOptions(id, data)
       bigStep = 0.01,
       isPercent = true
     },
+    smoothProgress = {
+      type = "toggle",
+      width = WeakAuras.normalWidth,
+      name = L["Smooth Progress"],
+      desc = L["Animates progress changes"],
+      order = 55.1
+    },
     slanted = {
       type = "toggle",
       width = WeakAuras.normalWidth,
       name = L["Slanted"],
-      order = 55.2,
+      order = 55.3,
       hidden = function() return data.orientation == "CLOCKWISE" or data.orientation == "ANTICLOCKWISE"; end
     },
     slant = {
       type = "range",
       width = WeakAuras.normalWidth,
       name = L["Slant Amount"],
-      order = 55.3,
+      order = 55.4,
       min = 0,
       max = 1,
       bigStep = 0.1,
@@ -261,14 +256,14 @@ local function createOptions(id, data)
       type = "toggle",
       width = WeakAuras.normalWidth,
       name = L["Inverse Slant"],
-      order = 55.4,
+      order = 55.5,
       hidden = function() return not data.slanted or data.orientation == "CLOCKWISE" or data.orientation == "ANTICLOCKWISE" end
     },
     slantMode = {
       type = "select",
       width = WeakAuras.normalWidth,
       name = L["Slant Mode"],
-      order = 55.5,
+      order = 55.6,
       hidden = function() return not data.slanted or data.orientation == "CLOCKWISE" or data.orientation == "ANTICLOCKWISE" end,
       values = OptionsPrivate.Private.slant_mode
     },
@@ -413,11 +408,11 @@ local function createThumbnail()
   local background = region:CreateTexture(nil, "BACKGROUND");
   borderframe.background = background;
 
-  local foreground = region:CreateTexture(nil, "ART");
+  local foreground = region:CreateTexture(nil, "ARTWORK");
   borderframe.foreground = foreground;
 
-  borderframe.foregroundSpinner = WeakAuras.createSpinner(region, "ARTWORK", region:GetFrameLevel() + 2);
   borderframe.backgroundSpinner = WeakAuras.createSpinner(region, "BACKGROUND", region:GetFrameLevel() + 1);
+  borderframe.foregroundSpinner = WeakAuras.createSpinner(region, "ARTWORK", region:GetFrameLevel() + 2);
 
   return borderframe;
 end
@@ -792,8 +787,4 @@ local templates = {
   },
 }
 
-local function GetAnchors(data)
-  return OptionsPrivate.Private.default_types_for_anchor
-end
-
-WeakAuras.RegisterRegionOptions("progresstexture", createOptions, createIcon, L["Progress Texture"], createThumbnail, modifyThumbnail, L["Shows a texture that changes based on duration"], templates, GetAnchors);
+WeakAuras.RegisterRegionOptions("progresstexture", createOptions, createIcon, L["Progress Texture"], createThumbnail, modifyThumbnail, L["Shows a texture that changes based on duration"], templates);

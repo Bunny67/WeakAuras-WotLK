@@ -1,7 +1,7 @@
 ## Interface: 30300
 ## Title: WeakAuras Options
 ## Author: The WeakAuras Team
-## Version: 3.2.3
+## Version: 3.7.9
 ## Notes: Options for WeakAuras
 ## Notes-esES: Opciones para WeakAuras
 ## Notes-deDE: Optionen für WeakAuras
@@ -29,11 +29,12 @@ RegionOptions\Model.lua
 RegionOptions\ProgressTexture.lua
 
 SubRegionOptions\SubRegionCommon.lua
+SubRegionOptions\Background.lua
 SubRegionOptions\SubText.lua
 SubRegionOptions\Border.lua
 SubRegionOptions\Glow.lua
 SubRegionOptions\Tick.lua
-SubRegionOptions\BarModel.lua
+SubRegionOptions\Model.lua
 
 Cache.lua
 
@@ -51,19 +52,21 @@ BuffTrigger2.lua
 GenericTrigger.lua
 
 WeakAurasOptions.lua
-ExternalAddons.lua
 ConditionOptions.lua
 AuthorOptions.lua
 
 OptionsFrames\OptionsFrame.lua
-# -- Groups
+
+# Groups
 OptionsFrames\CodeReview.lua
 OptionsFrames\IconPicker.lua
 OptionsFrames\ImportExport.lua
 OptionsFrames\ModelPicker.lua
 OptionsFrames\TextEditor.lua
 OptionsFrames\TexturePicker.lua
-# -- misc Frames
+OptionsFrames\Update.lua
+
+# Misc frames
 OptionsFrames\MoverSizer.lua
 OptionsFrames\FrameChooser.lua
 
@@ -73,6 +76,8 @@ AceGUI-Widgets\AceGUIWidget-WeakAurasIcon.lua
 AceGUI-Widgets\AceGUIWidget-WeakAurasNewHeaderButton.lua
 AceGUI-Widgets\AceGUIWidget-WeakAurasLoadedHeaderButton.lua
 AceGUI-Widgets\AceGUIWidget-WeakAurasDisplayButton.lua
+AceGUI-Widgets\AceGUIWidget-WeakAurasPendingInstallButton.lua
+AceGUI-Widgets\AceGUIWidget-WeakAurasPendingUpdateButton.lua
 AceGUI-Widgets\AceGUIWidget-WeakAurasTextureButton.lua
 AceGUI-Widgets\AceGUIWidget-WeakAurasIconButton.lua
 AceGUI-Widgets\AceGUIWidget-WeakAurasMultiLineEditBox.lua
@@ -86,3 +91,5 @@ AceGUI-Widgets\AceGUIContainer-WeakAurasTreeGroup.lua
 AceGUI-Widgets\AceGUIWidget-WeakAurasSnippetButton.lua
 AceGUI-Widgets\AceGUIContainer-WeakAurasInlineGroup.lua
 AceGUI-Widgets\AceGUIWidget-WeakAurasExpandAnchor.lua
+AceGUI-Widgets\AceGUIWidget-WeakAurasSpacer.lua
+AceGUI-Widgets\AceGuiWidget-WeakAurasProgressBar.lua

@@ -134,12 +134,7 @@ local function createOptions(id, data)
       order = 1.5,
       width = WeakAuras.normalWidth,
       name = L["Group by Frame"],
-      desc = L[
-[[Group and anchor each auras by frame.
-
-- Unit Frames: attach to unit frame buttons per unit.
-- Custom Frames: choose which frame each region should be anchored to.]]
-      ],
+      desc = L["Group and anchor each auras by frame.\n\n- Unit Frames: attach to unit frame buttons per unit.\n- Custom Frames: choose which frame each region should be anchored to."],
       hidden = function() return data.grow == "CUSTOM" end,
     },
     anchorPerUnit = {

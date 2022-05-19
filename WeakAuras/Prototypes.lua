@@ -84,8 +84,17 @@ function WeakAuras.UnitDetailedThreatSituation(unit1, unit2)
 end
 
 local constants = {
-  nameRealmFilterDesc = L[" Filter formats: 'Name', 'Name-Realm', '-Realm'. \n\nSupports multiple entries, separated by commas\n"],
+  nameRealmFilterDesc = L[" Filter formats: 'Name', 'Name-Realm', '-Realm'. \n\nSupports multiple entries, separated by commas\nCan use \\ to escape -."],
 }
+
+function WeakAuras.SpellSchool(school)
+  return Private.combatlog_spell_school_types[school] or ""
+end
+
+function WeakAuras.TestSchool(spellSchool, test)
+  print(spellSchool, test, type(spellSchool), type(test))
+  return spellSchool == test
+end
 
 Private.function_strings = {
   count = [[
@@ -99,6 +108,9 @@ Private.function_strings = {
   ]],
   count_fraction = [[
     return function(count, max)
+      if max == 0 then
+        return false
+      end
       local fraction = count/max
       if(fraction %s %s) then
         return true
@@ -609,6 +621,8 @@ function WeakAuras.CheckCombatLogFlags(flags, flagToCheck)
     return bit.band(flags, COMBATLOG_OBJECT_AFFILIATION_MINE) > 0
   elseif (flagToCheck == "InGroup") then
     return bit.band(flags, COMBATLOG_OBJECT_AFFILIATION_OUTSIDER) == 0
+  elseif (flagToCheck == "InParty") then
+    return bit.band(flags, COMBATLOG_OBJECT_AFFILIATION_PARTY) > 0
   elseif (flagToCheck == "NotInGroup") then
     return bit.band(flags, COMBATLOG_OBJECT_AFFILIATION_OUTSIDER) > 0
   end
@@ -795,7 +809,7 @@ Private.load_prototype = {
     },
     {
       name = "ingroup",
-      display = L["In Group"],
+      display = L["Group Type"],
       type = "multiselect",
       width = WeakAuras.normalWidth,
       init = "arg",
@@ -936,7 +950,7 @@ Private.load_prototype = {
   }
 };
 
-local function AddUnitChangeInternalEvents(triggerUnit, t)
+local function AddUnitChangeInternalEvents(triggerUnit, t, includePets)
   if (triggerUnit == nil) then
     return
   end
@@ -947,14 +961,32 @@ local function AddUnitChangeInternalEvents(triggerUnit, t)
     tinsert(t, "PET_UPDATE")
   else
     if Private.multiUnitUnits[triggerUnit] then
+      local isPet
       for unit in pairs(Private.multiUnitUnits[triggerUnit]) do
-        tinsert(t, "UNIT_CHANGED_" .. string.lower(unit))
-        WeakAuras.WatchUnitChange(unit)
+        isPet = WeakAuras.UnitIsPet(unit)
+        if (includePets ~= nil and isPet) or (includePets ~= "PetsOnly" and not isPet) then
+          tinsert(t, "UNIT_CHANGED_" .. string.lower(unit))
+          WeakAuras.WatchUnitChange(unit)
+        end
       end
     else
       tinsert(t, "UNIT_CHANGED_" .. string.lower(triggerUnit))
       WeakAuras.WatchUnitChange(triggerUnit)
     end
+  end
+end
+
+local function AddRemainingCastInternalEvents(triggerUnit, t)
+  if (triggerUnit == nil) then
+    return
+  end
+
+  if Private.multiUnitUnits[triggerUnit] then
+    for unit in pairs(Private.multiUnitUnits[triggerUnit]) do
+      tinsert(t, "CAST_REMAINING_CHECK_" .. string.lower(unit))
+    end
+  else
+    tinsert(t, "CAST_REMAINING_CHECK_" .. string.lower(triggerUnit))
   end
 end
 
@@ -976,11 +1008,32 @@ local function AddUnitEventForEvents(result, unit, event)
 end
 
 local unitHelperFunctions = {
+  UnitChangedForceEventsWithPets = function(trigger)
+    local events = {}
+    local includePets = trigger.use_includePets == true and trigger.includePets or nil
+    if Private.multiUnitUnits[trigger.unit] then
+      local isPet
+      for unit in pairs(Private.multiUnitUnits[trigger.unit]) do
+        isPet = WeakAuras.UnitIsPet(unit)
+        if (includePets ~= nil and isPet) or (includePets ~= "PetsOnly" and not isPet) then
+          tinsert(events, {"UNIT_CHANGED_" .. unit, unit})
+        end
+      end
+    else
+      if trigger.unit then
+        tinsert(events, {"UNIT_CHANGED_" .. trigger.unit, trigger.unit})
+      end
+    end
+    return events
+  end,
+
   UnitChangedForceEvents = function(trigger)
     local events = {}
     if Private.multiUnitUnits[trigger.unit] then
       for unit in pairs(Private.multiUnitUnits[trigger.unit]) do
-        tinsert(events, {"UNIT_CHANGED_" .. unit, unit})
+        if not WeakAuras.UnitIsPet(unit) then
+          tinsert(events, {"UNIT_CHANGED_" .. unit, unit})
+        end
       end
     else
       if trigger.unit then
@@ -1072,6 +1125,7 @@ Private.event_prototypes = {
       AddUnitEventForEvents(result, unit, "UNIT_FACTION")
       AddUnitEventForEvents(result, unit, "UNIT_NAME_UPDATE")
       AddUnitEventForEvents(result, unit, "UNIT_FLAGS")
+      AddUnitEventForEvents(result, unit, "PLAYER_FLAGS_CHANGED")
       return result;
     end,
     internal_events = function(trigger)
@@ -1107,6 +1161,7 @@ Private.event_prototypes = {
         type = "unit",
         init = "arg",
         values = "actual_unit_types_cast",
+        desc = Private.actual_unit_types_cast_tooltip,
         test = "true",
         store = true
       },
@@ -1141,6 +1196,7 @@ Private.event_prototypes = {
       {
         name = "namerealm",
         display = L["Unit Name/Realm"],
+        desc = constants.nameRealmFilterDesc,
         type = "string",
         preamble = "local nameRealmChecker = WeakAuras.ParseNameCheck(%q)",
         test = "nameRealmChecker:Check(name, realm)",
@@ -1170,6 +1226,23 @@ Private.event_prototypes = {
         values = "classification_types",
         store = true,
         conditionType = "select"
+      },
+      {
+        name = "raidMarkIndex",
+        display = L["Raid Mark"],
+        type = "select",
+        values = "raid_mark_check_type",
+        store = true,
+        conditionType = "select",
+        init = "GetRaidTargetIndex(unit) or 0"
+      },
+      {
+        name = "raidMark",
+        display = L["Raid Mark Icon"],
+        store = true,
+        hidden = true,
+        test = "true",
+        init = "raidMarkIndex > 0 and '{rt'..raidMarkIndex..'}' or ''"
       },
       {
         name = "ignoreSelf",
@@ -1252,6 +1325,22 @@ Private.event_prototypes = {
         conditionType = "bool"
       },
       {
+        name = "afk",
+        display = L["Afk"],
+        type = "tristate",
+        init = "UnitIsAFK(unit) == 1 and true or false",
+        store = true,
+        conditionType = "bool"
+      },
+      {
+        name = "dnd",
+        display = L["Do Not Disturb"],
+        type = "tristate",
+        init = "UnitIsDND(unit) == 1 and true or false",
+        store = true,
+        conditionType = "bool"
+      },
+      {
         hidden = true,
         test = "WeakAuras.UnitExistsFixed(unit, smart) and specificUnitCheck"
       }
@@ -1326,7 +1415,7 @@ Private.event_prototypes = {
         name = "percentXP",
         display = L["Experience (%)"],
         type = "number",
-        init = "total ~= 0 and (value / total) * 100",
+        init = "total ~= 0 and (value / total) * 100 or nil",
         store = true,
         conditionType = "number"
       },
@@ -1348,7 +1437,7 @@ Private.event_prototypes = {
       {
         name = "percentrested",
         display = L["Rested Experience (%)"],
-        init = "total ~= 0 and (restedXP / total) * 100",
+        init = "total ~= 0 and (restedXP / total) * 100 or nil",
         type = "number",
         store = true,
         conditionType = "number",
@@ -1369,11 +1458,13 @@ Private.event_prototypes = {
   },
   ["Health"] = {
     type = "unit",
+    includePets = "true",
     canHaveDuration = true,
     events = function(trigger)
       local unit = trigger.unit
       local result = {}
       AddUnitEventForEvents(result, unit, "UNIT_HEALTH")
+      AddUnitEventForEvents(result, unit, "UNIT_MAXHEALTH")
       AddUnitEventForEvents(result, unit, "UNIT_NAME_UPDATE")
       if trigger.use_ignoreDead or trigger.use_ignoreDisconnected then
         AddUnitEventForEvents(result, unit, "UNIT_FLAGS")
@@ -1383,10 +1474,11 @@ Private.event_prototypes = {
     internal_events = function(trigger)
       local unit = trigger.unit
       local result = {}
-      AddUnitChangeInternalEvents(unit, result)
+      local includePets = trigger.use_includePets == true and trigger.includePets or nil
+      AddUnitChangeInternalEvents(unit, result, includePets)
       return result
     end,
-    force_events = unitHelperFunctions.UnitChangedForceEvents,
+    force_events = unitHelperFunctions.UnitChangedForceEventsWithPets,
     name = L["Health"],
     init = function(trigger)
       trigger.unit = trigger.unit or "player";
@@ -1409,6 +1501,7 @@ Private.event_prototypes = {
         type = "unit",
         init = "arg",
         values = "actual_unit_types_cast",
+        desc = Private.actual_unit_types_cast_tooltip,
         test = "true",
         store = true
       },
@@ -1445,7 +1538,15 @@ Private.event_prototypes = {
         name = "percenthealth",
         display = L["Health (%)"],
         type = "number",
-        init = "total ~= 0 and (value / total) * 100",
+        init = "total ~= 0 and (value / total) * 100 or nil",
+        store = true,
+        conditionType = "number"
+      },
+      {
+        name = "deficit",
+        display = WeakAuras.newFeatureString .. L["Health Deficit"],
+        type = "number",
+        init = "total - value",
         store = true,
         conditionType = "number"
       },
@@ -1497,6 +1598,34 @@ Private.event_prototypes = {
         values = "class_types",
         store = true,
         conditionType = "select"
+      },
+      {
+        name = "raidMarkIndex",
+        display = L["Raid Mark"],
+        type = "select",
+        values = "raid_mark_check_type",
+        store = true,
+        conditionType = "select",
+        init = "GetRaidTargetIndex(unit) or 0"
+      },
+      {
+        name = "raidMark",
+        display = L["Raid Mark Icon"],
+        store = true,
+        hidden = true,
+        test = "true",
+        init = "raidMarkIndex > 0 and '{rt'..raidMarkIndex..'}' or ''"
+      },
+      {
+        name = "includePets",
+        display = WeakAuras.newFeatureString .. L["Include Pets"],
+        type = "select",
+        values = "include_pets_types",
+        width = WeakAuras.normalWidth,
+        test = "true",
+        enable = function(trigger)
+          return trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party"
+        end
       },
       {
         name = "ignoreSelf",
@@ -1574,11 +1703,12 @@ Private.event_prototypes = {
     internal_events = function(trigger)
       local unit = trigger.unit
       local result = {}
-      AddUnitChangeInternalEvents(unit, result)
+      local includePets = trigger.use_includePets == true and trigger.includePets or nil
+      AddUnitChangeInternalEvents(unit, result, includePets)
 
       return result
     end,
-    force_events = unitHelperFunctions.UnitChangedForceEvents,
+    force_events = unitHelperFunctions.UnitChangedForceEventsWithPets,
     name = L["Power"],
     init = function(trigger)
       trigger.unit = trigger.unit or "player";
@@ -1605,6 +1735,7 @@ Private.event_prototypes = {
         type = "unit",
         init = "arg",
         values = "actual_unit_types_cast",
+        desc = Private.actual_unit_types_cast_tooltip,
         test = "true",
         store = true
       },
@@ -1668,7 +1799,15 @@ Private.event_prototypes = {
         name = "percentpower",
         display = L["Power (%)"],
         type = "number",
-        init = "total ~= 0 and (value / total) * 100",
+        init = "total ~= 0 and (value / total) * 100 or nil",
+        store = true,
+        conditionType = "number"
+      },
+      {
+        name = "deficit",
+        display = WeakAuras.newFeatureString .. L["Power Deficit"],
+        type = "number",
+        init = "total - value",
         store = true,
         conditionType = "number"
       },
@@ -1720,6 +1859,34 @@ Private.event_prototypes = {
         values = "class_types",
         store = true,
         conditionType = "select"
+      },
+      {
+        name = "raidMarkIndex",
+        display = L["Raid Mark"],
+        type = "select",
+        values = "raid_mark_check_type",
+        store = true,
+        conditionType = "select",
+        init = "GetRaidTargetIndex(unit) or 0"
+      },
+      {
+        name = "raidMark",
+        display = L["Raid Mark Icon"],
+        store = true,
+        hidden = true,
+        test = "true",
+        init = "raidMarkIndex > 0 and '{rt'..raidMarkIndex..'}' or ''"
+      },
+      {
+        name = "includePets",
+        display = WeakAuras.newFeatureString .. L["Include Pets"],
+        type = "select",
+        values = "include_pets_types",
+        width = WeakAuras.normalWidth,
+        test = "true",
+        enable = function(trigger)
+          return trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party"
+        end
       },
       {
         name = "ignoreSelf",
@@ -1816,7 +1983,7 @@ Private.event_prototypes = {
       },
       {
         name = "sourceFlags",
-        display = L["Source In Group"],
+        display = L["Source Affiliation"],
         type = "select",
         values = "combatlog_flags_check_type",
         init = "arg",
@@ -1969,10 +2136,19 @@ Private.event_prototypes = {
         conditionType = "string"
       },
       {
+        name = "spellSchool",
+        display = WeakAuras.newFeatureString .. L["Spell School"],
+        type = "select",
+        values = "combatlog_spell_school_types_for_ui",
+        test = "spellSchool == %d",
+        init = "arg",
+        control = "WeakAurasSortedDropdown",
+        conditionType = "select",
+        store = true,
         enable = function(trigger)
           return trigger.subeventPrefix and (trigger.subeventPrefix:find("SPELL") or trigger.subeventPrefix == "RANGE" or trigger.subeventPrefix:find("DAMAGE"))
         end
-      }, -- spellSchool ignored with _ argument
+      },
       {
         name = "environmentalType",
         display = L["Environment Type"],
@@ -2191,7 +2367,7 @@ Private.event_prototypes = {
         init = "spellId and select(3, GetSpellInfo(spellId)) or 'Interface\\\\Icons\\\\INV_Misc_QuestionMark'",
         store = true,
         test = "true"
-      }
+      },
     },
     timedrequired = true
   },
@@ -2445,7 +2621,7 @@ Private.event_prototypes = {
         conditionEvents = {
           "PLAYER_TARGET_CHANGED",
           "WA_SPELL_RANGECHECK",
-        }
+        },
       },
       {
         hidden = true,
@@ -2592,7 +2768,7 @@ Private.event_prototypes = {
         conditionType = "select",
         conditionValues = "charges_change_condition_type";
         conditionTest = function(state, needle)
-          return state and state.show and WeakAuras.CheckChargesDirection(state.direction, needle)
+          return state and state.show and state.direction and WeakAuras.CheckChargesDirection(state.direction, needle)
         end,
       },
       {
@@ -2789,7 +2965,6 @@ Private.event_prototypes = {
     end,
     hasItemID = true,
     automaticrequired = true,
-    automaticAutoHide = false
   },
   ["Cooldown Progress (Equipment Slot)"] = {
     type = "item",
@@ -4323,10 +4498,12 @@ Private.event_prototypes = {
         end
       ]];
 
+      local showOnActive = trigger.showOn == 'showOnActive' or not trigger.showOn
+
       return ret:format(trigger.weapon or "main",
       trigger.use_enchant and trigger.enchant or "",
-      trigger.use_stack and tonumber(trigger.stack or 0) or "nil",
-      trigger.use_remaining and tonumber(trigger.remaining or 0) or "nil",
+      showOnActive and trigger.use_stack and tonumber(trigger.stack or 0) or "nil",
+      showOnActive and trigger.use_remaining and tonumber(trigger.remaining or 0) or "nil",
       trigger.showOn or "showOnActive",
       trigger.stack_operator or "<",
       trigger.remaining_operator or "<")
@@ -4987,18 +5164,16 @@ Private.event_prototypes = {
       AddUnitEventForEvents(result, unit, "UNIT_SPELLCAST_INTERRUPTIBLE")
       AddUnitEventForEvents(result, unit, "UNIT_SPELLCAST_NOT_INTERRUPTIBLE")
       AddUnitEventForEvents(result, unit, "UNIT_SPELLCAST_INTERRUPTED")
-      AddUnitEventForEvents(result, unit, "UNIT_TARGET")
       AddUnitEventForEvents(result, unit, "UNIT_NAME_UPDATE")
-      if trigger.use_showLatency and unit == "player" then
-        result.events = result.events or {}
-        tinsert(result.events, "CAST_LATENCY_UPDATE")
-      end
+      AddUnitEventForEvents(result, unit, "UNIT_TARGET")
       return result
     end,
     internal_events = function(trigger)
       local unit = trigger.unit
-      local result = {"CAST_REMAINING_CHECK_" .. string.lower(unit)}
-      AddUnitChangeInternalEvents(unit, result)
+      local result = {}
+      AddRemainingCastInternalEvents(unit, result)
+      local includePets = trigger.use_includePets == true and trigger.includePets or nil
+      AddUnitChangeInternalEvents(unit, result, includePets)
       return result
     end,
     loadFunc = function(trigger)
@@ -5006,7 +5181,7 @@ Private.event_prototypes = {
         WeakAuras.WatchForCastLatency()
       end
     end,
-    force_events = unitHelperFunctions.UnitChangedForceEvents,
+    force_events = unitHelperFunctions.UnitChangedForceEventsWithPets,
     canHaveDuration = "timed",
     name = L["Cast"],
     init = function(trigger)
@@ -5041,21 +5216,10 @@ Private.event_prototypes = {
           WeakAuras.ScheduleCastCheck(expirationTime - remainingCheck, unit)
         end
       ]=];
-
       ret = ret:format(trigger.unit == "group" and "true" or "false",
                         trigger.use_remaining and tonumber(trigger.remaining or 0) or "nil",
                         trigger.use_inverse and "true" or "false");
 
-      if trigger.unit == "player" and trigger.use_showLatency then
-        ret = ret .. [[
-          if event == "CAST_LATENCY_UPDATE" then
-            state.sendTime = GetTime()
-          elseif event == "UNIT_SPELLCAST_START" and tonumber(state.sendTime) then
-            state.latency = GetTime() - state.sendTime
-            state.changed = true
-          end
-        ]]
-      end
       ret = ret .. unitHelperFunctions.SpecificUnitCheck(trigger)
 
       return ret
@@ -5192,6 +5356,34 @@ Private.event_prototypes = {
         end
       },
       {
+        name = "raidMarkIndex",
+        display = L["Raid Mark"],
+        type = "select",
+        values = "raid_mark_check_type",
+        store = true,
+        conditionType = "select",
+        init = "GetRaidTargetIndex(unit) or 0"
+      },
+      {
+        name = "raidMark",
+        display = L["Raid Mark Icon"],
+        store = true,
+        hidden = true,
+        test = "true",
+        init = "raidMarkIndex > 0 and '{rt'..raidMarkIndex..'}' or ''"
+      },
+      {
+        name = "includePets",
+        display = WeakAuras.newFeatureString .. L["Include Pets"],
+        type = "select",
+        values = "include_pets_types",
+        width = WeakAuras.normalWidth,
+        test = "true",
+        enable = function(trigger)
+          return trigger.unit == "group" or trigger.unit == "raid" or trigger.unit == "party"
+        end
+      },
+      {
         name = "ignoreSelf",
         display = L["Ignore Self"],
         type = "toggle",
@@ -5325,7 +5517,8 @@ Private.event_prototypes = {
       {
         name = L["Latency"],
         func = function(trigger, state)
-          return 0, type(state.latency) == "number" and state.latency
+          if not state.expirationTime or not state.duration then return 0, 0 end
+          return 0, (state.expirationTime - state.duration) - (Private.LAST_CURRENT_SPELL_CAST_CHANGED or 0)
         end,
         enable = function(trigger)
           return trigger.use_showLatency and trigger.unit == "player"
@@ -5733,7 +5926,7 @@ Private.event_prototypes = {
       },
       {
         name = "ingroup",
-        display = L["In Group"],
+        display = L["Group Type"],
         type = "multiselect",
         values = "group_types",
         init = "WeakAuras.GroupType()",
@@ -6018,6 +6211,12 @@ end
 Private.event_prototypes["BigWigs Message"] = nil
 Private.event_prototypes["BigWigs Timer"] = nil
 
+Private.category_event_prototype = {}
+for name, prototype in pairs(Private.event_prototypes) do
+  Private.category_event_prototype[prototype.type] = Private.category_event_prototype[prototype.type] or {}
+  Private.category_event_prototype[prototype.type][name] = prototype.name
+end
+
 Private.dynamic_texts = {
   ["p"] = {
     get = function(state)
@@ -6026,6 +6225,10 @@ Private.dynamic_texts = {
         return state.value or nil
       end
       if state.progressType == "timed" then
+        if state.paused then
+          return state.remaining and state.remaining >= 0 and state.remaining or nil
+        end
+
         if not state.expirationTime or not state.duration then
           return nil
         end

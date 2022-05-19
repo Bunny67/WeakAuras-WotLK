@@ -289,22 +289,20 @@ local function createOptions(id, data)
     options["displayText_format_" .. key] = option
   end
 
-  if data.controlledChildren then
-    for index, childId in pairs(data.controlledChildren) do
-      local childData = WeakAuras.GetData(childId)
-      local get = function(key)
-        return childData["displayText_format_" .. key]
-      end
-      local input = childData.displayText
-      OptionsPrivate.AddTextFormatOption(input, true, get, addOption, hidden, setHidden, index, #data.controlledChildren)
-    end
-  else
-    local get = function(key)
-      return data["displayText_format_" .. key]
-    end
-    local input = data.displayText
-    OptionsPrivate.AddTextFormatOption(input, true, get, addOption, hidden, setHidden)
+  local total, index = 0, 1
+  for child in OptionsPrivate.Private.TraverseLeafsOrAura(data) do
+    total = total + 1
   end
+
+  for child in OptionsPrivate.Private.TraverseLeafsOrAura(data) do
+    local get = function(key)
+      return child["displayText_format_" .. key]
+    end
+    local input = child.displayText
+    OptionsPrivate.AddTextFormatOption(input, true, get, addOption, hidden, setHidden, false, index, total)
+    index = index + 1
+  end
+
   addOption("footer", {
     type = "description",
     name = "",
@@ -354,6 +352,9 @@ local function modifyThumbnail(parent, borderframe, data, fullModify, size)
 
   local fontPath = SharedMedia:Fetch("font", data.font) or data.font;
   text:SetFont(fontPath, data.fontSize < 33 and data.fontSize or 33, data.outline and "OUTLINE" or nil);
+  if not text:GetFont() then -- Font invalid, set the font but keep the setting
+    text:SetFont(STANDARD_TEXT_FONT, data.fontSize < 33 and data.fontSize or 33, data.outline and "OUTLINE" or nil);
+  end
   text:SetTextHeight(data.fontSize);
   text:SetText(data.displayText);
   text:SetTextColor(data.color[1], data.color[2], data.color[3], data.color[4]);

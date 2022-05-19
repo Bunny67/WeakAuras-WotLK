@@ -30,7 +30,7 @@ local default = {
   borderOffset = 5,
   borderInset = 11,
   borderSize = 16,
-  borderBackdrop = "Blizzard Tooltip",
+  borderBackdrop = "Blizzard Tooltip"
 };
 
 local screenWidth, screenHeight = math.ceil(GetScreenWidth() / 20) * 20, math.ceil(GetScreenHeight() / 20) * 20;
@@ -70,6 +70,7 @@ local regionFunctions = {
 local function create(parent)
   -- Main region
   local region = CreateFrame("FRAME", nil, UIParent);
+  region.regionType = "model"
   region:SetMovable(true);
   region:SetResizable(true);
   region:SetMinResize(1, 1);
@@ -83,6 +84,8 @@ local function create(parent)
   for k, v in pairs (regionFunctions) do
     region[k] = v
   end
+
+  region.AnchorSubRegion = WeakAuras.regionPrototype.AnchorSubRegion
 
   -- Return complete region
   return region;
@@ -293,5 +296,9 @@ do
   end
 end
 
+local function validate(data)
+  Private.EnforceSubregionExists(data, "subbackground")
+end
+
 -- Register new region type with WeakAuras
-WeakAuras.RegisterRegionType("model", create, modify, default, GetProperties);
+WeakAuras.RegisterRegionType("model", create, modify, default, GetProperties, validate);

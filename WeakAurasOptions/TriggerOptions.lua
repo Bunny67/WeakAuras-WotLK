@@ -16,8 +16,6 @@ local executeAll = OptionsPrivate.commonOptions.CreateExecuteAll("trigger")
 local flattenRegionOptions = OptionsPrivate.commonOptions.flattenRegionOptions
 local fixMetaOrders = OptionsPrivate.commonOptions.fixMetaOrders
 
-local spellCache = WeakAuras.spellCache
-
 local function union(table1, table2)
   local meta = {};
   for i,v in pairs(table1) do
@@ -80,7 +78,6 @@ local function GetGlobalOptions(data)
         data.triggers.activeTriggerMode = v;
         WeakAuras.Add(data);
         WeakAuras.UpdateThumbnail(data);
-        WeakAuras.UpdateDisplayButton(data);
       end,
       hidden = function() return #data.triggers <= 1 end
     }
@@ -153,13 +150,8 @@ end
 
 function OptionsPrivate.GetTriggerOptions(data)
   local allOptions = {}
-  if data.controlledChildren then
-    for index, childId in pairs(data.controlledChildren) do
-      local childData = WeakAuras.GetData(childId)
-      allOptions = AddOptions(allOptions, childData)
-    end
-  else
-    allOptions = AddOptions(allOptions, data)
+  for child in OptionsPrivate.Private.TraverseLeafsOrAura(data) do
+    allOptions = AddOptions(allOptions, child)
   end
 
   fixMetaOrders(allOptions)
@@ -323,11 +315,12 @@ function OptionsPrivate.AddTriggerMetaFunctions(options, data, triggernum)
       local canDelete = false
       -- Since we want to handle all selected auras in one dialog, we have to iterate over GetPickedDisplay
       local picked = OptionsPrivate.GetPickedDisplay()
-      OptionsPrivate.Private.ApplyToDataOrChildData(picked, function(childData)
-        if #childData.triggers > 1 and #childData.triggers >= triggernum then
+      for child in OptionsPrivate.Private.TraverseLeafsOrAura(picked) do
+        if #child.triggers > 1 and #child.triggers >= triggernum then
           canDelete = true
+          break;
         end
-      end)
+      end
 
       if canDelete then
         StaticPopupDialogs["WEAKAURAS_CONFIRM_TRIGGER_DELETE"] = {
@@ -335,15 +328,16 @@ function OptionsPrivate.AddTriggerMetaFunctions(options, data, triggernum)
           button1 = L["Delete"],
           button2 = L["Cancel"],
           OnAccept = function()
-            OptionsPrivate.Private.ApplyToDataOrChildData(picked, function(childData)
-              if #childData.triggers > 1 and #childData.triggers >= triggernum then
-                tremove(childData.triggers, triggernum)
-                DeleteConditionsForTrigger(childData, triggernum)
-                WeakAuras.Add(childData)
+            for child in OptionsPrivate.Private.TraverseLeafsOrAura(picked) do
+              if #child.triggers > 1 and #child.triggers >= triggernum then
+                tremove(child.triggers, triggernum)
+                DeleteConditionsForTrigger(child, triggernum)
+                WeakAuras.Add(child)
                 OptionsPrivate.RemoveCollapsed(collapsedId, "trigger", {triggernum})
-                WeakAuras.ClearAndUpdateOptions(childData.id)
+                OptionsPrivate.ClearOptions(child.id)
               end
-            end)
+            end
+
             WeakAuras.FillOptions()
             triggerDeleteDialogOpen = false
           end,
@@ -363,7 +357,9 @@ function OptionsPrivate.AddTriggerMetaFunctions(options, data, triggernum)
   local _, _, _, enabled = GetAddOnInfo("WeakAurasTemplates")
   if enabled then
     options.__applyTemplate = function()
-      WeakAuras.OpenTriggerTemplate(data)
+      -- If we have more than a single aura selected,
+      -- we want to open the template view with the group/multi selection
+      OptionsPrivate.OpenTriggerTemplate(OptionsPrivate.GetPickedDisplay())
     end
   end
 end

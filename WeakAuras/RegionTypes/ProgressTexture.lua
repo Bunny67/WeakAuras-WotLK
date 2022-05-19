@@ -92,7 +92,6 @@ local default = {
   height = 200,
   orientation = "VERTICAL",
   inverse = false,
-  alpha = 1.0,
   foregroundColor = {1, 1, 1, 1},
   backgroundColor = {0.5, 0.5, 0.5, 0.5},
   startAngle = 0,
@@ -101,7 +100,6 @@ local default = {
   user_y = 0,
   crop_x = 0.41,
   crop_y = 0.41,
-  crop = 0.41,
   rotation = 0,
   selfPoint = "CENTER",
   anchorPoint = "CENTER",
@@ -110,9 +108,9 @@ local default = {
   yOffset = 0,
   font = defaultFont,
   fontSize = defaultFontSize,
-  stickyDuration = false,
   mirror = false,
-  frameStrata = 1
+  frameStrata = 1,
+  slantMode = "INSIDE"
 };
 
 WeakAuras.regionPrototype.AddAlphaToDefault(default);
@@ -160,9 +158,45 @@ local properties = {
     bigStep = 1,
     default = 32
   },
+  orientation = {
+    display = L["Orientation"],
+    setter = "SetOrientation",
+    type = "list",
+    values = Private.orientation_with_circle_types
+  },
+  inverse = {
+    display = L["Inverse"],
+    setter = "SetInverse",
+    type = "bool"
+  },
+  mirror = {
+    display = L["Mirror"],
+    setter = "SetMirror",
+    type = "bool"
+  }
 }
 
 WeakAuras.regionPrototype.AddProperties(properties, default);
+
+local function GetProperties(data)
+  local overlayInfo = Private.GetOverlayInfo(data);
+  if (overlayInfo and next(overlayInfo)) then
+    local auraProperties = CopyTable(properties);
+
+    for id, display in ipairs(overlayInfo) do
+      auraProperties["overlays." .. id] = {
+        display = string.format(L["%s Overlay Color"], display),
+        setter = "SetOverlayColor",
+        arg1 = id,
+        type = "color",
+      }
+    end
+
+    return auraProperties;
+  else
+    return CopyTable(properties);
+  end
+end
 
 local spinnerFunctions = {};
 
@@ -391,6 +425,7 @@ local function create(parent)
   local font = "GameFontHighlight";
 
   local region = CreateFrame("FRAME", nil, parent);
+  region.regionType = "progresstexture"
   region:SetMovable(true);
   region:SetResizable(true);
   region:SetMinResize(1, 1);
@@ -405,14 +440,29 @@ local function create(parent)
   region.foregroundSpinner = createSpinner(region, "ARTWORK", parent:GetFrameLevel() + 2);
   region.backgroundSpinner = createSpinner(region, "BACKGROUND", parent:GetFrameLevel() + 1);
 
-  region.values = {};
+  region.extraTextures = {};
+  region.extraSpinners = {};
+
+  -- Use a dummy object for the SmoothStatusBarMixin, because our SetValue
+  -- is used for a different purpose
+  region.smoothProgress = {};
+  WeakAuras.Mixin(region.smoothProgress, SmoothStatusBarMixin);
+  region.smoothProgress.SetValue = function(self, progress)
+    region:SetValueOnTexture(progress);
+  end
+
+  region.smoothProgress.GetValue = function(self)
+    return region.progress;
+  end
+
+  region.smoothProgress.GetMinMaxValues = function(self)
+    return 0, 1;
+  end
 
   region.duration = 0;
   region.expirationTime = math.huge;
 
   WeakAuras.regionPrototype.create(region);
-
-  region.AnchorSubRegion = WeakAuras.regionPrototype.AnchorSubRegion
 
   return region;
 end
@@ -805,7 +855,11 @@ local function modify(parent, region, data)
     end
 
     progress = progress > 0.0001 and progress or 0.0001;
-    region:SetValueOnTexture(progress);
+    if (data.smoothProgress) then
+      region.smoothProgress:SetSmoothedValue(progress);
+    else
+      region:SetValueOnTexture(progress);
+    end
   end
 
   function region:SetValue(value, total)
@@ -817,7 +871,11 @@ local function modify(parent, region, data)
       end
     end
     progress = progress > 0.0001 and progress or 0.0001;
-    region:SetValueOnTexture(progress);
+    if (data.smoothProgress) then
+      region.smoothProgress:SetSmoothedValue(progress);
+    else
+      region:SetValueOnTexture(progress);
+    end
   end
 
   function region:Update()
@@ -825,7 +883,27 @@ local function modify(parent, region, data)
 
     local max
     if state.progressType == "timed" then
-      local expirationTime = state.expirationTime and state.expirationTime > 0 and state.expirationTime or math.huge;
+      local expirationTime
+      if state.paused == true then
+        if not region.paused then
+          region:Pause()
+        end
+        if region.TimerTick then
+          region.TimerTick = nil
+          region:UpdateRegionHasTimerTick()
+        end
+        expirationTime = GetTime() + (state.remaining or 0)
+      else
+        if region.paused then
+          region:Resume()
+        end
+        if not region.TimerTick then
+          region.TimerTick = TimerTick
+          region:UpdateRegionHasTimerTick()
+        end
+        expirationTime = state.expirationTime and state.expirationTime > 0 and state.expirationTime or math.huge;
+      end
+
       local duration = state.duration or 0
       if region.adjustedMinRelPercent then
         region.adjustedMinRel = region.adjustedMinRelPercent * duration
@@ -843,11 +921,11 @@ local function modify(parent, region, data)
       end
 
       region:SetTime(max - adjustMin, expirationTime - adjustMin, state.inverse);
-      if not region.TimerTick then
-        region.TimerTick = TimerTick
-        region:UpdateRegionHasTimerTick()
-      end
     elseif state.progressType == "static" then
+      if region.paused then
+        region:Resume()
+      end
+
       local value = state.value or 0;
       local total = state.total or 0;
       if region.adjustedMinRelPercent then
@@ -870,6 +948,9 @@ local function modify(parent, region, data)
         region:UpdateRegionHasTimerTick()
       end
     else
+      if region.paused then
+        region:Resume()
+      end
       region:SetTime(0, math.huge)
       if region.TimerTick then
         region.TimerTick = nil
@@ -891,6 +972,14 @@ local function modify(parent, region, data)
     if (data.sameTexture) then
       background:SetTexture(texture);
       backgroundSpinner:SetTexture(texture);
+    end
+
+    for _, extraTexture in ipairs(region.extraTextures) do
+      extraTexture:SetTexture(texture);
+    end
+
+    for _, extraSpinner in ipairs(region.extraSpinners) do
+      extraSpinner:SetTexture(texture);
     end
   end
 
@@ -929,7 +1018,21 @@ local function modify(parent, region, data)
     region:SetValueOnTexture(progress);
   end
 
+  function region:SetOverlayColor(id, r, g, b, a)
+    self.overlays[id] = { r, g, b, a};
+    if (self.extraTextures[id]) then
+      self.extraTextures[id]:SetVertexColor(r, g, b, a);
+    end
+    if (self.extraSpinners[id]) then
+      self.extraSpinners[id]:Color(r, g, b, a);
+    end
+  end
+
   WeakAuras.regionPrototype.modifyFinish(parent, region, data);
 end
 
-WeakAuras.RegisterRegionType("progresstexture", create, modify, default, properties);
+local function validate(data)
+  Private.EnforceSubregionExists(data, "subbackground")
+end
+
+WeakAuras.RegisterRegionType("progresstexture", create, modify, default, GetProperties, validate);

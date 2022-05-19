@@ -1,7 +1,7 @@
 ## Interface: 30300
 ## Title: WeakAuras
 ## Author: The WeakAuras Team
-## Version: 3.2.3
+## Version: 3.7.9
 ## Notes: A powerful, comprehensive utility for displaying graphics and information based on buffs, debuffs, and other triggers.
 ## Notes-esES: Potente y completa aplicación que te permitirá mostrar por pantalla múltiples diseños, basados en beneficios, perjuicios y otros activadores.
 ## Notes-deDE: Ein leistungsfähiges, umfassendes Addon zur grafischen Darstellung von Informationen von Auren, Cooldowns, Timern und vielem mehr.
@@ -20,16 +20,16 @@
 compat.lua
 Pools.lua
 
-# external code + initialization
+# External code + initialization
 embeds.xml
 Init.lua
 locales.xml
 ArchiveTypes\Repository.lua
 DefaultOptions.lua
 
-# core files
-Prototypes.lua
+# Core files
 Types.lua
+Prototypes.lua
 Profiling.lua
 WeakAuras.lua
 History.lua
@@ -38,14 +38,14 @@ Modernize.lua
 Animations.lua
 Conditions.lua
 
-# trigger systems
+# Trigger systems
 BuffTrigger.lua
 BuffTrigger2.lua
 GenericTrigger.lua
 AuraWarnings.lua
 AuraEnvironment.lua
 
-# region support
+# Region support
 RegionTypes\RegionPrototype.lua
 RegionTypes\ProgressTexture.lua
 RegionTypes\Texture.lua
@@ -57,9 +57,10 @@ RegionTypes\DynamicGroup.lua
 RegionTypes\StopMotion.lua
 RegionTypes\Model.lua
 
-# sub region support
+# Sub-region support
+SubRegionTypes\Background.lua
 SubRegionTypes\SubText.lua
 SubRegionTypes\Border.lua
 SubRegionTypes\Glow.lua
 SubRegionTypes\Tick.lua
-SubRegionTypes\BarModel.lua
+SubRegionTypes\Model.lua

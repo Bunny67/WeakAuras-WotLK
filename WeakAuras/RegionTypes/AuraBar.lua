@@ -35,12 +35,7 @@ local default = {
   icon_side = "RIGHT",
   icon_color = {1.0, 1.0, 1.0, 1.0},
   frameStrata = 1,
-  zoom = 0,
-  subRegions = {
-    [1] = {
-      ["type"] = "aurabar_bar"
-    }
-  }
+  zoom = 0
 };
 
 WeakAuras.regionPrototype.AddAdjustedDurationToDefault(default);
@@ -223,8 +218,6 @@ local anchorAlignment = {
   ["VERTICAL_INVERSE"] = { "BOTTOMLEFT", "BOTTOMRIGHT", "TOP" }
 }
 
-local extraTextureWrapMode = "REPEAT";
-
 -- Emulate blizzard statusbar with advanced features (more grow directions)
 local barPrototype = {
   ["UpdateAnchors"] = function(self)
@@ -314,7 +307,6 @@ local barPrototype = {
       for index, additionalBar in ipairs(self.additionalBars) do
         if (not self.extraTextures[index]) then
           local extraTexture = self:CreateTexture(nil, "ARTWORK");
-          extraTexture:SetTexture(self:GetStatusBarTexture(), extraTextureWrapMode, extraTextureWrapMode);
           extraTexture:SetDrawLayer("ARTWORK", min(index, 7));
           self.extraTextures[index] = extraTexture;
         end
@@ -377,6 +369,14 @@ local barPrototype = {
             extraTexture:SetVertexColor(unpack(color));
           else
             extraTexture:SetVertexColor(1, 1, 1, 1);
+          end
+
+          local texture = self.additionalBarsTextures and self.additionalBarsTextures[index];
+          if texture then
+            local texturePath = SharedMedia:Fetch("statusbar", texture) or ""
+            extraTexture:SetTexture(texturePath)
+          else
+            extraTexture:SetTexture(self:GetStatusBarTexture());
           end
 
           local xOffset = 0;
@@ -461,13 +461,23 @@ local barPrototype = {
     end
   end,
 
-  ["SetAdditionalBars"] = function(self, additionalBars, colors, min, max, inverse, overlayclip)
+  ["SetAdditionalBars"] = function(self, additionalBars, colors, textures, min, max, inverse, overlayclip)
     self.additionalBars = additionalBars;
     self.additionalBarsColors = colors;
+    self.additionalBarsTextures = textures;
     self.additionalBarsMin = min or 0;
     self.additionalBarsMax = max or 0;
     self.additionalBarsInverse = inverse;
     self.additionalBarsClip = overlayclip;
+    self:UpdateAdditionalBars();
+  end,
+
+  ["GetAdditionalBarsInverse"] = function(self)
+    return self.additionalBarsInverse
+  end,
+
+  ["SetAdditionalBarsInverse"] = function(self, value)
+    self.additionalBarsInverse = value;
     self:UpdateAdditionalBars();
   end,
 
@@ -515,7 +525,7 @@ local barPrototype = {
     self.fg:SetTexture(texture);
     self.bg:SetTexture(texture);
     for index, extraTexture in ipairs(self.extraTextures) do
-      extraTexture:SetTexture(texture, extraTextureWrapMode, extraTextureWrapMode);
+      extraTexture:SetTexture(texture);
     end
   end,
 
@@ -854,6 +864,7 @@ local funcs = {
     else
       self.bar:SetValue(1 - self.bar:GetValue());
     end
+    self.bar:SetAdditionalBarsInverse(not self.bar:GetAdditionalBarsInverse())
     self.subRegionEvents:Notify("InverseChanged")
   end,
   SetOrientation = function(self, orientation)
@@ -994,6 +1005,7 @@ end
 local function create(parent)
   -- Create overall region (containing everything else)
   local region = CreateFrame("FRAME", nil, parent);
+  region.regionType = "aurabar"
   region:SetMovable(true);
   region:SetResizable(true);
   region:SetMinResize(1, 1);
@@ -1029,9 +1041,6 @@ local function create(parent)
   icon.SetDesaturated = setDesaturated
   icon._SetTexture = icon.SetTexture
   icon.SetTexture = setTexture
-
-  -- Region variables
-  region.values = {};
 
   local oldSetFrameLevel = region.SetFrameLevel;
   function region.SetFrameLevel(self, frameLevel)
@@ -1099,6 +1108,11 @@ local function modify(parent, region, data)
     region.overlays = CopyTable(data.overlays);
   else
     region.overlays = {}
+  end
+  if data.overlaysTexture then
+    region.overlaysTexture = CopyTable(data.overlaysTexture)
+  else
+    region.overlaysTexture = {}
   end
 
   -- Update texture settings
@@ -1236,15 +1250,33 @@ local function modify(parent, region, data)
     local state = region.state
     region:UpdateMinMax()
     if state.progressType == "timed" then
-      local expirationTime = state.expirationTime and state.expirationTime > 0 and state.expirationTime or math.huge;
+      local expirationTime
+      if state.paused == true then
+        if not region.paused then
+          region:Pause()
+        end
+        if region.TimerTick then
+          region.TimerTick = nil
+          region:UpdateRegionHasTimerTick()
+        end
+        expirationTime = GetTime() + (state.remaining or 0)
+      else
+        if region.paused then
+          region:Resume()
+        end
+        if not region.TimerTick then
+          region.TimerTick = TimerTick
+          region:UpdateRegionHasTimerTick()
+        end
+        expirationTime = state.expirationTime and state.expirationTime > 0 and state.expirationTime or math.huge;
+      end
       local duration = state.duration or 0
 
       region:SetTime(region.currentMax - region.currentMin, expirationTime - region.currentMin, state.inverse);
-      if not region.TimerTick then
-        region.TimerTick = TimerTick
-        region:UpdateRegionHasTimerTick()
-      end
     elseif state.progressType == "static" then
+      if region.paused then
+        region:Resume()
+      end
       local value = state.value or 0;
       local total = state.total or 0;
 
@@ -1254,6 +1286,9 @@ local function modify(parent, region, data)
         region:UpdateRegionHasTimerTick()
       end
     else
+      if region.paused then
+        region:Resume()
+      end
       region:SetTime(0, math.huge)
       if region.TimerTick then
         region.TimerTick = nil
@@ -1265,7 +1300,7 @@ local function modify(parent, region, data)
 
     local duration = state.duration or 0
     local effectiveInverse = (state.inverse and not region.inverseDirection) or (not state.inverse and region.inverseDirection);
-    region.bar:SetAdditionalBars(state.additionalProgress, region.overlays, region.currentMin, region.currentMax, effectiveInverse, region.overlayclip);
+    region.bar:SetAdditionalBars(state.additionalProgress, region.overlays, region.overlaysTexture, region.currentMin, region.currentMax, effectiveInverse, region.overlayclip);
   end
 
   -- Scale update function
@@ -1322,42 +1357,18 @@ local function modify(parent, region, data)
   WeakAuras.regionPrototype.modifyFinish(parent, region, data);
 end
 
-local function ValidateRegion(data)
-  data.subRegions = data.subRegions or {}
-  for index, subRegionData in ipairs(data.subRegions) do
-    if subRegionData.type == "aurabar_bar" then
-      return
+local function validate(data)
+  -- pre-migration
+  if data.subRegions then
+    for _, subRegionData in ipairs(data.subRegions) do
+      if subRegionData.type == "aurabar_bar" then
+        subRegionData.type = "subforeground"
+      end
     end
   end
-  tinsert(data.subRegions, 1, {
-    ["type"] = "aurabar_bar"
-  })
+  Private.EnforceSubregionExists(data, "subforeground")
+  Private.EnforceSubregionExists(data, "subbackground")
 end
 
 -- Register new region type with WeakAuras
-WeakAuras.RegisterRegionType("aurabar", create, modify, default, GetProperties, ValidateRegion);
-
-local function subSupports(regionType)
-  return regionType == "aurabar"
-end
-
-local function noop()
-end
-
-local function SetFrameLevel(self, level)
-  self.parent.bar:SetFrameLevel(level)
-  self.parent.iconFrame:SetFrameLevel(level)
-end
-
-local function subCreate()
-  local result = {}
-  result.Update = noop
-  result.SetFrameLevel = SetFrameLevel
-  return result
-end
-
-local function subModify(parent, region)
-  region.parent = parent
-end
-
-WeakAuras.RegisterSubRegionType("aurabar_bar", L["Foreground"], subSupports, subCreate, subModify, noop, noop, {}, nil, {}, false);
+WeakAuras.RegisterRegionType("aurabar", create, modify, default, GetProperties, validate);

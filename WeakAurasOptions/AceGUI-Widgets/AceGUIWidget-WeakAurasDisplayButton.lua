@@ -5,7 +5,7 @@ local tinsert, tconcat, tremove, wipe = table.insert, table.concat, table.remove
 local select, pairs, next, type, unpack = select, pairs, next, type, unpack
 local tostring, error = tostring, error
 
-local Type, Version = "WeakAurasDisplayButton", 56
+local Type, Version = "WeakAurasDisplayButton", 57
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)
 if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
@@ -85,11 +85,10 @@ clipboard.pasteMenuEntry = {
   func = function()
     if (not IsRegionAGroup(clipboard.source) and IsRegionAGroup(clipboard.current)) then
       -- Copy from a single aura to a group => paste it to each individual aura
-      for index, childId in pairs(clipboard.current.controlledChildren) do
-        local childData = WeakAuras.GetData(childId);
-        copyAuraPart(clipboard.source, childData, clipboard.part);
-        WeakAuras.Add(childData)
-        WeakAuras.ClearAndUpdateOptions(childData.id)
+      for child in OptionsPrivate.Private.TraverseLeafs(clipboard.current) do
+        copyAuraPart(clipboard.source, child, clipboard.part);
+        WeakAuras.Add(child)
+        WeakAuras.ClearAndUpdateOptions(child.id)
       end
     else
       copyAuraPart(clipboard.source, clipboard.current, clipboard.part);
@@ -99,9 +98,9 @@ clipboard.pasteMenuEntry = {
 
     WeakAuras.FillOptions()
     OptionsPrivate.Private.ScanForLoads({[clipboard.current.id] = true});
-    WeakAuras.SortDisplayButtons();
+    OptionsPrivate.SortDisplayButtons(nil, true);
     WeakAuras.PickDisplay(clipboard.current.id);
-    WeakAuras.UpdateDisplayButton(clipboard.current.id);
+    WeakAuras.UpdateThumbnail(clipboard.current.id);
     WeakAuras.ClearAndUpdateOptions(clipboard.current.id);
   end
 }
@@ -260,7 +259,8 @@ local function Show_Long_Tooltip(owner, description)
       if(i == 1) then
         GameTooltip:AddDoubleLine(v[1], v[2]..(v[3] and (" |T"..v[3]..":12:12:0:0:64:64:4:60:4:60|t") or ""));
       else
-        GameTooltip:AddDoubleLine(v[1], v[2]..(v[3] and (" |T"..v[3]..":12:12:0:0:64:64:4:60:4:60|t") or ""), 1, 1, 1, 1, 1, 1, 1, 1);
+        GameTooltip:AddDoubleLine(v[1], v[2]..(v[3] and (" |T"..v[3]..":12:12:0:0:64:64:4:60:4:60|t") or ""),
+                                  1, 1, 1, 1, 1, 1, 1, 1);
       end
     end
     line = line + 1;
@@ -299,10 +299,10 @@ local Actions = {
           source.data.parent = groupId
           WeakAuras.Add(source.data)
           WeakAuras.Add(group.data)
+          OptionsPrivate.Private.AddParents(group.data)
           WeakAuras.UpdateGroupOrders(group.data)
           WeakAuras.ClearAndUpdateOptions(group.data.id)
           WeakAuras.ClearAndUpdateOptions(source.data.id)
-          WeakAuras.UpdateDisplayButton(group.data)
           WeakAuras.FillOptions()
           group.callbacks.UpdateExpandButton();
           group:ReloadTooltip()
@@ -332,9 +332,9 @@ local Actions = {
         source:SetGroup()
         source.data.parent = nil
         WeakAuras.Add(parent);
+        OptionsPrivate.Private.AddParents(parent)
         WeakAuras.UpdateGroupOrders(parent);
         WeakAuras.ClearAndUpdateOptions(parent.id);
-        WeakAuras.UpdateDisplayButton(parent);
         local group = WeakAuras.GetDisplayButton(parent.id)
         group.callbacks.UpdateExpandButton();
         group:ReloadTooltip()
@@ -344,96 +344,27 @@ local Actions = {
     else
       error("Calling 'Ungroup' with invalid source. Reload your UI to fix the display list.")
     end
-  end,
-  -- move source inside its own group before or after target
-  ["Move"] = function(source, target, before )
-    if source and source.data.parent then
-      local parent = WeakAuras.GetData(source.data.parent)
-      local children = parent.controlledChildren
-      local i = source:GetGroupOrder()
-      if ensure(children, i, source.data.id) then
-        if target and target.data.parent then
-          local j = target:GetGroupOrder()
-          if ensure(children, j, target.data.id) then
-            -- account for possible reorder
-            j = i < j and j-1 or j
-            -- account for insert position
-            j = before and j or j+1
-            tremove(children, i)
-            tinsert(children, j, source.data.id)
-          else
-            error("Calling 'Move' with invalid target. Reload your UI to fix the display list.")
-          end
-        else
-          tremove(children, i)
-          tinsert(children, 1, source.data.id)
-        end
-        WeakAuras.Add(parent)
-        WeakAuras.ClearAndUpdateOptions(parent.id)
-        WeakAuras.FillOptions()
-        WeakAuras.UpdateGroupOrders(parent)
-        WeakAuras.UpdateDisplayButton(parent)
-      else
-        error("Calling 'Move' with invalid source. Reload your UI to fix the display list.")
-      end
-    else
-      error("Calling 'Move' with invalid source. Reload your UI to fix the display list.")
-    end
-  end,
+  end
 }
 
-local Icons = {
-  ["Group"] = "Interface\\GossipFrame\\TrainerGossipIcon",
-  ["Ungroup"] = "Interface\\GossipFrame\\UnlearnGossipIcon",
-  ["Move"] = nil
-}
-
-local function GetAction(target, area, source)
-  if target and source and (area == "TOP" or area == "BOTTOM")then
-    if target.data.parent and source.data.parent then
-      if source.data.parent == target.data.parent then
-        return function(_source, _target)
-          Actions["Move"](_source, _target, area=="TOP")
-        end,
-        Icons["Move"]
-      else
-        return function(_source, _target)
-          Actions["Ungroup"](_source)
-          Actions["Group"](_source, _target.data.parent, _target, area == "TOP")
-        end,
-        Icons["Group"]
-      end
-    elseif target.data.parent then -- and not source.data.parent
+local function GetAction(target, area)
+  if target and area then
+    if area == "GROUP" then
       return function(_source, _target)
-        Actions["Group"](_source, _target.data.parent, _target, area == "TOP")
-      end,
-      Icons["Group"]
-    elseif source.data.parent then -- and not target.data.parent
-      if area == "TOP" then
-        return function(_source, _target)
+        if _source.data.parent then
           Actions["Ungroup"](_source)
-          Actions["Group"](_source)
-        end,
-        Icons["Ungroup"]
-      else -- area == "BOTTOM"
-        if source.data.parent == target.data.id then
-          return Actions["Move"], Icons["Move"]
-        else
-          return function(_source, _target)
-            Actions["Ungroup"](_source)
-            Actions["Group"](_source, _target.data.id)
-          end,
-          Icons["Group"]
         end
+        Actions["Group"](_source, _target.data.id)
       end
-    else -- not target.data.parent and not source.data.parent
-      if target:IsGroup() and area == "BOTTOM" then
+    else -- BEFORE or AFTER
+      -- Insert into target's parent, at the right position
+      if target.data.parent then
         return function(_source, _target)
-          Actions["Group"](_source, _target.data.id)
-        end,
-        Icons["Group"]
-      else
-        return nil
+          if _source.data.parent then
+            Actions["Ungroup"](_source)
+          end
+          Actions["Group"](_source, _target.data.parent, _target, area == "BEFORE")
+        end
       end
     end
   end
@@ -443,18 +374,30 @@ end
 
 local function GetDropTarget()
   local buttonList = WeakAuras.displayButtons
-  local id, button, pos, offset
-  repeat
-    repeat
-      id, button = next(buttonList, id)
-    until not id or not button.dragging and button:IsEnabled() and button:IsShown()
-    if id and button then
-      offset = (button.frame.height or button.frame:GetHeight() or 16) / 2
-      pos = button.frame:IsMouseOver(1,offset) and "TOP"
-        or button.frame:IsMouseOver(-offset,-1) and "BOTTOM"
+
+  for id, button in pairs(buttonList) do
+    if not button.dragging and button:IsEnabled() and button:IsShown() then
+      local halfHeight = button.frame:GetHeight() / 2
+      local height = button.frame:GetHeight()
+      if button.data.controlledChildren then
+        if button.data.parent == nil and button.frame:IsMouseOver(1, -1) then
+          -- Top level group, always group into
+          return id, button, "GROUP"
+        end
+
+        -- For sub groups, middle third is for grouping
+        if button.frame:IsMouseOver(-height / 3, height / 3) then
+          return id, button, "GROUP"
+        end
+      end
+
+      if button.frame:IsMouseOver(1, height / 2) then
+        return id, button, "BEFORE"
+      elseif button.frame:IsMouseOver(-height / 2, -1) then
+        return id, button, "AFTER"
+      end
     end
-  until not id or pos
-  return id, button, pos
+  end
 end
 
 local function Show_DropIndicator(id)
@@ -464,33 +407,21 @@ local function Show_DropIndicator(id)
   if source then
     target, pos = select(2, GetDropTarget())
   end
-  indicator:ClearAllPoints()
-  local action, icon = GetAction(target, pos, source)
+  local action = GetAction(target, pos)
   if action then
-    -- show line
-    if pos == "TOP" then
-      indicator:SetPoint("BOTTOMLEFT", target.frame, "TOPLEFT", 0, -1)
-      indicator:SetPoint("BOTTOMRIGHT", target.frame, "TOPRIGHT", 0, -1)
-      indicator:Show()
-    elseif pos == "BOTTOM" then
-      indicator:SetPoint("TOPLEFT", target.frame, "BOTTOMLEFT", 0, 1)
-      indicator:SetPoint("TOPRIGHT", target.frame, "BOTTOMRIGHT", 0, 1)
-      indicator:Show()
-    else
-      error("Invalid value pos '"..tostring(pos))
-    end
-    -- show icon
-    if icon then
-      if indicator.icon.texture ~= icon then
-        indicator.icon.texture = icon
-        indicator.icon:SetTexture(icon)
-      end
-      indicator.icon:Show()
-    else
-      indicator.icon:Hide()
-    end
+    indicator:ShowAction(target, pos)
   else
     indicator:Hide()
+  end
+end
+
+local function IsParentRecursive(needle, parent)
+  if needle.id == parent.id then
+    return true
+  end
+  if needle.parent then
+    local needleParent = WeakAuras.GetData(needle.parent)
+    return IsParentRecursive(needleParent, parent)
   end
 end
 
@@ -502,17 +433,18 @@ local methods = {
     self:SetWidth(1000);
     self:SetHeight(32);
     self.hasThumbnail = false
+    self.first = false
+    self.last = false
   end,
   ["Initialize"] = function(self)
-    local data = self.data;
     self.callbacks = {};
 
     function self.callbacks.OnClickNormal(_, mouseButton)
-      if(IsControlKeyDown() and not data.controlledChildren) then
-        if (OptionsPrivate.IsDisplayPicked(data.id)) then
-          OptionsPrivate.ClearPick(data.id);
+      if(IsControlKeyDown() and not self.data.controlledChildren) then
+        if (OptionsPrivate.IsDisplayPicked(self.data.id)) then
+          OptionsPrivate.ClearPick(self.data.id);
         else
-          OptionsPrivate.PickDisplayMultiple(data.id);
+          OptionsPrivate.PickDisplayMultiple(self.data.id);
         end
         self:ReloadTooltip();
       elseif(IsShiftKeyDown()) then
@@ -526,30 +458,34 @@ local methods = {
               fullName = name
             end
           end
-          editbox:Insert("[WeakAuras: "..fullName.." - "..data.id.."]");
+          editbox:Insert("[WeakAuras: "..fullName.." - "..self.data.id.."]");
           OptionsPrivate.Private.linked = OptionsPrivate.Private.linked or {}
-          OptionsPrivate.Private.linked[data.id] = true
-        elseif not data.controlledChildren then
+          OptionsPrivate.Private.linked[self.data.id] = GetTime()
+        elseif not self.data.controlledChildren then
           -- select all buttons between 1st select and current
-          OptionsPrivate.PickDisplayMultipleShift(data.id)
+          OptionsPrivate.PickDisplayMultipleShift(self.data.id)
         end
       else
         if(mouseButton == "RightButton") then
           Hide_Tooltip();
-          if(OptionsPrivate.IsDisplayPicked(data.id) and OptionsPrivate.IsPickedMultiple()) then
+          if(OptionsPrivate.IsDisplayPicked(self.data.id) and OptionsPrivate.IsPickedMultiple()) then
             EasyMenu(OptionsPrivate.MultipleDisplayTooltipMenu(), WeakAuras_DropDownMenu, self.frame, 0, 0, "MENU");
           else
-            UpdateClipboardMenuEntry(data);
+            UpdateClipboardMenuEntry(self.data);
             EasyMenu(self.menu, WeakAuras_DropDownMenu, self.frame, 0, 0, "MENU");
-            if not(OptionsPrivate.IsDisplayPicked(data.id)) then
-              WeakAuras.PickDisplay(data.id);
+            if not(OptionsPrivate.IsDisplayPicked(self.data.id)) then
+              WeakAuras.PickDisplay(self.data.id);
             end
           end
         else
-          if (OptionsPrivate.IsDisplayPicked(data.id)) then
+          if (OptionsPrivate.IsDisplayPicked(self.data.id)) then
             OptionsPrivate.ClearPicks();
           else
-            WeakAuras.PickDisplay(data.id);
+            if self.data.controlledChildren then
+              WeakAuras.PickDisplay(self.data.id, "group")
+            else
+              WeakAuras.PickDisplay(self.data.id);
+            end
           end
           self:ReloadTooltip();
         end
@@ -557,124 +493,160 @@ local methods = {
     end
 
     function self.callbacks.UpdateExpandButton()
-      if(#self.data.controlledChildren == 0) then
+      if(not self.data.controlledChildren or #self.data.controlledChildren == 0) then
         self:DisableExpand();
       else
         self:EnableExpand();
       end
     end
 
+
     function self.callbacks.OnClickGrouping()
       if (WeakAuras.IsImporting()) then return end;
-      if #self.grouping > 0 then
-        for index, childId in ipairs(self.grouping) do
-          tinsert(data.controlledChildren, childId);
-          local childButton = WeakAuras.GetDisplayButton(childId);
-          local childData = WeakAuras.GetData(childId);
-          if childData.parent then
-            childButton:Ungroup();
-          end
-          childButton:SetGroup(data.id, data.regionType == "dynamicgroup");
-          childButton:SetGroupOrder(#data.controlledChildren, #data.controlledChildren);
-          childData.parent = data.id;
-          WeakAuras.Add(childData);
-          WeakAuras.ClearAndUpdateOptions(childData.id)
+      for index, selectedId in ipairs(self.grouping) do
+        local selectedData = WeakAuras.GetData(selectedId);
+        tinsert(self.data.controlledChildren, selectedId);
+        local selectedButton = WeakAuras.GetDisplayButton(selectedId);
+        while selectedData.parent do
+          selectedButton:Ungroup();
         end
-      else
-        tinsert(data.controlledChildren, self.grouping.id);
-        local childButton = WeakAuras.GetDisplayButton(self.grouping.id);
-        childButton:SetGroup(data.id, data.regionType == "dynamicgroup");
-        childButton:SetGroupOrder(#data.controlledChildren, #data.controlledChildren);
-        self.grouping.parent = data.id;
-        WeakAuras.Add(self.grouping);
-        WeakAuras.ClearAndUpdateOptions(self.grouping.id);
+        selectedButton:SetGroup(self.data.id, self.data.regionType == "dynamicgroup");
+        selectedButton:SetGroupOrder(#self.data.controlledChildren, #self.data.controlledChildren);
+        selectedData.parent = self.data.id;
+        if (self.data.regionType == "dynamicgroup") then
+          selectedData.xOffset = 0
+          selectedData.yOffset = 0
+        end
+        WeakAuras.Add(selectedData);
+        OptionsPrivate.ClearOptions(selectedId)
+
+        if (selectedData.controlledChildren) then
+          for child in OptionsPrivate.Private.TraverseAllChildren(selectedData) do
+            local childButton = WeakAuras.GetDisplayButton(child.id)
+            childButton:UpdateOffset()
+          end
+        end
       end
-      if (data.regionType == "dynamicgroup") then
-        self.grouping.xOffset = 0;
-        self.grouping.yOffset = 0;
-      end
-      WeakAuras.Add(data);
-      WeakAuras.ClearAndUpdateOptions(data.id)
+
+      WeakAuras.Add(self.data);
+      OptionsPrivate.Private.AddParents(self.data)
       self.callbacks.UpdateExpandButton();
-      OptionsPrivate.SetGrouping();
-      WeakAuras.UpdateDisplayButton(data);
-      WeakAuras.ClearAndUpdateOptions(data.id);
+      OptionsPrivate.StopGrouping();
+      OptionsPrivate.ClearOptions(self.data.id);
       WeakAuras.FillOptions();
-      WeakAuras.UpdateGroupOrders(data);
-      WeakAuras.SortDisplayButtons();
+      WeakAuras.UpdateGroupOrders(self.data);
+      OptionsPrivate.SortDisplayButtons();
       self:ReloadTooltip();
+      self:Expand()
       OptionsPrivate.ResetMoverSizer();
     end
 
     function self.callbacks.OnClickGroupingSelf()
-      OptionsPrivate.SetGrouping();
+      OptionsPrivate.StopGrouping();
       self:ReloadTooltip();
     end
 
     function self.callbacks.OnGroupClick()
-      OptionsPrivate.SetGrouping(data);
+      OptionsPrivate.StartGrouping(self.data);
+    end
+
+    local function addParents(hash, data)
+      local parent = data.parent
+      if parent then
+        hash[parent] = true
+        local parentData = WeakAuras.GetData(parent)
+        if parentData then
+          addParents(hash, parentData)
+        end
+      end
     end
 
     function self.callbacks.OnDeleteClick()
       if (WeakAuras.IsImporting()) then return end;
-      local toDelete = {data}
-      local parents = data.parent and {[data.parent] = true}
+      local toDelete = {self.data}
+      local parents = {}
+      addParents(parents, self.data)
       OptionsPrivate.ConfirmDelete(toDelete, parents)
+    end
+
+    local function DuplicateGroups(sourceParent, targetParent, mapping)
+      for index, childId in pairs(sourceParent.controlledChildren) do
+        local childData = WeakAuras.GetData(childId)
+        if childData.controlledChildren then
+          local newChildGroup = OptionsPrivate.DuplicateAura(childData, targetParent.id)
+          mapping[childData] = newChildGroup
+          DuplicateGroups(childData, newChildGroup, mapping)
+        end
+      end
+    end
+
+    local function DuplicateAuras(sourceParent, targetParent, mapping)
+      for index, childId in pairs(sourceParent.controlledChildren) do
+        local childData = WeakAuras.GetData(childId)
+        if childData.controlledChildren then
+          DuplicateAuras(childData, mapping[childData], mapping)
+        else
+          OptionsPrivate.DuplicateAura(childData, targetParent.id, true, index)
+        end
+      end
     end
 
     function self.callbacks.OnDuplicateClick()
       if (WeakAuras.IsImporting()) then return end;
-      if data.controlledChildren then
-        local new_idGroup = OptionsPrivate.DuplicateAura(data)
-        -- Do this after duplicating the parent!
+      if self.data.controlledChildren then
+        local newGroup = OptionsPrivate.DuplicateAura(self.data)
+
+        local mapping = {}
+        -- This builds the group skeleton
+        DuplicateGroups(self.data, newGroup, mapping)
+        -- Do this after duplicating all groups
         OptionsPrivate.Private.PauseAllDynamicGroups()
-        for index, childId in pairs(data.controlledChildren) do
-          local childData = WeakAuras.GetData(childId)
-          OptionsPrivate.DuplicateAura(childData, new_idGroup, true)
+        -- And this fills in the leafs
+        DuplicateAuras(self.data, newGroup, mapping)
+
+        local button = WeakAuras.GetDisplayButton(newGroup.id)
+        button.callbacks.UpdateExpandButton()
+
+        for old, new in pairs(mapping) do
+          local button = WeakAuras.GetDisplayButton(new.id)
+          button.callbacks.UpdateExpandButton()
         end
 
-        local button = WeakAuras.GetDisplayButton(new_idGroup)
-        button.callbacks.UpdateExpandButton()
-        WeakAuras.UpdateDisplayButton(WeakAuras.GetData(new_idGroup))
-
-        WeakAuras.SortDisplayButtons()
-        OptionsPrivate.PickAndEditDisplay(new_idGroup)
+        OptionsPrivate.SortDisplayButtons(nil, true)
+        OptionsPrivate.PickAndEditDisplay(newGroup.id)
 
         OptionsPrivate.Private.ResumeAllDynamicGroups()
       else
-        local new_id = OptionsPrivate.DuplicateAura(data)
-        WeakAuras.SortDisplayButtons()
-        OptionsPrivate.PickAndEditDisplay(new_id)
+        local new = OptionsPrivate.DuplicateAura(self.data)
+        OptionsPrivate.SortDisplayButtons(nil, true)
+        OptionsPrivate.PickAndEditDisplay(new.id)
       end
     end
 
     function self.callbacks.OnDeleteAllClick()
       if (WeakAuras.IsImporting()) then return end;
       local toDelete = {}
-      if(data.controlledChildren) then
-
-        local region = WeakAuras.regions[data.id];
-        if (region.Suspend) then
-          region:Suspend();
-        end
-
-        for _, id in pairs(data.controlledChildren) do
-          tinsert(toDelete, WeakAuras.GetData(id));
+      if(self.data.controlledChildren) then
+        local region = WeakAuras.regions[self.data.id];
+        for child in OptionsPrivate.Private.TraverseAllChildren(self.data) do
+          tinsert(toDelete, child);
         end
       end
-      tinsert(toDelete, data)
-      OptionsPrivate.ConfirmDelete(toDelete);
+      tinsert(toDelete, self.data)
+      local parents = {}
+      addParents(parents, self.data)
+      OptionsPrivate.ConfirmDelete(toDelete, parents);
     end
 
     function self.callbacks.OnUngroupClick()
-      OptionsPrivate.Ungroup(data);
+      OptionsPrivate.Ungroup(self.data);
     end
 
     function self.callbacks.OnUpGroupClick()
       if (WeakAuras.IsImporting()) then return end;
-      if(data.parent) then
-        local id = data.id;
-        local parentData = WeakAuras.GetData(data.parent);
+      if(self.data.parent) then
+        local id = self.data.id;
+        local parentData = WeakAuras.GetData(self.data.parent);
         local index;
         for childIndex, childId in pairs(parentData.controlledChildren) do
           if(childId == id) then
@@ -689,16 +661,16 @@ local methods = {
             tremove(parentData.controlledChildren, index);
             tinsert(parentData.controlledChildren, index - 1, id);
             WeakAuras.Add(parentData);
+            OptionsPrivate.Private.AddParents(parentData)
             WeakAuras.ClearAndUpdateOptions(parentData.id)
             self:SetGroupOrder(index - 1, #parentData.controlledChildren);
             local otherbutton = WeakAuras.GetDisplayButton(parentData.controlledChildren[index]);
             otherbutton:SetGroupOrder(index, #parentData.controlledChildren);
-            WeakAuras.SortDisplayButtons();
+            OptionsPrivate.SortDisplayButtons();
             local updata = {duration = 0.15, type = "custom", use_translate = true, x = 0, y = -32};
             local downdata = {duration = 0.15, type = "custom", use_translate = true, x = 0, y = 32};
-            OptionsPrivate.Private.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index-1]).uid, "main", updata, self.frame, true, function() WeakAuras.SortDisplayButtons() end);
-            OptionsPrivate.Private.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index]).uid, "main", downdata, otherbutton.frame, true, function() WeakAuras.SortDisplayButtons() end);
-            WeakAuras.UpdateDisplayButton(parentData);
+            OptionsPrivate.Private.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index-1]).uid, "main", updata, self.frame, true, function() OptionsPrivate.SortDisplayButtons() end);
+            OptionsPrivate.Private.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index]).uid, "main", downdata, otherbutton.frame, true, function() OptionsPrivate.SortDisplayButtons() end);
             WeakAuras.FillOptions()
           end
         else
@@ -711,9 +683,9 @@ local methods = {
 
     function self.callbacks.OnDownGroupClick()
       if (WeakAuras.IsImporting()) then return end;
-      if(data.parent) then
-        local id = data.id;
-        local parentData = WeakAuras.GetData(data.parent);
+      if(self.data.parent) then
+        local id = self.data.id;
+        local parentData = WeakAuras.GetData(self.data.parent);
         local index;
         for childIndex, childId in pairs(parentData.controlledChildren) do
           if(childId == id) then
@@ -728,16 +700,16 @@ local methods = {
             tremove(parentData.controlledChildren, index);
             tinsert(parentData.controlledChildren, index + 1, id);
             WeakAuras.Add(parentData);
+            OptionsPrivate.Private.AddParents(parentData)
             WeakAuras.ClearAndUpdateOptions(parentData.id)
             self:SetGroupOrder(index + 1, #parentData.controlledChildren);
             local otherbutton = WeakAuras.GetDisplayButton(parentData.controlledChildren[index]);
             otherbutton:SetGroupOrder(index, #parentData.controlledChildren);
-            WeakAuras.SortDisplayButtons()
+            OptionsPrivate.SortDisplayButtons()
             local updata = {duration = 0.15, type = "custom", use_translate = true, x = 0, y = -32};
             local downdata = {duration = 0.15, type = "custom", use_translate = true, x = 0, y = 32};
-            OptionsPrivate.Private.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index+1]).uid, "main", downdata, self.frame, true, function() WeakAuras.SortDisplayButtons() end);
-            OptionsPrivate.Private.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index]).uid, "main", updata, otherbutton.frame, true, function() WeakAuras.SortDisplayButtons() end);
-            WeakAuras.UpdateDisplayButton(parentData);
+            OptionsPrivate.Private.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index+1]).uid, "main", downdata, self.frame, true, function() OptionsPrivate.SortDisplayButtons() end);
+            OptionsPrivate.Private.Animate("button", WeakAuras.GetData(parentData.controlledChildren[index]).uid, "main", updata, otherbutton.frame, true, function() OptionsPrivate.SortDisplayButtons() end);
             WeakAuras.FillOptions()
           end
         else
@@ -750,40 +722,19 @@ local methods = {
 
     function self.callbacks.OnViewClick()
       OptionsPrivate.Private.PauseAllDynamicGroups();
-
-      if(self.view.func() == 2) then
-        for index, childId in ipairs(data.controlledChildren) do
-          WeakAuras.GetDisplayButton(childId):PriorityHide(2);
+      if(self.view.visibility == 2) then
+        for child in OptionsPrivate.Private.TraverseAllChildren(self.data) do
+          WeakAuras.GetDisplayButton(child.id):PriorityHide(2);
         end
+        self:PriorityHide(2)
       else
-        for index, childId in ipairs(data.controlledChildren) do
-          WeakAuras.GetDisplayButton(childId):PriorityShow(2);
+        for child in OptionsPrivate.Private.TraverseAllChildren(self.data) do
+          WeakAuras.GetDisplayButton(child.id):PriorityShow(2);
         end
+        self:PriorityShow(2)
       end
-
+      self:RecheckParentVisibility()
       OptionsPrivate.Private.ResumeAllDynamicGroups();
-    end
-
-    function self.callbacks.ViewTest()
-      local none, all = true, true;
-      for index, childId in ipairs(data.controlledChildren) do
-        local childButton = WeakAuras.GetDisplayButton(childId);
-        if(childButton) then
-          if(childButton:GetVisibility() ~= 2) then
-            all = false;
-          end
-          if(childButton:GetVisibility() ~= 0) then
-            none = false;
-          end
-        end
-      end
-      if(all) then
-        return 2;
-      elseif(none) then
-        return 0;
-      else
-        return 1;
-      end
     end
 
     function self.callbacks.OnRenameClick()
@@ -798,78 +749,46 @@ local methods = {
       end
     end
 
-    function self.callbacks.OnUpdateClick()
-      local _,_,updateData = self:HasUpdate()
-      if updateData then
-        WeakAuras.Import(updateData.encoded, self.data)
-      end
-    end
-
     function self.callbacks.OnRenameAction(newid)
       if (WeakAuras.IsImporting()) then return end;
-      local oldid = data.id;
+      local oldid = self.data.id;
       if not(newid == oldid) then
-        WeakAuras.Rename(data, newid);
+        WeakAuras.Rename(self.data, newid);
       end
     end
 
     function self.callbacks.OnDragStart()
-      if WeakAuras.IsImporting() or self:IsGroup() then return end;
-      if #OptionsPrivate.tempGroup.controlledChildren == 0 then
-        WeakAuras.PickDisplay(data.id);
+      if WeakAuras.IsImporting() then return end;
+      if not OptionsPrivate.IsDisplayPicked(self.data.id) then
+        WeakAuras.PickDisplay(self.data.id)
       end
-      OptionsPrivate.SetDragging(data);
+      OptionsPrivate.StartDrag(self.data);
     end
 
     function self.callbacks.OnDragStop()
       if not self.dragging then return end
-      OptionsPrivate.SetDragging(data, true)
+      local target, area = select(2, GetDropTarget())
+      local action = GetAction(target, area)
+      OptionsPrivate.Drop(self.data, target, action, area)
     end
 
     function self.callbacks.OnKeyDown(self, key)
       if (key == "ESCAPE") then
-        OptionsPrivate.SetDragging();
+        OptionsPrivate.DragReset()
       end
     end
 
-    function self.callbacks.wagoStopIgnoreAll(_, skipUpdateIcon)
-      self.data.ignoreWagoUpdate = nil
-      self.data.skipWagoUpdate = nil
-      if not skipUpdateIcon then
-        self:RefreshUpdate("wagoStopIgnoreAll")
+    self.frame:SetScript("OnEnter", function()
+      if(OptionsPrivate.IsPickedMultiple() and OptionsPrivate.IsDisplayPicked(self.frame.id)) then
+        Show_Long_Tooltip(self.frame, OptionsPrivate.MultipleDisplayTooltipDesc());
+      else
+        if not self.grouping then
+          self:SetNormalTooltip();
+        end
+        Show_Long_Tooltip(self.frame, self.frame.description);
       end
-    end
-
-    function self.callbacks.wagoIgnoreAll(_, skipUpdateIcon)
-      self.data.ignoreWagoUpdate = true
-      if not skipUpdateIcon then
-        self:RefreshUpdate("wagoIgnoreAll")
-      end
-    end
-
-    function self.callbacks.wagoStopIgnoreNext(_, skipUpdateIcon)
-      self.data.skipWagoUpdate = nil
-      if not skipUpdateIcon then
-        self:RefreshUpdate("wagoStopIgnoreNext")
-      end
-    end
-
-    function self.callbacks.wagoIgnoreNext(_, skipUpdateIcon)
-      self.data.skipWagoUpdate = self.update.version
-      if not skipUpdateIcon then
-        self:RefreshUpdate("wagoIgnoreNext")
-      end
-    end
-
-    self.frame.terribleCodeOrganizationHackTable = {};
-
-    function self.frame.terribleCodeOrganizationHackTable.IsGroupingOrCopying()
-      return self.grouping;
-    end
-
-    function self.frame.terribleCodeOrganizationHackTable.SetNormalTooltip()
-      self:SetNormalTooltip();
-    end
+    end);
+    self.frame:SetScript("OnLeave", Hide_Tooltip);
 
     local copyEntries = {};
     tinsert(copyEntries, clipboard.copyEverythingEntry);
@@ -883,7 +802,7 @@ local methods = {
     tinsert(copyEntries, clipboard.copyAuthorOptionsEntry);
     tinsert(copyEntries, clipboard.copyUserConfigEntry);
 
-    self:SetTitle(data.id);
+    self:SetTitle(self.data.id);
     self.menu = {
       {
         text = L["Rename"],
@@ -900,15 +819,15 @@ local methods = {
 
     tinsert(self.menu, clipboard.pasteMenuEntry);
 
-    if (not data.controlledChildren) then
+    if (not self.data.controlledChildren) then
       local convertMenu = {};
       for regionType, regionData in pairs(WeakAuras.regionOptions) do
-        if(regionType ~= "group" and regionType ~= "dynamicgroup" and regionType ~= "timer" and regionType ~= data.regionType) then
+        if(regionType ~= "group" and regionType ~= "dynamicgroup" and regionType ~= self.data.regionType) then
           tinsert(convertMenu, {
             text = regionData.displayName,
             notCheckable = true,
             func = function()
-              OptionsPrivate.ConvertDisplay(data, regionType);
+              OptionsPrivate.ConvertDisplay(self.data, regionType);
               WeakAuras_DropDownMenu:Hide();
             end
           });
@@ -929,31 +848,22 @@ local methods = {
     });
 
     tinsert(self.menu, {
-      text = L["Export to string..."],
+      text = L["Export..."],
       notCheckable = true,
-      func = function() OptionsPrivate.ExportToString(data.id) end
+      func = function() OptionsPrivate.ExportToString(self.data.id) end
     });
     tinsert(self.menu, {
-      text = L["Export to Lua table..."],
+      text = L["Export debug table..."],
       notCheckable = true,
-      func = function() OptionsPrivate.ExportToTable(data.id) end
+      func = function() OptionsPrivate.ExportToTable(self.data.id) end
     });
-
-    if WeakAurasCompanion then
-      tinsert(self.menu, {
-        text = '|TInterface\\OptionsFrame\\UI-OptionsFrame-NewFeatureIcon:0|t' .. L["Wago Update"],
-        notCheckable = true,
-        hasArrow = true,
-        menuList = { }
-      });
-    end
 
     tinsert(self.menu, {
       text = " ",
       notClickable = true,
       notCheckable = true,
     });
-    if not data.controlledChildren then
+    if not self.data.controlledChildren then
       tinsert(self.menu, {
         text = L["Delete"],
         notCheckable = true,
@@ -961,7 +871,7 @@ local methods = {
       });
     end
 
-    if (data.controlledChildren) then
+    if (self.data.controlledChildren) then
       tinsert(self.menu, {
         text = L["Delete children and group"],
         notCheckable = true,
@@ -978,16 +888,18 @@ local methods = {
       notCheckable = true,
       func = function() WeakAuras_DropDownMenu:Hide() end
     });
-    if(data.controlledChildren) then
-      self:SetViewClick(self.callbacks.OnViewClick);
-      self:SetViewTest(self.callbacks.ViewTest);
-      self:DisableGroup();
+    if(self.data.controlledChildren) then
+      self.loaded:Hide();
+      self.expand:Show();
       self.callbacks.UpdateExpandButton();
-      self:SetOnExpandCollapse(function() WeakAuras.SortDisplayButtons(nil, true) end);
+      self:SetOnExpandCollapse(function() OptionsPrivate.SortDisplayButtons(nil, true) end);
     else
-      self:SetViewRegion(WeakAuras.regions[data.id].region);
-      self:EnableGroup();
+      self:SetViewRegion(WeakAuras.regions[self.data.id].region);
+      self.loaded:Show();
+      self.expand:Hide();
     end
+    self.group:Show();
+
     self:SetNormalTooltip();
     self.frame:SetScript("OnClick", self.callbacks.OnClickNormal);
     self.frame:SetScript("OnKeyDown", self.callbacks.OnKeyDown);
@@ -1003,37 +915,22 @@ local methods = {
     self.ungroup:SetScript("OnClick", self.callbacks.OnUngroupClick);
     self.upgroup:SetScript("OnClick", self.callbacks.OnUpGroupClick);
     self.downgroup:SetScript("OnClick", self.callbacks.OnDownGroupClick);
+    self.view:SetScript("OnClick", self.callbacks.OnViewClick);
 
-    if WeakAurasCompanion then
-      local hasUpdate, _, updateData = self:HasUpdate()
-      if hasUpdate then
-        self.update.hasUpdate = hasUpdate
-        self.update.version = updateData.wagoVersion
-        local showVersion = self.data.semver or self.data.version or 0
-        local showCompanionVersion = updateData.wagoSemver or updateData.wagoVersion
-        self.update.title = L["Update %s by %s"]:format(updateData.name, updateData.author)
-        self.update.desc = L["From version %s to version %s"]:format(showVersion, showCompanionVersion)
-        if updateData.versionNote then
-          self.update.desc = ("%s\n\n%s"):format(self.update.desc, updateData.versionNote)
-        end
-        self.update:SetScript("OnClick", self.callbacks.OnUpdateClick);
-      end
-    end
-
-    if data.parent then
-      local parentData = WeakAuras.GetData(data.parent);
+    if self.data.parent then
+      local parentData = WeakAuras.GetData(self.data.parent);
       local index;
       for childIndex, childId in pairs(parentData.controlledChildren) do
-        if(childId == data.id) then
+        if(childId == self.data.id) then
           index = childIndex;
           break;
         end
       end
       if(index) then
-        self:SetGroup(data.parent);
+        self:SetGroup(self.data.parent);
         self:SetGroupOrder(index, #parentData.controlledChildren);
       else
-        error("Display \""..data.id.."\" thinks it is a member of group \""..data.parent.."\" which does not control it");
+        error("Display \""..self.data.id.."\" thinks it is a member of group \""..self.data.parent.."\" which does not control it");
       end
     end
 
@@ -1043,21 +940,29 @@ local methods = {
     local data = self.data;
     local namestable = {};
     if(data.controlledChildren) then
-      for index, childId in pairs(data.controlledChildren) do
-        tinsert(namestable, {" ", childId});
+      namestable[1] = "";
+      local function addChildrenNames(data, indent)
+        for index, childId in pairs(data.controlledChildren) do
+          tinsert(namestable, indent .. childId);
+          local childData = WeakAuras.GetData(childId)
+          if (childData.controlledChildren) then
+            addChildrenNames(childData, indent .. "  ")
+          end
+        end
       end
+      addChildrenNames(data, "  ")
 
       if (#namestable > 30) then
         local size = #namestable;
         namestable[26] = {" ", "[...]"};
-        namestable[27] = {L[string.format(L["%s total auras"], #data.controlledChildren)], " " }
+        namestable[27] = {L[string.format(L["%s total auras"], #namestable)], " " }
         for i = 28, size do
           namestable[i] = nil;
         end
       end
 
-      if(#namestable > 0) then
-        namestable[1][1] = L["Children:"];
+      if(#namestable > 1) then
+        namestable[1] = L["Children:"];
       else
         namestable[1] = L["No Children"];
       end
@@ -1066,10 +971,6 @@ local methods = {
     end
     if(OptionsPrivate.Private.CanHaveClones(data)) then
       tinsert(namestable, {" ", "|cFF00FF00"..L["Auto-cloning enabled"]})
-    end
-    if(OptionsPrivate.Private.IsDefinedByAddon(data.id)) then
-      tinsert(namestable, " ");
-      tinsert(namestable, {" ", "|cFF00FFFF"..L["Addon"]..": "..OptionsPrivate.Private.IsDefinedByAddon(data.id)});
     end
 
     local hasDescription = data.desc and data.desc ~= "";
@@ -1094,8 +995,8 @@ local methods = {
 
     tinsert(namestable, " ");
     tinsert(namestable, {" ", "|cFF00FFFF"..L["Right-click for more options"]});
+    tinsert(namestable, {" ", "|cFF00FFFF"..L["Drag to move"]});
     if not(data.controlledChildren) then
-      tinsert(namestable, {" ", "|cFF00FFFF"..L["Drag to move"]});
       tinsert(namestable, {" ", "|cFF00FFFF"..L["Control-click to select multiple displays"]});
     end
     tinsert(namestable, {" ", "|cFF00FFFF"..L["Shift-click to create chat link"]});
@@ -1103,193 +1004,243 @@ local methods = {
     local displayName = regionData and regionData.displayName or "";
     self:SetDescription({data.id, displayName}, unpack(namestable));
   end,
-  ["ReloadTooltip"] = function(self)if(
-    OptionsPrivate.IsPickedMultiple() and OptionsPrivate.IsDisplayPicked(self.data.id)) then
-    Show_Long_Tooltip(self.frame, OptionsPrivate.MultipleDisplayTooltipDesc());
-  else
-    Show_Long_Tooltip(self.frame, self.frame.description);
-  end
-  end,
-  ["SetGrouping"] = function(self, groupingData, multi)
-    self.grouping = groupingData;
-    if(self.grouping) then
-      if(self.data.id == self.grouping.id or multi) then
-        self.frame:SetScript("OnClick", self.callbacks.OnClickGroupingSelf);
-        self:SetDescription(L["Cancel"], L["Do not group this display"]);
-      else
-        if(self.data.regionType == "group" or self.data.regionType == "dynamicgroup") then
-          self.frame:SetScript("OnClick", self.callbacks.OnClickGrouping);
-          self:SetDescription(self.data.id, L["Add to group %s"]:format(self.data.id));
-        else
-          self:Disable();
-        end
-      end
+  ["ReloadTooltip"] = function(self)
+    if(OptionsPrivate.IsPickedMultiple() and OptionsPrivate.IsDisplayPicked(self.data.id)) then
+      Show_Long_Tooltip(self.frame, OptionsPrivate.MultipleDisplayTooltipDesc());
     else
-      self:SetNormalTooltip();
-      self.frame:SetScript("OnClick", self.callbacks.OnClickNormal);
-      self:Enable();
+      Show_Long_Tooltip(self.frame, self.frame.description);
     end
+  end,
+  ["StartGrouping"] = function(self, groupingData, selected, groupingGroup, childOfGrouing)
+    self.grouping = groupingData;
+    self:UpdateIconsVisible()
+    if(selected) then
+      self.frame:SetScript("OnClick", self.callbacks.OnClickGroupingSelf);
+      self:SetDescription(L["Cancel"], L["Do not group this display"]);
+    elseif (childOfGrouing) then
+      self:Disable();
+    else
+      if(self.data.regionType == "dynamicgroup" and groupingGroup) then
+        self:Disable();
+      elseif (self.data.regionType == "group" or self.data.regionType == "dynamicgroup") then
+        self.frame:SetScript("OnClick", self.callbacks.OnClickGrouping);
+        self:SetDescription(self.data.id, L["Add to group %s"]:format(self.data.id));
+      else
+        self:Disable();
+      end
+    end
+  end,
+  ["StopGrouping"] = function(self)
+    self.grouping = nil;
+    self:UpdateIconsVisible()
+    self:SetNormalTooltip();
+    self.frame:SetScript("OnClick", self.callbacks.OnClickNormal);
+    self:Enable();
   end,
   ["Ungroup"] = function(self)
     if (WeakAuras.IsImporting()) then return end;
     local parentData = WeakAuras.GetData(self.data.parent);
     if not parentData then return end;
-    local index;
-    for childIndex, childId in pairs(parentData.controlledChildren) do
-      if(childId == self.data.id) then
-        index = childIndex;
-        break;
-      end
-    end
+    local index = tIndexOf(parentData.controlledChildren, self.data.id);
     if(index) then
       tremove(parentData.controlledChildren, index);
       WeakAuras.Add(parentData);
+      OptionsPrivate.Private.AddParents(parentData)
       WeakAuras.ClearAndUpdateOptions(parentData.id);
     else
       error("Display thinks it is a member of a group which does not control it");
     end
-    self:SetGroup();
-    self.data.parent = nil;
+
+    local newParent = parentData.parent and WeakAuras.GetData(parentData.parent)
+    if newParent then
+      local insertIndex = tIndexOf(newParent.controlledChildren, parentData.id)
+      if not insertIndex then
+        error("Parent Display thinks it is a member of a group which does not control it");
+      end
+      insertIndex = insertIndex + 1
+      tinsert(newParent.controlledChildren, insertIndex, self.data.id)
+    end
+
+    self:SetGroup(newParent and newParent.id);
+    self.data.parent = newParent and newParent.id;
     WeakAuras.Add(self.data);
+    self:UpdateIconsVisible()
+    if newParent then
+      WeakAuras.Add(newParent)
+      OptionsPrivate.Private.AddParents(newParent)
+      WeakAuras.ClearAndUpdateOptions(newParent.id)
+      WeakAuras.UpdateGroupOrders(newParent)
+    end
     WeakAuras.ClearAndUpdateOptions(self.data.id);
     WeakAuras.UpdateGroupOrders(parentData);
-    WeakAuras.UpdateDisplayButton(parentData);
-    WeakAuras.SortDisplayButtons();
-  end,
-  ["SetDragging"] = function(self, data, drop, size)
-    if (size) then
-      self.multi = {
-        size = size,
-        selected = data and (data.id == self.data.id)
-      }
+    if(#parentData.controlledChildren == 0) then
+      local parentButton = WeakAuras.GetDisplayButton(parentData.id)
+      parentButton:DisableExpand()
     end
-    if data then
-      -- self
-      if self.data.id == data.id or self.multi then
-        if drop then
-          self:Drop()
-          self.frame:SetScript("OnClick", self.callbacks.OnClickNormal)
-          self.frame:EnableKeyboard(false); -- disables self.callbacks.OnKeyDown
-        else
-          Hide_Tooltip()
-          self.frame:SetScript("OnClick", nil)
-          self.frame:EnableKeyboard(true); -- enables self.callbacks.OnKeyDown
-          self:Drag()
-        end
-        -- invalid targets
-      elseif not self.data.parent and not self:IsGroup()
-      then
-        if drop then
-          self:Enable()
-        else
-          self:Disable()
-        end
-        -- valid target
-      else
-        if drop then
-          self.frame:SetScript("OnClick", self.callbacks.OnClickNormal)
-        else
-          self.frame:SetScript("OnClick", nil)
-        end
-      end
+
+    for child in OptionsPrivate.Private.TraverseAllChildren(self.data) do
+      local button = WeakAuras.GetDisplayButton(child.id)
+      button:UpdateOffset()
+    end
+
+    OptionsPrivate.SortDisplayButtons();
+  end,
+  ["UpdateIconsVisible"] = function(self)
+    if self.dragging or self.grouping then
+      self.downgroup:Hide()
+      self.group:Hide()
+      self.ungroup:Hide()
+      self.upgroup:Hide()
     else
-      -- restore events and layout
-      self.frame:SetScript("OnClick", self.callbacks.OnClickNormal)
-      self.frame:EnableKeyboard(false);
-      self:Enable()
-      if (self.dragging) then
-        self:Drop(true)
-      end
-    end
-  end,
-  ["ShowTooltip"] = function(self)
-  end,
-  ["Drag"] = function(self)
-    local uiscale, scale = UIParent:GetScale(), self.frame:GetEffectiveScale()
-    local x, w = self.frame:GetLeft(), self.frame:GetWidth()
-    local _, y = GetCursorPosition()
-    -- hide "visual clutter"
-    self.downgroup:Hide()
-    self.group:Hide()
-    self.loaded:Hide()
-    self.ungroup:Hide()
-    self.upgroup:Hide()
-    self.view:Hide()
-    -- mark as being dragged, attach to mouse and raise frame strata
-    self.dragging = true
-    --self.frame:ClearAllPoints()
-    self.frame.temp = {
-      parent = self.frame:GetParent(),
-      strata = self.frame:GetFrameStrata(),
-    }
-	self.frame:StartMoving()
-    --self.frame:SetParent(UIParent)
-    self.frame:SetFrameStrata("FULLSCREEN_DIALOG")
-    if not self.multi then
-      --self.frame:SetPoint("Center", UIParent, "BOTTOMLEFT", (x+w/2)*scale/uiscale, y/uiscale)
-    else
-      if self.multi.selected then
-        -- change label & icon
-        --self.frame:SetPoint("Center", UIParent, "BOTTOMLEFT", (x+w/2)*scale/uiscale, y/uiscale)
-        self.frame.temp.title = self.title:GetText()
-        self.title:SetText((L["%i auras selected"]):format(self.multi.size))
-        self:OverrideIcon();
-      else
-        -- Hide frames
-        self.frame:StopMovingOrSizing()
-        self.frame:Hide()
-      end
-    end
-    -- attach OnUpdate event to update drop indicator
-    if not self.multi or (self.multi and self.multi.selected) then
-      local id = self.data.id
-      self.frame:SetScript("OnUpdate", function(self,elapsed)
-        self.elapsed = (self.elapsed or 0) + elapsed
-        if self.elapsed > 0.1 then
-          Show_DropIndicator(id)
-          self.elapsed = 0
-        end
-      end)
-      Show_DropIndicator(id)
-    end
-    OptionsPrivate.UpdateButtonsScroll()
-  end,
-  ["Drop"] = function(self, reset)
-    Show_DropIndicator()
-    local target, area = select(2, GetDropTarget())
-    -- get action and execute it
-    self.frame:StopMovingOrSizing()
-    self.frame:SetScript("OnUpdate", nil)
-    if self.multi and self.multi.selected then
-      -- restore title and icon
-      self.title:SetText(self.frame.temp.title)
-      self:RestoreIcon();
-    end
-    if self.dragging then
-      self.frame:SetParent(self.frame.temp.parent)
-      self.frame:SetFrameStrata(self.frame.temp.strata)
-      self.frame.temp = nil
+      self.group:Show()
       if self.data.parent then
         self.downgroup:Show()
         self.ungroup:Show()
         self.upgroup:Show()
       else
-        self.group:Show()
+        self.downgroup:Hide()
+        self.ungroup:Hide()
+        self.upgroup:Hide()
       end
+    end
+  end,
+  ["DragStart"] = function(self, mode, picked, mainAura, size)
+    self.frame:SetScript("OnClick", nil)
+    self.view:Hide()
+    self.expand:Hide()
+    self.loaded:Hide()
+    Hide_Tooltip()
+    if picked then
+      self.frame:EnableKeyboard(true)
+      local uiscale, scale = UIParent:GetScale(), self.frame:GetEffectiveScale()
+      local x, w = self.frame:GetLeft(), self.frame:GetWidth()
+      local _, y = GetCursorPosition()
+      -- mark as being dragged, attach to mouse and raise frame strata
+      self.dragging = true
+      self.frame:StartMoving()
+      --self.frame:ClearAllPoints()
+      self.frame.temp = {
+        parent = self.frame:GetParent(),
+        strata = self.frame:GetFrameStrata(),
+      }
+      --self.frame:SetParent(UIParent)
+      self.frame:SetFrameStrata("FULLSCREEN_DIALOG")
+      if self.data.id == mainAura.id then
+        self.frame:SetPoint("Center", UIParent, "BOTTOMLEFT", (x+w/2)*scale/uiscale, y/uiscale)
+        if mode == "MULTI" then
+          -- change label & icon
+          self.frame:SetPoint("Center", UIParent, "BOTTOMLEFT", (x+w/2)*scale/uiscale, y/uiscale)
+          self.frame.temp.title = self.title:GetText()
+          self.title:SetText((L["%i auras selected"]):format(size))
+          self:OverrideIcon();
+        end
+      else
+        -- Hide frames
+        self.frame:StopMovingOrSizing()
+        self.frame:Hide()
+      end
+      -- attach OnUpdate event to update drop indicator
+      if self.data.id == mainAura.id then
+        local id = self.data.id
+        self.frame:SetScript("OnUpdate", function(self,elapsed)
+          self.elapsed = (self.elapsed or 0) + elapsed
+          if self.elapsed > 0.1 then
+            Show_DropIndicator(id)
+            self.elapsed = 0
+          end
+        end)
+        Show_DropIndicator(id)
+      end
+      self:UpdateIconsVisible()
+      OptionsPrivate.UpdateButtonsScroll()
+    else
+      -- Are we a valid target?
+      -- Top level auras that aren't groups aren't
+      if not self.data.parent and not self:IsGroup() then
+        self:Disable()
+      end
+
+      -- If we are dragging a group, dynamic groups aren't valid targets
+      if mode == "GROUP" then
+        if self.data.regionType == "dynamicgroup" then
+          self:Disable()
+        else
+          local parentData = self.data.parent and WeakAuras.GetData(self.data.parent)
+          if (parentData and parentData.regionType == "dynamicgroup") then
+            self:Disable()
+          end
+        end
+      end
+    end
+  end,
+  ["Drop"] = function(self, mode, mainAura, target, func)
+    if mode == "MULTI" or mode == "SINGLE" then
+      if self.dragging then
+        if func and target then
+          func(self, target)
+        end
+      end
+    elseif mode == "GROUP" then
+      if mainAura.id == self.data.id then
+        if func and target then
+          func(self, target)
+        end
+      end
+    end
+    self:DropEnd()
+  end,
+  ["IsDragging"] = function(self)
+    return self.dragging
+  end,
+  ["DragReset"] = function(self)
+    self:DropEnd()
+  end,
+  ["DropEnd"] = function(self)
+    Show_DropIndicator()
+
+    self.frame:SetScript("OnClick", self.callbacks.OnClickNormal)
+    self.frame:EnableKeyboard(false); -- disables self.callbacks.OnKeyDown
+    self.view:Show()
+    if self.data.controlledChildren then
+      self.expand:Show()
+    else
       self.loaded:Show()
-      self.view:Show()
+    end
+    self:Enable()
+
+    -- get action and execute it
+    self.frame:StopMovingOrSizing()
+    self.frame:SetScript("OnUpdate", nil)
+    if self.dragging then
+      if self.frame.temp.title then
+        -- restore title and icon
+        self.title:SetText(self.frame.temp.title)
+        self:RestoreIcon();
+      end
+      self.frame:SetParent(self.frame.temp.parent)
+      self.frame:SetFrameStrata(self.frame.temp.strata)
+      self.frame.temp = nil
     end
     self.dragging = false
-    -- exit if we have no target or only want to reset
-    self.multi = nil
-    if reset or not target then
-      return OptionsPrivate.UpdateButtonsScroll()
+    self:UpdateIconsVisible()
+  end,
+  ["ShowTooltip"] = function(self)
+  end,
+  ["UpdateOffset"] = function(self)
+    local group = self.frame.dgroup
+    if group then
+      local depth = 0
+      while(group) do
+        depth = depth + 1
+        group = WeakAuras.GetData(group).parent
+      end
+      self.offset:SetWidth(depth * 8 + 1)
+    else
+      self.offset:SetWidth(1)
     end
-    local action = GetAction(target, area, self)
-    if action then
-      action(self, target)
-    end
-    WeakAuras.SortDisplayButtons()
+  end,
+  ["GetOffset"] = function(self)
+    return self.offset:GetWidth()
   end,
   ["GetGroupOrCopying"] = function(self)
     return self.group;
@@ -1306,35 +1257,14 @@ local methods = {
   end,
   ["SetViewRegion"] = function(self, region)
     self.view.region = region;
-    self.view.func = function() return self.view.visibility end;
-    self.view:SetScript("OnClick", function()
-      if(self.view.visibility < 2) then
-        self.view:PriorityShow(2);
-      else
-        self.view:PriorityHide(2);
-      end
-    end);
-  end,
-  ["SetViewClick"] = function(self, func)
-    self.view:SetScript("OnClick", func);
-  end,
-  ["SetViewTest"] = function(self, func)
-    self.view.func = func;
   end,
   ["SetRenameAction"] = function(self, func)
     self.renamebox.func = function()
       func(self.renamebox:GetText());
     end
   end,
-  ["DisableGroup"] = function(self)
-    self.group:Hide();
-    self.loaded:Hide();
-    self.expand:Show();
-  end,
   ["EnableGroup"] = function(self)
-    self.group:Show();
-    self.loaded:Show();
-    self.expand:Hide();
+
   end,
   ["SetIds"] = function(self, ids)
     self.renamebox.ids = ids;
@@ -1343,19 +1273,13 @@ local methods = {
     self.frame.dgroup = group;
     if(group) then
       self.icon:SetPoint("LEFT", self.ungroup, "RIGHT");
-      self.background:SetPoint("LEFT", self.ungroup, "RIGHT");
-      self.ungroup:Show();
-      self.group:Hide();
-      self.upgroup:Show();
-      self.downgroup:Show();
+      self.background:SetPoint("LEFT", self.offset, "RIGHT");
     else
       self.icon:SetPoint("LEFT", self.frame, "LEFT");
       self.background:SetPoint("LEFT", self.frame, "LEFT");
-      self.ungroup:Hide();
-      self.group:Show();
-      self.upgroup:Hide();
-      self.downgroup:Hide();
     end
+    self:UpdateIconsVisible()
+    self:UpdateOffset()
   end,
   ["GetGroup"] = function(self)
     return self.frame.dgroup;
@@ -1418,98 +1342,6 @@ local methods = {
       self:Collapse();
     end
   end,
-  ["ShowGroupUpdate"] = function(self)
-    if self.groupUpdate and self.groupUpdate.disabled then
-      self.groupUpdate:Show()
-      self.groupUpdate.disabled = false
-    end
-  end,
-  ["HideGroupUpdate"] = function(self)
-    if self.groupUpdate and not self.groupUpdate.disabled then
-      self.groupUpdate:Hide()
-      self.groupUpdate.disabled = true
-    end
-  end,
-  ["RefreshUpdateMenu"] = function(self)
-    local pos
-    for k, menu in pairs(self.menu) do
-      if menu.text and menu.text:find(L["Wago Update"]) then
-        pos = k
-        break
-      end
-    end
-    if pos then
-      local wagoMenu = self.menu[pos].menuList
-      for i=1,#wagoMenu do tremove(wagoMenu, 1) end
-      tinsert(wagoMenu, {
-        text = self.data.ignoreWagoUpdate and L["Stop ignoring Updates"] or L["Ignore all Updates"],
-        notCheckable = true,
-        func = self.data.ignoreWagoUpdate and self.callbacks.wagoStopIgnoreAll or self.callbacks.wagoIgnoreAll
-      })
-      if not self.data.ignoreWagoUpdate and self.update.hasUpdate then
-        if self.data.skipWagoUpdate and self.update.version == self.data.skipWagoUpdate then
-          tinsert(wagoMenu, {
-            text =  L["Don't skip this Version"],
-            notCheckable = true,
-            func = self.callbacks.wagoStopIgnoreNext
-          });
-        else
-          tinsert(wagoMenu, {
-            text = L["Skip this Version"],
-            notCheckable = true,
-            func = self.callbacks.wagoIgnoreNext
-          });
-          tinsert(wagoMenu, {
-            text = " ",
-            notClickable = true,
-            notCheckable = true,
-          });
-          tinsert(wagoMenu, {
-            text = L["Update this Aura"],
-            notCheckable = true,
-            func = self.callbacks.OnUpdateClick
-          });
-        end
-      end
-    end
-  end,
-  ["ShowUpdateIcon"] = function(self)
-    if self.update and self.update.disabled then
-      self.update:Show()
-      self.update:Enable()
-      self.updateLogo:Show()
-      self.update.disabled = false
-    end
-  end,
-  ["HideUpdateIcon"] = function(self)
-    if self.update and not self.update.disabled then
-      self.update:Hide()
-      self.update:Disable()
-      self.updateLogo:Hide()
-      self.update.disabled = true
-    end
-  end,
-  ["HasUpdate"] = function(self)
-    -- return hasUpdate, skipVersion, updateData, key
-    if not WeakAurasCompanion or self.data.ignoreWagoUpdate then return end
-    local slug = self.data.uid and WeakAurasCompanion.uids[self.data.uid] or WeakAurasCompanion.ids[self.data.id]
-    if slug then
-      local updateData = WeakAurasCompanion.slugs[slug]
-      if updateData then
-        if not (self.data.skipWagoUpdate and self.data.skipWagoUpdate == updateData.wagoVersion) then
-          if not self.data.version or tonumber(updateData.wagoVersion) > tonumber(self.data.version) then
-            -- got update
-            return true, false, updateData, slug
-          end
-        else
-          -- version skip flag
-          return true, true, updateData, slug
-        end
-      end
-    end
-    -- no addon, or no data, or ignore flag
-    return false, false, nil, nil
-  end,
   ["UpdateWarning"] = function(self)
     local icon, title, warningText = OptionsPrivate.Private.AuraWarnings.FormatWarnings(self.data.uid)
     if warningText then
@@ -1529,81 +1361,31 @@ local methods = {
       self.warning:Hide()
     end
   end,
-  ["RefreshUpdate"] = function(self, actionFunc)
-    if self.data.parent then
-      -- is in a group
-      local parentButton = WeakAuras.GetDisplayButton(self.data.parent)
-      if parentButton then
-        parentButton:RefreshUpdate(actionFunc)
-      end
-    else
-      -- is top level
-      local hasUpdate, skipVersion, _, slug = self:HasUpdate()
-      self:RefreshUpdateMenu()
-      if hasUpdate and not skipVersion then
-        self:ShowUpdateIcon()
-      else
-        self:HideUpdateIcon()
-      end
-      if self.data.controlledChildren then
-        -- is a group
-        local hasUpdate, skipVersion, _, slug = self:HasUpdate()
-        local showGroupUpdateIcon = false
-        for childIndex, childId in pairs(self.data.controlledChildren) do
-          local childButton = WeakAuras.GetDisplayButton(childId);
-          if childButton then
-            if actionFunc then
-              childButton.callbacks[actionFunc](nil, true)
-            end
-            childButton:RefreshUpdateMenu()
-            local childHasUpdate, childSkipVersion, _, childSlug = childButton:HasUpdate()
-            if childHasUpdate and slug ~= childSlug and not childSkipVersion then
-              showGroupUpdateIcon = true
-              childButton:ShowUpdateIcon()
-            else
-              childButton:HideUpdateIcon()
-            end
-          end
-        end
-        if showGroupUpdateIcon then
-          self:ShowGroupUpdate()
-        else
-          self:HideGroupUpdate()
-        end
-      end
-    end
-  end,
   ["SetGroupOrder"] = function(self, order, max)
-    if(order == 1) then
-      self:DisableUpGroup();
-    else
-      self:EnableUpGroup();
-    end
-    if(order == max) then
-      self:DisableDownGroup();
-    else
-      self:EnableDownGroup();
-    end
+    self.first = (order == 1)
+    self.last = (order == max)
     self.frame.dgrouporder = order;
+    self:UpdateUpDownButtons()
+  end,
+  ["UpdateUpDownButtons"] = function(self)
+    if self.first or not self:IsEnabled() then
+      self.upgroup:Disable();
+      self.upgroup.texture:SetVertexColor(0.3, 0.3, 0.3);
+    else
+      self.upgroup:Enable();
+      self.upgroup.texture:SetVertexColor(1, 1, 1);
+    end
+
+    if self.last or not self:IsEnabled() then
+      self.downgroup:Disable();
+      self.downgroup.texture:SetVertexColor(0.3, 0.3, 0.3);
+    else
+      self.downgroup:Enable();
+      self.downgroup.texture:SetVertexColor(1, 1, 1);
+    end
   end,
   ["GetGroupOrder"] = function(self)
     return self.frame.dgrouporder;
-  end,
-  ["DisableUpGroup"] = function(self)
-    self.upgroup:Disable();
-    self.upgroup.texture:SetVertexColor(0.3, 0.3, 0.3);
-  end,
-  ["EnableUpGroup"] = function(self)
-    self.upgroup:Enable();
-    self.upgroup.texture:SetVertexColor(1, 1, 1);
-  end,
-  ["DisableDownGroup"] = function(self)
-    self.downgroup:Disable();
-    self.downgroup.texture:SetVertexColor(0.3, 0.3, 0.3);
-  end,
-  ["EnableDownGroup"] = function(self)
-    self.downgroup:Enable();
-    self.downgroup.texture:SetVertexColor(1, 1, 1);
   end,
   ["DisableLoaded"] = function(self)
     self.loaded.title = L["Not Loaded"];
@@ -1617,19 +1399,117 @@ local methods = {
   end,
   ["Pick"] = function(self)
     self.frame:LockHighlight();
-    self.view:PriorityShow(1);
+    self:PriorityShow(1);
+    self:RecheckParentVisibility()
   end,
   ["ClearPick"] = function(self, noHide)
     self.frame:UnlockHighlight();
     if not noHide then
-      self.view:PriorityHide(1);
+      self:PriorityHide(1);
+      self:RecheckParentVisibility()
+    end
+  end,
+  ["SyncVisibility"] = function(self)
+    if (not WeakAuras.IsOptionsOpen()) then
+      return;
+    end
+    if self.view.visibility >= 1 then
+      if(self.view.region and self.view.region.Expand) then
+        OptionsPrivate.Private.FakeStatesFor(self.view.region.id, true)
+        if (OptionsPrivate.Private.personalRessourceDisplayFrame) then
+          OptionsPrivate.Private.personalRessourceDisplayFrame:expand(self.view.region.id);
+        end
+        if (OptionsPrivate.Private.mouseFrame) then
+          OptionsPrivate.Private.mouseFrame:expand(self.view.region.id);
+        end
+      end
+    else
+      if(self.view.region and self.view.region.Collapse) then
+        OptionsPrivate.Private.FakeStatesFor(self.view.region.id, false)
+        if (OptionsPrivate.Private.personalRessourceDisplayFrame) then
+          OptionsPrivate.Private.personalRessourceDisplayFrame:collapse(self.view.region.id);
+        end
+        if (OptionsPrivate.Private.mouseFrame) then
+          OptionsPrivate.Private.mouseFrame:collapse(self.view.region.id);
+        end
+      end
     end
   end,
   ["PriorityShow"] = function(self, priority)
-    self.view:PriorityShow(priority);
+    if (not WeakAuras.IsOptionsOpen()) then
+      return;
+    end
+    if(priority >= self.view.visibility and self.view.visibility ~= priority) then
+      self.view.visibility = priority;
+      self:SyncVisibility()
+      self:UpdateViewTexture()
+    end
+    if self.view.region and self.view.region.ClickToPick then
+      self.view.region:ClickToPick();
+    end
   end,
   ["PriorityHide"] = function(self, priority)
-    self.view:PriorityHide(priority);
+    if (not WeakAuras.IsOptionsOpen()) then
+      return;
+    end
+    if(priority >= self.view.visibility and self.view.visibility ~= 0) then
+      self.view.visibility = 0;
+      self:SyncVisibility()
+      self:UpdateViewTexture()
+    end
+  end,
+  ["RecheckParentVisibility"] = function(self)
+    if self.data.parent then
+      local parentButton = WeakAuras.GetDisplayButton(self.data.parent)
+      parentButton:RecheckVisibility()
+    else
+      WeakAuras.OptionsFrame().loadedButton:RecheckVisibility()
+      WeakAuras.OptionsFrame().unloadedButton:RecheckVisibility()
+    end
+  end,
+  ["RecheckVisibility"] = function(self)
+    local none, all = true, true;
+    for child in OptionsPrivate.Private.TraverseAllChildren(self.data) do
+      local childButton = WeakAuras.GetDisplayButton(child.id);
+      if(childButton) then
+        if(childButton:GetVisibility() ~= 2) then
+          all = false;
+        end
+        if(childButton:GetVisibility() ~= 0) then
+          none = false;
+        end
+      end
+    end
+    local newVisibility
+    if(all) then
+      newVisibility = 2;
+    elseif(none) then
+      newVisibility = 0;
+    else
+      newVisibility = 1;
+    end
+    if newVisibility ~= self.view.visibility then
+      self.view.visibility = newVisibility
+      self:UpdateViewTexture()
+
+      self:RecheckParentVisibility()
+    end
+  end,
+  ["SetVisibilityDirectly"] = function(self, visibility)
+    if self.data.parent and visibility ~= self.view.visibility then
+      self.view.visibility = visibility
+      self:UpdateViewTexture()
+    end
+  end,
+  ["UpdateViewTexture"] = function(self)
+    local visibility = self.view.visibility
+    if(visibility == 2) then
+      self.view.texture:SetTexture("Interface\\LFGFrame\\BattlenetWorking0.blp");
+    elseif(visibility == 1) then
+      self.view.texture:SetTexture("Interface\\LFGFrame\\BattlenetWorking2.blp");
+    else
+      self.view.texture:SetTexture("Interface\\LFGFrame\\BattlenetWorking4.blp");
+    end
   end,
   ["GetVisibility"] = function(self)
     return self.view.visibility;
@@ -1640,10 +1520,9 @@ local methods = {
     self.view:Disable();
     self.group:Disable();
     self.ungroup:Disable();
-    self.upgroup:Disable();
-    self.downgroup:Disable();
     self.loaded:Disable();
     self.expand:Disable();
+    self:UpdateUpDownButtons()
   end,
   ["Enable"] = function(self)
     self.background:Show();
@@ -1651,9 +1530,8 @@ local methods = {
     self.view:Enable();
     self.group:Enable();
     self.ungroup:Enable();
-    self.upgroup:Enable();
-    self.downgroup:Enable();
     self.loaded:Enable();
+    self:UpdateUpDownButtons()
     if not(self.expand.disabled) then
       self.expand:Enable();
     end
@@ -1666,7 +1544,6 @@ local methods = {
     self:SetViewRegion();
     self:Enable();
     self:SetGroup();
-    self:EnableGroup();
     self.renamebox:Hide();
     self.title:Show();
     local id = self.data.id;
@@ -1773,6 +1650,13 @@ local function Constructor()
   button.dgroup = nil;
   button.data = {};
 
+  local offset = CreateFrame("Frame", nil, button)
+  button.offset = offset
+  offset:SetPoint("TOP", button, "TOP");
+  offset:SetPoint("BOTTOM", button, "BOTTOM");
+  offset:SetPoint("LEFT", button, "LEFT");
+  offset:SetWidth(1)
+
   local background = button:CreateTexture(nil, "BACKGROUND");
   button.background = background;
   background:SetTexture("Interface\\BUTTONS\\UI-Listbox-Highlight2.blp");
@@ -1780,14 +1664,14 @@ local function Constructor()
   background:SetVertexColor(0.5, 0.5, 0.5, 0.25);
   background:SetPoint("TOP", button, "TOP");
   background:SetPoint("BOTTOM", button, "BOTTOM");
-  background:SetPoint("LEFT", button, "LEFT");
+  background:SetPoint("LEFT", button, "LEFT")
   background:SetPoint("RIGHT", button, "RIGHT");
 
   local icon = button:CreateTexture(nil, "OVERLAY");
   button.icon = icon;
   icon:SetWidth(32);
   icon:SetHeight(32);
-  icon:SetPoint("LEFT", button, "LEFT");
+  icon:SetPoint("LEFT", offset, "RIGHT");
 
   local title = button:CreateFontString(nil, "OVERLAY", "GameFontNormal");
   button.title = title;
@@ -1799,18 +1683,6 @@ local function Constructor()
 
   button.description = {};
 
-  button:SetScript("OnEnter", function()
-    if(OptionsPrivate.IsPickedMultiple() and OptionsPrivate.IsDisplayPicked(button.id)) then
-      Show_Long_Tooltip(button, OptionsPrivate.MultipleDisplayTooltipDesc());
-    else
-      if not(button.terribleCodeOrganizationHackTable.IsGroupingOrCopying()) then
-        button.terribleCodeOrganizationHackTable.SetNormalTooltip();
-      end
-      Show_Long_Tooltip(button, button.description);
-    end
-  end);
-  button:SetScript("OnLeave", Hide_Tooltip);
-
   local view = CreateFrame("BUTTON", nil, button);
   button.view = view;
   view:SetWidth(16);
@@ -1818,55 +1690,15 @@ local function Constructor()
   view:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -2, 0);
   local viewTexture = view:CreateTexture()
   view.texture = viewTexture;
-  viewTexture:SetTexture("Interface\\LFGFrame\\BattlenetWorking1.blp");
+  viewTexture:SetTexture("Interface\\LFGFrame\\BattlenetWorking4.blp");
   viewTexture:SetTexCoord(0.1, 0.9, 0.1, 0.9);
   viewTexture:SetAllPoints(view);
   view:SetNormalTexture(viewTexture);
   view:SetHighlightTexture("Interface\\BUTTONS\\UI-Panel-MinimizeButton-Highlight.blp");
   view:SetScript("OnEnter", function() Show_Tooltip(button, L["View"], L["Toggle the visibility of this display"]) end);
   view:SetScript("OnLeave", Hide_Tooltip);
+
   view.visibility = 0;
-  view.PriorityShow = function(self, priority)
-    if (not WeakAuras.IsOptionsOpen()) then
-      return;
-    end
-    if(priority >= self.visibility) then
-      self.visibility = priority;
-      if(self.region and self.region.Expand) then
-        OptionsPrivate.Private.FakeStatesFor(self.region.id, true)
-        if (OptionsPrivate.Private.mouseFrame) then
-          OptionsPrivate.Private.mouseFrame:expand(self.region.id);
-        end
-      end
-    end
-    if self.region and self.region.ClickToPick then
-      self.region:ClickToPick();
-    end
-  end
-  view.PriorityHide = function(self, priority)
-    if (not WeakAuras.IsOptionsOpen()) then
-      return;
-    end
-    if(priority >= self.visibility) then
-      self.visibility = 0;
-      if(self.region and self.region.Collapse) then
-        OptionsPrivate.Private.FakeStatesFor(self.region.id, false)
-        if (OptionsPrivate.Private.mouseFrame) then
-          OptionsPrivate.Private.mouseFrame:collapse(self.region.id);
-        end
-      end
-    end
-  end
-  view.func = function() return view.visibility end;
-  view:SetScript("OnUpdate", function()
-    if(view.func() == 2) then
-      view.texture:SetTexture("Interface\\LFGFrame\\BattlenetWorking0.blp");
-    elseif(view.func() == 1) then
-      view.texture:SetTexture("Interface\\LFGFrame\\BattlenetWorking2.blp");
-    else
-      view.texture:SetTexture("Interface\\LFGFrame\\BattlenetWorking4.blp");
-    end
-  end);
 
   local loaded = CreateFrame("BUTTON", nil, button);
   button.loaded = loaded;
@@ -1928,7 +1760,7 @@ local function Constructor()
   button.ungroup = ungroup;
   ungroup:SetWidth(11);
   ungroup:SetHeight(11);
-  ungroup:SetPoint("LEFT", button, "LEFT", 0, 0);
+  ungroup:SetPoint("LEFT", offset, "RIGHT", 0, 0);
   local ungrouptexture = group:CreateTexture(nil, "OVERLAY");
   ungrouptexture:SetTexture("Interface\\MoneyFrame\\Arrow-Left-Down.blp");
   ungrouptexture:SetTexCoord(0.5, 0, 0.5, 1, 1, 0, 1, 1);
@@ -1943,7 +1775,7 @@ local function Constructor()
   button.upgroup = upgroup;
   upgroup:SetWidth(11);
   upgroup:SetHeight(11);
-  upgroup:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0);
+  upgroup:SetPoint("TOPLEFT", offset, "TOPRIGHT", 0, 0);
   local upgrouptexture = group:CreateTexture(nil, "OVERLAY");
   upgroup.texture = upgrouptexture;
   upgrouptexture:SetTexture("Interface\\MoneyFrame\\Arrow-Left-Down.blp");
@@ -1960,7 +1792,7 @@ local function Constructor()
   button.downgroup = downgroup;
   downgroup:SetWidth(11);
   downgroup:SetHeight(11);
-  downgroup:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", 0, 0);
+  downgroup:SetPoint("BOTTOMLEFT", offset, "BOTTOMRIGHT", 0, 0);
   local downgrouptexture = group:CreateTexture(nil, "OVERLAY");
   downgroup.texture = downgrouptexture;
   downgrouptexture:SetTexture("Interface\\MoneyFrame\\Arrow-Left-Down.blp");
@@ -1989,67 +1821,6 @@ local function Constructor()
   expand:SetScript("OnEnter", function() Show_Tooltip(button, expand.title, expand.desc) end);
   expand:SetScript("OnLeave", Hide_Tooltip);
 
-  local update, updateLogo
-  local groupUpdate
-  if WeakAurasCompanion then
-    update = CreateFrame("BUTTON", nil, button);
-    button.update = update
-    update.disabled = true
-    update.func = function() end
-    update:SetNormalTexture([[Interface\AddOns\WeakAuras\Media\Textures\wagoupdate_refresh.tga]])
-    update:Disable()
-    update:SetWidth(24)
-    update:SetHeight(24)
-    update:SetPoint("RIGHT", button, "RIGHT", -35, 0)
-    update.title = ""
-    update.desc = ""
-    update.hasUpdate = false
-    update.version = nil
-    update.menuDisabled = true
-
-    -- Add logo
-    updateLogo = CreateFrame("Frame", nil, button)
-    button.updateLogo = updateLogo
-    local tex = updateLogo:CreateTexture(nil, "OVERLAY")
-    tex:SetTexture([[Interface\AddOns\WeakAuras\Media\Textures\wagoupdate_logo.tga]])
-    tex:SetAllPoints()
-    updateLogo:SetSize(24,24)
-    updateLogo:SetPoint("CENTER",update)
-
-    -- Animation On Hover
-    local animGroup = update:CreateAnimationGroup()
-    update.animGroup = animGroup
-    local animRotate = animGroup:CreateAnimation("rotation")
-    animRotate:SetDegrees(-360)
-    animRotate:SetDuration(1)
-    animRotate:SetSmoothing("OUT")
-
-    animGroup:SetScript("OnFinished",function() if (MouseIsOver(update)) then animGroup:Play() end end)
-    update:SetScript("OnEnter", function()
-      animGroup:Play()
-      Show_Tooltip(button, update.title, update.desc)
-    end);
-    update:SetScript("OnLeave", Hide_Tooltip)
-    update:Hide()
-    updateLogo:Hide()
-
-    -- Update in group icon
-    groupUpdate = CreateFrame("BUTTON", nil, button)
-    button.groupUpdate = groupUpdate
-    local gTex = groupUpdate:CreateTexture(nil, "OVERLAY")
-    gTex:SetTexture([[Interface\AddOns\WeakAuras\Media\Textures\wagoupdate_logo.tga]])
-    gTex:SetAllPoints()
-    groupUpdate:SetSize(16, 16)
-    groupUpdate:SetPoint("BOTTOM", button, "BOTTOM")
-    groupUpdate:SetPoint("LEFT", icon, "RIGHT", 20, 0)
-    groupUpdate.disabled = true
-    groupUpdate.title = L["Update in Group"]
-    groupUpdate.desc = L["Group contains updates from Wago"]
-    groupUpdate:SetScript("OnEnter", function() Show_Tooltip(button, groupUpdate.title, groupUpdate.desc) end)
-    groupUpdate:SetScript("OnLeave", Hide_Tooltip)
-    groupUpdate:Hide()
-  end
-
   local warning = CreateFrame("BUTTON", nil, button);
   button.warning = warning
   warning:SetWidth(16)
@@ -2071,11 +1842,9 @@ local function Constructor()
     loaded = loaded,
     background = background,
     expand = expand,
-    update = update,
     warning = warning,
-    groupUpdate = groupUpdate,
-    updateLogo = updateLogo,
-    type = Type
+    type = Type,
+    offset = offset
   }
   for method, func in pairs(methods) do
     widget[method] = func

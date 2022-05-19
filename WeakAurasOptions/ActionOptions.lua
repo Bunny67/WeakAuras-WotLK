@@ -12,6 +12,17 @@ local hiddenAll = OptionsPrivate.commonOptions.CreateHiddenAll("action")
 local getAll = OptionsPrivate.commonOptions.CreateGetAll("action")
 local setAll = OptionsPrivate.commonOptions.CreateSetAll("action", getAll)
 
+local RestrictedChannelCheck
+if WeakAuras.IsClassic() then
+  RestrictedChannelCheck = function()
+    return false
+  end
+else
+  RestrictedChannelCheck = function(data)
+    return data.message_type == "SAY" or data.message_type == "YELL" or data.message_type == "SMARTRAID"
+  end
+end
+
 function OptionsPrivate.GetActionOptions(data)
   local action = {
     type = "group",
@@ -94,6 +105,13 @@ function OptionsPrivate.GetActionOptions(data)
         disabled = function() return not data.actions.start.do_message end,
         control = "WeakAurasSortedDropdown"
       },
+      start_message_warning = {
+        type = "description",
+        width = WeakAuras.doubleWidth,
+        name = L["Note: Automated Messages to SAY and YELL are blocked outside of Instances."],
+        order = 2.5,
+        hidden = function() return not RestrictedChannelCheck(data.actions.start) end
+      },
       start_message_space = {
         type = "execute",
         width = WeakAuras.normalWidth,
@@ -101,7 +119,7 @@ function OptionsPrivate.GetActionOptions(data)
         order = 3,
         image = function() return "", 0, 0 end,
         hidden = function()
-          return not(data.actions.start.message_type == "WHISPER" or data.actions.start.message_type == "COMBAT"
+          return not(data.actions.start.message_type == "COMBAT"
                      or data.actions.start.message_type == "PRINT" or data.actions.start.message_type == "ERROR")
         end
       },
@@ -130,7 +148,19 @@ function OptionsPrivate.GetActionOptions(data)
         name = L["Send To"],
         order = 3.1,
         disabled = function() return not data.actions.start.do_message end,
-        hidden = function() return data.actions.start.message_type ~= "WHISPER" end
+        hidden = function() return data.actions.start.message_type ~= "WHISPER" end,
+        desc = function()
+          return L["Dynamic text tooltip"] .. OptionsPrivate.Private.GetAdditionalProperties(data)
+        end,
+      },
+      start_message_dest_isunit = {
+        type = "toggle",
+        width = WeakAuras.normalWidth,
+        name = L["Is Unit"],
+        order = 3.15,
+        hidden = function()
+          return data.actions.start.message_type ~= "WHISPER"
+        end
       },
       start_message = {
         type = "input",
@@ -300,6 +330,7 @@ function OptionsPrivate.GetActionOptions(data)
       },
       start_glow_color = {
         type = "color",
+        hasAlpha = true,
         width = WeakAuras.normalWidth,
         name = L["Glow Color"],
         order = 10.8,
@@ -475,13 +506,23 @@ function OptionsPrivate.GetActionOptions(data)
         disabled = function() return not data.actions.finish.do_message end,
         control = "WeakAurasSortedDropdown"
       },
+      finish_message_warning = {
+        type = "description",
+        width = WeakAuras.doubleWidth,
+        name = L["Note: Automated Messages to SAY and YELL are blocked outside of Instances."],
+        order = 22.5,
+        hidden = function() return not RestrictedChannelCheck(data.actions.finish) end
+      },
       finish_message_space = {
         type = "execute",
         width = WeakAuras.normalWidth,
         name = "",
         order = 23,
         image = function() return "", 0, 0 end,
-        hidden = function() return data.actions.finish.message_type ~= "WHISPER" end
+        hidden = function()
+          return not(data.actions.finish.message_type == "COMBAT"
+                     or data.actions.finish.message_type == "PRINT" or data.actions.finish.message_type == "ERROR")
+        end
       },
       finish_message_color = {
         type = "color",
@@ -509,6 +550,15 @@ function OptionsPrivate.GetActionOptions(data)
         order = 23.1,
         disabled = function() return not data.actions.finish.do_message end,
         hidden = function() return data.actions.finish.message_type ~= "WHISPER" end
+      },
+      finish_message_dest_isunit = {
+        type = "toggle",
+        width = WeakAuras.normalWidth,
+        name = L["Is Unit"],
+        order = 23.15,
+        hidden = function()
+          return data.actions.finish.message_type ~= "WHISPER"
+        end
       },
       finish_message = {
         type = "input",
@@ -654,6 +704,7 @@ function OptionsPrivate.GetActionOptions(data)
       },
       finish_glow_color = {
         type = "color",
+        hasAlpha = true,
         width = WeakAuras.normalWidth,
         name = L["Glow Color"],
         order = 30.8,
@@ -824,7 +875,7 @@ function OptionsPrivate.GetActionOptions(data)
                           0.011, function() return not data.actions.init.do_custom end, {"actions", "init", "custom"}, true);
 
   OptionsPrivate.commonOptions.AddCodeOption(action.args, data, L["Custom Code"], "start_message", "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#chat-message---custom-code",
-                          5, function() return not (data.actions.start.do_message and OptionsPrivate.Private.ContainsCustomPlaceHolder(data.actions.start.message)) end, {"actions", "start", "message_custom"}, false);
+                          5, function() return not (data.actions.start.do_message and (OptionsPrivate.Private.ContainsCustomPlaceHolder(data.actions.start.message) or (data.actions.start.message_type == "WHISPER" and OptionsPrivate.Private.ContainsCustomPlaceHolder(data.actions.start.message_dest)))) end, {"actions", "start", "message_custom"}, false);
 
   local startHidden = function()
     return OptionsPrivate.IsCollapsed("format_option", "actions", "start_message", true)
@@ -868,15 +919,19 @@ function OptionsPrivate.GetActionOptions(data)
   end
 
   if data.controlledChildren then
-    for index, childId in pairs(data.controlledChildren) do
-      local childData = WeakAuras.GetData(childId)
+    local list = {}
+    for child in OptionsPrivate.Private.TraverseLeafs(data) do
+      tinsert(list, child)
+    end
+
+    for index, child in ipairs(list) do
       local startGet = function(key)
-        return childData.actions.start["message_format_" .. key]
+        return child.actions.start["message_format_" .. key]
       end
-      OptionsPrivate.AddTextFormatOption(childData.actions and childData.actions.start.message, true, startGet, startAddOption, startHidden, startSetHidden, index, #data.controlledChildren)
+      OptionsPrivate.AddTextFormatOption(child.actions and child.actions.start.message, true, startGet, startAddOption, startHidden, startSetHidden, true, index, #list)
     end
   else
-    OptionsPrivate.AddTextFormatOption(data.actions and data.actions.start.message, true, startGet, startAddOption, startHidden, startSetHidden)
+    OptionsPrivate.AddTextFormatOption(data.actions and data.actions.start.message, true, startGet, startAddOption, startHidden, startSetHidden, true)
   end
 
 
@@ -884,7 +939,7 @@ function OptionsPrivate.GetActionOptions(data)
                           13, function() return not data.actions.start.do_custom end, {"actions", "start", "custom"}, true);
 
   OptionsPrivate.commonOptions.AddCodeOption(action.args, data, L["Custom Code"], "finish_message", "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#chat-message---custom-code",
-                          25, function() return not (data.actions.finish.do_message and OptionsPrivate.Private.ContainsCustomPlaceHolder(data.actions.finish.message)) end, {"actions", "finish", "message_custom"}, false);
+                          25, function() return not (data.actions.finish.do_message and (OptionsPrivate.Private.ContainsCustomPlaceHolder(data.actions.finish.message) or (data.actions.finish.message_type == "WHISPER" and OptionsPrivate.Private.ContainsCustomPlaceHolder(data.actions.finish.message_dest)))) end, {"actions", "finish", "message_custom"}, false);
 
   local finishHidden = function()
     return OptionsPrivate.IsCollapsed("format_option", "actions", "finish_message", true)
@@ -898,7 +953,7 @@ function OptionsPrivate.GetActionOptions(data)
     return data.actions.finish["message_format_" .. key]
   end
 
-  order = 25
+  order = 26
   usedKeys = {}
   local function finishAddOption(key, option)
     if usedKeys[key] then
@@ -927,15 +982,18 @@ function OptionsPrivate.GetActionOptions(data)
   end
 
   if data.controlledChildren then
-    for index, childId in pairs(data.controlledChildren) do
-      local childData = WeakAuras.GetData(childId)
+    local list = {}
+    for child in OptionsPrivate.Private.TraverseLeafs(data) do
+      tinsert(list, child)
+    end
+    for index, child in ipairs(list) do
       local finishGet = function(key)
-        return childData.actions.finish["message_format_" .. key]
+        return child.actions.finish["message_format_" .. key]
       end
-      OptionsPrivate.AddTextFormatOption(childData.actions and childData.actions.finish.message, true, finishGet, finishAddOption, finishHidden, finishSetHidden, index, #data.controlledChildren)
+      OptionsPrivate.AddTextFormatOption(child.actions and child.actions.finish.message, true, finishGet, finishAddOption, finishHidden, finishSetHidden, true, index, #list)
     end
   else
-    OptionsPrivate.AddTextFormatOption(data.actions and data.actions.finish.message, true, finishGet, finishAddOption, finishHidden, finishSetHidden)
+    OptionsPrivate.AddTextFormatOption(data.actions and data.actions.finish.message, true, finishGet, finishAddOption, finishHidden, finishSetHidden, true)
   end
 
   OptionsPrivate.commonOptions.AddCodeOption(action.args, data, L["Custom Code"], "finish", "https://github.com/WeakAuras/WeakAuras2/wiki/Custom-Code-Blocks#on-hide",

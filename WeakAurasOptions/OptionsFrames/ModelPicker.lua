@@ -20,31 +20,23 @@ local function GetAll(baseObject, path, property, default)
   if not property then
     return default
   end
-  if baseObject.controlledChildren then
-    local result
-    local first = true
-    for index, childId in pairs(baseObject.controlledChildren) do
-      local childData = WeakAuras.GetData(childId)
-      local childObject = valueFromPath(childData, path)
-      if childObject and childObject[property] then
-        if first then
-          result = childObject[property]
-          first = false
-        else
-          if result ~= childObject[property] then
-            return default
-          end
+
+  local result = default
+  local first = true
+  for child in OptionsPrivate.Private.TraverseLeafsOrAura(baseObject) do
+    local childObject = valueFromPath(child, path)
+    if childObject and childObject[property] then
+      if first then
+        result = childObject[property]
+        first = false
+      else
+        if result ~= childObject[property] then
+          return default
         end
       end
     end
-    return result
-  else
-    local object = valueFromPath(baseObject, path)
-    if object and object[property] then
-      return object[property]
-    end
-    return default
   end
+  return result
 end
 
 local function ConstructModelPicker(frame)
@@ -161,11 +153,19 @@ local function ConstructModelPicker(frame)
     group:Pick(nil, nil, nil, modelPickerY:GetValue());
   end);
 
+  local modelPickerRotation = AceGUI:Create("Slider");
+  modelPickerRotation:SetSliderValues(0, 360, 0.05);
+  modelPickerRotation:SetLabel(L["Rotation"]);
+  modelPickerRotation.frame:SetParent(group.frame);
+  modelPickerRotation:SetCallback("OnValueChanged", function()
+    group:Pick(nil, nil, nil, nil, modelPickerRotation:GetValue());
+  end);
+
   local modelTree = AceGUI:Create("WeakAurasTreeGroup");
   group.modelTree = modelTree;
-  group.frame:SetScript("OnUpdate", function()
+  group.frame:SetScript("OnSizeChanged", function()
     local frameWidth = frame:GetWidth();
-    local sliderWidth = (frameWidth - 50) / 3;
+    local sliderWidth = (frameWidth - 50) / 4;
     local narrowSliderWidth = (frameWidth - 50) / 7;
 
     modelTree:SetTreeWidth(frameWidth - 370);
@@ -178,6 +178,9 @@ local function ConstructModelPicker(frame)
 
     modelPickerY.frame:SetPoint("bottomleft", frame, "bottomleft", 35 + (2 * sliderWidth), 43);
     modelPickerY.frame:SetPoint("bottomright", frame, "bottomleft", 35 + (3 * sliderWidth), 43);
+
+    modelPickerRotation.frame:SetPoint("bottomleft", frame, "bottomleft", 45 + (3 * sliderWidth), 43);
+    modelPickerRotation.frame:SetPoint("bottomright", frame, "bottomleft", 45 + (4 * sliderWidth), 43);
   end);
   group:SetLayout("fill");
   modelTree:SetTree(WeakAuras.ModelPaths);
@@ -194,7 +197,26 @@ local function ConstructModelPicker(frame)
   model:SetFrameStrata("FULLSCREEN");
   group.model = model;
 
-  local function SetOnObject(object, model_path, model_z, model_x, model_y)
+  local startX, rotation
+  local function OnUpdateScript()
+    local uiScale, x = UIParent:GetEffectiveScale(), GetCursorPosition()
+    local screenW, screenH = GetScreenWidth(), GetScreenHeight()
+    local diffX = startX/uiScale - x/uiScale
+    rotation = (rotation + 180 / screenW * diffX) % 360
+    model:SetFacing(rad(rotation))
+  end
+  model:EnableMouse()
+  model:SetScript("OnMouseDown", function(self)
+    startX = GetCursorPosition()
+    rotation = group.selectedValues.rotation or 0
+    self:SetScript("OnUpdate", OnUpdateScript)
+  end)
+  model:SetScript("OnMouseUp", function(self)
+    self:SetScript("OnUpdate", nil)
+    group:Pick(nil, nil, nil, nil, rotation)
+  end)
+
+  local function SetOnObject(object, model_path, model_z, model_x, model_y, rotation)
     if model_path then
       object.model_path = model_path
     end
@@ -207,37 +229,31 @@ local function ConstructModelPicker(frame)
     if model_y then
       object.model_y = model_y
     end
+    if rotation then
+      object.rotation = rotation
+    end
   end
 
-  function group.Pick(self, model_path, model_z, model_x, model_y)
+  function group.Pick(self, model_path, model_z, model_x, model_y, rotation)
     local valueFromPath = OptionsPrivate.Private.ValueFromPath
 
     self.selectedValues.model_path = model_path or self.selectedValues.model_path
     self.selectedValues.model_x = model_x or self.selectedValues.model_x
     self.selectedValues.model_y = model_y or self.selectedValues.model_y
     self.selectedValues.model_z = model_z or self.selectedValues.model_z
+    self.selectedValues.rotation = rotation or self.selectedValues.rotation
 
     WeakAuras.SetModel(self.model, self.selectedValues.model_path)
 
     self.model:SetPosition(self.selectedValues.model_z, self.selectedValues.model_x, self.selectedValues.model_y);
     self.model:SetFacing(rad(self.selectedValues.rotation));
 
-    if(self.baseObject.controlledChildren) then
-      for index, childId in pairs(self.baseObject.controlledChildren) do
-        local childData = WeakAuras.GetData(childId)
-        local object = valueFromPath(childData, self.path)
-        if(object) then
-          SetOnObject(object, model_path, model_z, model_x, model_y)
-          WeakAuras.Add(childData)
-          WeakAuras.UpdateThumbnail(childData)
-        end
-      end
-    else
-      local object = valueFromPath(self.baseObject, self.path)
-      if object then
-        SetOnObject(object, model_path, model_z, model_x, model_y)
-        WeakAuras.Add(self.baseObject)
-        WeakAuras.UpdateThumbnail(self.baseObject)
+    for child in OptionsPrivate.Private.TraverseLeafsOrAura(self.baseObject) do
+      local object = valueFromPath(child, self.path)
+      if(object) then
+        SetOnObject(object, model_path, model_z, model_x, model_y, rotation)
+        WeakAuras.Add(child)
+        WeakAuras.UpdateThumbnail(child)
       end
     end
   end
@@ -266,20 +282,24 @@ local function ConstructModelPicker(frame)
     modelPickerX.editbox:SetText(("%.2f"):format(self.selectedValues.model_x));
     modelPickerY:SetValue(self.selectedValues.model_y);
     modelPickerY.editbox:SetText(("%.2f"):format(self.selectedValues.model_y));
+    modelPickerRotation:SetValue(self.selectedValues.rotation);
+    modelPickerRotation.editbox:SetText(("%.2f"):format(self.selectedValues.rotation));
 
     if(baseObject.controlledChildren) then
       self.givenModel = {};
       self.givenZ = {};
       self.givenX = {};
       self.givenY = {};
-      for index, childId in pairs(baseObject.controlledChildren) do
-        local childData = WeakAuras.GetData(childId)
-        local object = valueFromPath(childData, path)
+      self.givenRotation = {};
+      for child in OptionsPrivate.Private.TraverseLeafs(baseObject) do
+        local childId = child.id
+        local object = valueFromPath(child, path)
         if(object) then
           self.givenModel[childId] = object.model_path;
           self.givenZ[childId] = object.model_z;
           self.givenX[childId] = object.model_x;
           self.givenY[childId] = object.model_y;
+          self.givenRotation[childId] = object.rotation;
         end
       end
     else
@@ -289,6 +309,7 @@ local function ConstructModelPicker(frame)
       self.givenZ = object.model_z;
       self.givenX = object.model_x;
       self.givenY = object.model_y;
+      self.givenRotation = object.rotation;
     end
     frame.window = "model";
     frame:UpdateFrameVisible()
@@ -300,31 +321,33 @@ local function ConstructModelPicker(frame)
     WeakAuras.FillOptions()
   end
 
-  function group.CancelClose(self)
+  function group.CancelClose()
     local valueFromPath = OptionsPrivate.Private.ValueFromPath
     if(group.baseObject.controlledChildren) then
-      for index, childId in pairs(group.baseObject.controlledChildren) do
-        local childData = WeakAuras.GetData(childId);
-        local object = valueFromPath(childData, self.path)
+      for child in OptionsPrivate.Private.TraverseLeafs(group.baseObject) do
+        local childId = child.id
+        local object = valueFromPath(child, group.path)
         if(object) then
           object.model_path = group.givenModel[childId];
           object.model_z = group.givenZ[childId];
           object.model_x = group.givenX[childId];
           object.model_y = group.givenY[childId];
-          WeakAuras.Add(childData);
-          WeakAuras.UpdateThumbnail(childData);
+          object.rotation = group.givenRotation[childId];
+          WeakAuras.Add(child);
+          WeakAuras.UpdateThumbnail(child);
         end
       end
     else
-      local object = valueFromPath(self.baseObject, self.path)
+      local object = valueFromPath(group.baseObject, group.path)
 
       if(object) then
         object.model_path = group.givenModel
         object.model_z = group.givenZ
         object.model_x = group.givenX
         object.model_y = group.givenY
-        WeakAuras.Add(self.baseObject);
-        WeakAuras.UpdateThumbnail(self.baseObject);
+        object.rotation = group.givenRotation
+        WeakAuras.Add(group.baseObject);
+        WeakAuras.UpdateThumbnail(group.baseObject);
       end
     end
     group.Close();

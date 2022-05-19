@@ -1196,6 +1196,7 @@ Private.event_prototypes = {
       {
         name = "namerealm",
         display = L["Unit Name/Realm"],
+        desc = constants.nameRealmFilterDesc,
         type = "string",
         preamble = "local nameRealmChecker = WeakAuras.ParseNameCheck(%q)",
         test = "nameRealmChecker:Check(name, realm)",
@@ -2136,7 +2137,7 @@ Private.event_prototypes = {
       },
       {
         name = "spellSchool",
-        display = L["Spell School"],
+        display = WeakAuras.newFeatureString .. L["Spell School"],
         type = "select",
         values = "combatlog_spell_school_types_for_ui",
         test = "spellSchool == %d",
@@ -2767,7 +2768,7 @@ Private.event_prototypes = {
         conditionType = "select",
         conditionValues = "charges_change_condition_type";
         conditionTest = function(state, needle)
-          return state and state.show and WeakAuras.CheckChargesDirection(state.direction, needle)
+          return state and state.show and state.direction and WeakAuras.CheckChargesDirection(state.direction, needle)
         end,
       },
       {

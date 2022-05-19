@@ -814,7 +814,7 @@ local function BuildUidMap(data, children, type)
       end
       otherUidMap:SetUIDMatch(otherUid, otherUid) -- Uids are the same!
       self:SetUIDMatch(otherUid, otherUid)
-      self:IncProgress()
+      IncProgress()
       coroutine.yield()
     end
 
@@ -1193,24 +1193,52 @@ local function MatchInfo(data, children, target)
   return matchInfo
 end
 
-local function ListAuras(auras, uidMap)
+local function AddAuraList(container, uidMap, list, expandText)
+  local expand = AceGUI:Create("WeakAurasExpand")
+  local collapsed = true
+  local image = collapsed and "Interface\\AddOns\\WeakAuras\\Media\\Textures\\expand"
+                           or "Interface\\AddOns\\WeakAuras\\Media\\Textures\\collapse"
+  expand:SetImage(image)
+  expand:SetImageSize(10, 10)
+  expand:SetFontObject(GameFontHighlight)
+  expand:SetFullWidth(true)
+  expand:SetLabel(expandText)
+  container:AddChild(expand)
+
+  local auraLabelContainer = AceGUI:Create("WeakAurasInlineGroup")
+  auraLabelContainer:SetFullWidth(true)
+  auraLabelContainer:DoLayout()
+  container:AddChild(auraLabelContainer)
+
   local sortedNames = {}
-  for uid in pairs(auras) do
+  for uid in pairs(list) do
     tinsert(sortedNames, uidMap:GetIdFor(uid))
   end
   table.sort(sortedNames)
 
-  local result = sortedNames[1]
+  expand:SetCallback("OnClick", function()
+    collapsed = not collapsed
+    local image = collapsed and "Interface\\AddOns\\WeakAuras\\Media\\Textures\\expand"
+                           or "Interface\\AddOns\\WeakAuras\\Media\\Textures\\collapse"
+    expand:SetImage(image)
 
-  for i = 2, #sortedNames - 1, 1 do
-    result = result .. L[", "] .. sortedNames[i]
-  end
-
-  if #sortedNames > 1 then
-    result = result .. L[" and "] .. sortedNames[#sortedNames]
-  end
-
-  return result
+    if collapsed then
+      auraLabelContainer:ReleaseChildren()
+    else
+      local text
+      for _, name in ipairs(sortedNames) do
+        text = (text or "") .. "   • " .. name .. "\n"
+      end
+      if text then
+        local auraLabel = AceGUI:Create("Label")
+        auraLabel:SetText(text)
+        auraLabel:SetFullWidth(true)
+        auraLabelContainer:AddChild(auraLabel)
+      end
+    end
+    auraLabelContainer:DoLayout()
+    container:DoLayout()
+  end)
 end
 
 local methods = {
@@ -1261,22 +1289,18 @@ local methods = {
       else
         local oldRootId = matchInfo.oldUidMap:GetIdFor(matchInfo.oldUidMap:GetRootUID())
         local preferToUpdate = matchInfo.oldUidMap:GetRawData(matchInfo.oldUidMap:GetRootUID()).preferToUpdate
-        if children and #children > 0 then
+        if (data.regionType == "group" or data.regionType == "dynamicgroup") then
           local matchInfoText = L["This is a modified version of your group: |cff9900FF%s|r"]:format(oldRootId)
-          matchInfoText = matchInfoText .. "\n"
+          matchInfoResult:SetText(matchInfoText)
           if matchInfo.addedCount ~= 0 then
-            matchInfoText = matchInfoText .. L["   • %d |4aura:auras; added"]:format(matchInfo.addedCount)
-            matchInfoText = matchInfoText .. "\n"
+            AddAuraList(self, matchInfo.newUidMap, matchInfo.added, L["%d |4aura:auras; added"]:format(matchInfo.addedCount))
           end
           if matchInfo.modifiedCount ~= 0 then
-            matchInfoText = matchInfoText .. L["   • %d |4aura:auras; modified"]:format(matchInfo.modifiedCount)
-            matchInfoText = matchInfoText .. "\n"
+            AddAuraList(self, matchInfo.oldUidMap, matchInfo.diffs, L["%d |4aura:auras; modified"]:format(matchInfo.modifiedCount))
           end
           if matchInfo.deletedCount ~= 0 then
-            matchInfoText = matchInfoText .. L["   • %d |4aura:auras; deleted"]:format(matchInfo.deletedCount)
-            matchInfoText = matchInfoText .. "\n"
+            AddAuraList(self, matchInfo.oldUidMap, matchInfo.deleted, L["%d |4aura:auras; deleted"]:format(matchInfo.deletedCount))
           end
-          matchInfoResult:SetText(matchInfoText)
         else
           matchInfoResult:SetText(L["This is a modified version of your aura, |cff9900FF%s.|r"]:format(oldRootId))
         end
@@ -1417,64 +1441,12 @@ local methods = {
 
         button:SetCallback("OnValueChanged", function(_, _, value)
           self.userChoices.activeCategories[name] = value
-          self:UpdateSummary()
         end)
 
       end
     end
 
-    area:AddChild(AceGUI:Create("WeakAurasSpacer"))
-    local summaryHeader = AceGUI:Create("Label")
-    summaryHeader:SetText(L["Summary"])
-    summaryHeader:SetFontObject(GameFontNormalHuge)
-    summaryHeader:SetFullWidth(true)
-    area:AddChild(summaryHeader)
-
-    local summary = AceGUI:Create("Label")
-    summary:SetFontObject(GameFontHighlight)
-    summary:SetFullWidth(true)
-    area:AddChild(summary)
-    self.updateSummary= summary
-
     area:DoLayout()
-
-    self:UpdateSummary()
-  end,
-  UpdateSummary = function(self, mode)
-    local summaryText = ""
-    if self.userChoices.activeCategories.newchildren then
-      if self.matchInfo.addedCount < 10 then
-        summaryText = summaryText .. L["The following auras will be added: %s\n"]:
-                                     format(ListAuras(self.matchInfo.added, self.matchInfo.newUidMap))
-      else
-        summaryText = summaryText .. L["%s auras will be added.\n"]:format(self.matchInfo.addedCount)
-      end
-    end
-
-    if self.userChoices.activeCategories.oldchildren then
-      if self.matchInfo.deletedCount < 10 then
-        summaryText = summaryText .. L["The following auras will be removed: %s\n"]:
-                                     format(ListAuras(self.matchInfo.deleted, self.matchInfo.oldUidMap))
-      else
-        summaryText = summaryText .. L["%s auras will be removed.\n"]:format(self.matchInfo.deletedCount)
-      end
-    end
-
-    local updateCategories = ""
-    for _, category in ipairs(OptionsPrivate.Private.update_categories) do
-      if not category.skipInSummary and self.userChoices.activeCategories[category.name] then
-        if updateCategories == "" then
-          updateCategories = category.label
-        else
-          updateCategories = updateCategories .. ", " .. category.label
-        end
-      end
-    end
-
-    if updateCategories ~= "" then
-      summaryText = summaryText .. L["Updates in the following categories will be applied: %s\n"]:format(updateCategories)
-    end
-    self.updateSummary:SetText(summaryText)
   end,
   SelectMode = function(self, mode)
     if self.userChoices.mode == mode then

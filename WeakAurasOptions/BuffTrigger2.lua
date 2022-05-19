@@ -210,6 +210,14 @@ local function GetBuffTriggerOptions(data, triggernum)
     end
   end
 
+  local function HasMatchPerUnitCount(trigger)
+    if trigger.type == "aura2" and IsGroupTrigger(trigger)
+      and trigger.showClones and trigger.combinePerUnit and trigger.perUnitMode ~= "unaffected"
+    then
+      return trigger.useMatchPerUnit_count
+    end
+  end
+
   local ValidateNumeric = WeakAuras.ValidateNumeric
   local aura_options = {
     useUnit = {
@@ -731,7 +739,7 @@ local function GetBuffTriggerOptions(data, triggernum)
       type = "input",
       width = WeakAuras.normalWidth,
       name = L["Filter by Unit Name"],
-      desc = L["Filter formats: 'Name', 'Name-Realm', '-Realm'.\n\nSupports multiple entries, separated by commas\n"],
+      desc = L["Filter formats: 'Name', 'Name-Realm', '-Realm'.\n\nSupports multiple entries, separated by commas\nCan use \\ to escape -."],
       order = 68.5,
       hidden = function()
         return not (trigger.type == "aura2"
@@ -900,6 +908,45 @@ local function GetBuffTriggerOptions(data, triggernum)
       hidden = function() return not (trigger.type == "aura2" and HasMatchCount(trigger)) end,
       validate = ValidateNumeric,
       desc = L["Counts the number of matches over all units."]
+    },
+    useMatchPerUnit_count = {
+      type = "toggle",
+      width = WeakAuras.normalWidth,
+      name = L["Match Count per Unit"],
+      hidden = function() return not (trigger.type == "aura2" and IsGroupTrigger(trigger)
+        and trigger.showClones and trigger.combinePerUnit and trigger.perUnitMode ~= "unaffected") end,
+      order = 71.6
+    },
+    useMatchPerUnit_countSpace = {
+      type = "description",
+      name = "",
+      order = 71.7,
+      width = WeakAuras.normalWidth,
+      hidden = function()
+        if trigger.type == "aura2" and IsGroupTrigger(trigger)
+          and trigger.showClones and trigger.combinePerUnit and trigger.perUnitMode ~= "unaffected" then
+            return trigger.useMatchPerUnit_count
+        end
+        return true
+      end
+    },
+    matchPerUnit_countOperator = {
+      type = "select",
+      name = L["Operator"],
+      order = 71.8,
+      width = WeakAuras.halfWidth,
+      values = OptionsPrivate.Private.operator_types,
+      hidden = function() return not (HasMatchPerUnitCount(trigger)) end,
+      desc = L["Counts the number of matches per unit."]
+    },
+    matchPerUnit_count = {
+      type = "input",
+      name = L["Count"],
+      order = 71.9,
+      width = WeakAuras.halfWidth,
+      hidden = function() return not (HasMatchPerUnitCount(trigger)) end,
+      validate = ValidateNumeric,
+      desc = L["Counts the number of matches per unit."]
     },
     showClones = {
       type = "toggle",

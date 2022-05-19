@@ -701,7 +701,7 @@ local function LayoutDisplayButtons(msg)
   local loadedSorted, unloadedSorted = GetSortedOptionsLists();
 
   frame:SetLoadProgressVisible(true)
-  if WeakAurasCompanion then
+  if OptionsPrivate.Private.CompanionData.slugs then
     frame.buttonsScroll:AddChild(frame.pendingInstallButton);
     frame.buttonsScroll:AddChild(frame.pendingUpdateButton);
   end
@@ -982,9 +982,8 @@ function OptionsPrivate.SortDisplayButtons(filter, overrideReset, id)
   wipe(frame.buttonsScroll.children);
 
   local pendingInstallButtonShown = false
-  local CompanionData = WeakAurasCompanion and WeakAurasCompanion.WeakAuras or WeakAurasCompanion
-  if CompanionData and CompanionData.stash then
-    for id, companionData in pairs(CompanionData.stash) do
+  if OptionsPrivate.Private.CompanionData.stash then
+    for id, companionData in pairs(OptionsPrivate.Private.CompanionData.stash) do
       if not pendingInstallButtonShown then
         tinsert(frame.buttonsScroll.children, frame.pendingInstallButton)
         pendingInstallButtonShown = true
@@ -1023,7 +1022,7 @@ function OptionsPrivate.SortDisplayButtons(filter, overrideReset, id)
   end
 
   local pendingUpdateButtonShown = false
-  if CompanionData then
+  if OptionsPrivate.Private.CompanionData.slugs then
     local buttonsShown = {}
     for _, button in pairs(pendingUpdateButtons) do
       button:ResetLinkedAuras()
@@ -1036,7 +1035,7 @@ function OptionsPrivate.SortDisplayButtons(filter, overrideReset, id)
           version = 1
         end
         if slug and version then
-          local auraData = CompanionData.slugs and CompanionData.slugs[slug]
+          local auraData = OptionsPrivate.Private.CompanionData.slugs[slug]
           if auraData and auraData.wagoVersion then
             if tonumber(auraData.wagoVersion) > tonumber(version) then
               -- there is an update for this aura
@@ -1250,22 +1249,24 @@ function OptionsPrivate.PickDisplayMultipleShift(target)
         elseif (firstData.parent == nil and targetData.parent == nil) then
           -- top-level
           for index, button in ipairs(frame.buttonsScroll.children) do
-            local data = button.data;
-            -- 1st button
-            if (data and (data.id == target or data.id == first)) then
-              table.insert(batchSelection, data.id);
-              for i = index + 1, #frame.buttonsScroll.children do
-                local current = frame.buttonsScroll.children[i];
-                local currentData = current.data;
-                if currentData and not currentData.parent and not currentData.controlledChildren then
-                  table.insert(batchSelection, currentData.id);
-                  -- last button: stop selection
-                  if (currentData.id == target or currentData.id == first) then
-                    break;
+            if button.type == "WeakAurasDisplayButton" then
+              local data = button.data;
+              -- 1st button
+              if (data and (data.id == target or data.id == first)) then
+                table.insert(batchSelection, data.id);
+                for i = index + 1, #frame.buttonsScroll.children do
+                  local current = frame.buttonsScroll.children[i];
+                  local currentData = current.data;
+                  if currentData and not currentData.parent and not currentData.controlledChildren then
+                    table.insert(batchSelection, currentData.id);
+                    -- last button: stop selection
+                    if (currentData.id == target or currentData.id == first) then
+                      break;
+                    end
                   end
                 end
+                break;
               end
-              break;
             end
           end
         end

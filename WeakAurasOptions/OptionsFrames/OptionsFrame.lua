@@ -487,7 +487,7 @@ function OptionsPrivate.CreateFrame()
   addFooter(L["Find Auras"], [[Interface\AddOns\WeakAuras\Media\Textures\wagoupdate_logo.tga]], "https://wago.io",
             L["Browse Wago, the largest collection of auras."])
 
-  if not WeakAurasCompanion then
+  if not OptionsPrivate.Private.CompanionData.slugs then
     addFooter(L["Update Auras"], [[Interface\AddOns\WeakAuras\Media\Textures\wagoupdate_refresh.tga]], "https://weakauras.wtf",
             L["Keep your Wago imports up to date with the Companion App."])
   end
@@ -720,10 +720,8 @@ function OptionsPrivate.CreateFrame()
   -- override SetScroll to make children visible as needed
   local oldSetScroll = buttonsScroll.SetScroll
   buttonsScroll.SetScroll = function(self, value)
-    if self:GetScrollPos() ~= value then
-      oldSetScroll(self, value)
-      self.LayoutFunc(self.content, self.children, true)
-    end
+    oldSetScroll(self, value)
+    self.LayoutFunc(self.content, self.children, true)
   end
 
   function buttonsScroll:SetScrollPos(top, bottom)
@@ -1116,11 +1114,11 @@ function OptionsPrivate.CreateFrame()
 
   frame.ClearPicks = function(self, noHide)
     OptionsPrivate.Private.PauseAllDynamicGroups()
-    if type(frame.pickedDisplay) == "string" then
-      displayButtons[frame.pickedDisplay]:ClearPick(noHide)
-    else
-      for i, childId in pairs(tempGroup.controlledChildren) do
-        displayButtons[childId]:ClearPick(noHide)
+    for id, button in pairs(displayButtons) do
+      button:ClearPick(true)
+      if not noHide then
+        button:PriorityHide(1)
+        button:SetVisibilityDirectly(0)
       end
     end
 

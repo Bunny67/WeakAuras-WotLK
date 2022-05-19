@@ -1,6 +1,6 @@
 local AddonName, Private = ...
 
-local internalVersion = 51
+local internalVersion = 52
 
 -- Lua APIs
 local insert = table.insert
@@ -746,14 +746,41 @@ local function LoadCustomActionFunctions(data)
   end
 end
 
-function WeakAuras.CountWagoUpdates()
+Private.CompanionData = {}
+-- use this function to not overwrite data from other companion compatible addons
+-- when using this function, do not name your global data table "WeakAurasCompanion"
+function WeakAuras.AddCompanionData(data)
+  WeakAuras.DeepMixin(Private.CompanionData, data)
+end
+
+-- add data from versions of companion compatible addon that does not use WeakAuras.AddCompanionData yet
+local function AddLegacyCompanionData()
   local CompanionData = WeakAurasCompanion and WeakAurasCompanion.WeakAuras or WeakAurasCompanion
-  if not (CompanionData and CompanionData.slugs) then
+  if CompanionData then
+    WeakAuras.AddCompanionData(CompanionData)
+  end
+end
+
+function Private.PostAddCompanion()
+  -- add data from older verion of companion addons
+  AddLegacyCompanionData()
+  -- nag if updates
+  local count = Private.CountWagoUpdates()
+  if count and count > 0 then
+    WeakAuras.prettyPrint(L["There are %i updates to your auras ready to be installed!"]:format(count))
+  end
+  -- nag if new installs
+  if Private.CompanionData.stash and next(Private.CompanionData.stash) then
+    WeakAuras.prettyPrint(L["You have new auras ready to be installed!"])
+  end
+end
+
+function Private.CountWagoUpdates()
+  if not (Private.CompanionData.slugs) then
     return 0
   end
-  local WeakAurasSaved = WeakAurasSaved
   local updatedSlugs, updatedSlugsCount = {}, 0
-  for id, aura in pairs(WeakAurasSaved.displays) do
+  for id, aura in pairs(db.displays) do
     if not aura.ignoreWagoUpdate and aura.url and aura.url ~= "" then
       local slug, version = aura.url:match("wago.io/([^/]+)/([0-9]+)")
       if not slug and not version then
@@ -761,7 +788,7 @@ function WeakAuras.CountWagoUpdates()
         version = 1
       end
       if slug and version then
-        local wago = CompanionData.slugs and CompanionData.slugs[slug]
+        local wago = Private.CompanionData.slugs[slug]
         if wago and wago.wagoVersion and tonumber(wago.wagoVersion) > tonumber(version) then
           if not updatedSlugs[slug] then
             updatedSlugs[slug] = true
@@ -779,8 +806,8 @@ local function tooltip_draw()
   local tooltip = GameTooltip;
   tooltip:ClearLines();
   tooltip:AddDoubleLine("WeakAuras", versionString);
-  if WeakAurasCompanion then
-    local count = WeakAuras.CountWagoUpdates()
+  if Private.CompanionData.slugs then
+    local count = Private.CountWagoUpdates()
     if count > 0 then
       tooltip:AddLine(" ");
       tooltip:AddLine((L["There are %i updates to your auras ready to be installed!"]):format(count));
@@ -1058,6 +1085,7 @@ loadedFrame:SetScript("OnEvent", function(self, event, addon)
           timer:ScheduleTimer(function() squelch_actions = false; end, remainingSquelch); -- No sounds while loading
         end
       end
+      Private.PostAddCompanion()
     elseif(event == "PLAYER_REGEN_ENABLED") then
       callback = function()
         if (queueshowooc) then
@@ -2253,6 +2281,33 @@ local oldDataStub2 = {
   conditions = {},
 }
 
+function Private.UpdateSoundIcon(data)
+  local function anySoundCondition()
+    if data.conditions then
+      for _, condition in ipairs(data.conditions) do
+        for changeIndex, change in ipairs(condition.changes) do
+          if change.property == "sound" then
+            return true
+          end
+        end
+      end
+    end
+  end
+
+  if data.actions.start.do_sound or data.actions.finish.do_sound then
+    Private.AuraWarnings.UpdateWarning(data.uid, "sound_action", "sound", L["This aura plays a sound via an action."])
+  else
+    Private.AuraWarnings.UpdateWarning(data.uid, "sound_action")
+  end
+
+  if anySoundCondition() then
+    Private.AuraWarnings.UpdateWarning(data.uid, "sound_condition", "sound", L["This aura plays a sound via a condition."])
+  else
+    Private.AuraWarnings.UpdateWarning(data.uid, "sound_condition")
+  end
+
+end
+
 function WeakAuras.PreAdd(data)
   -- Readd what Compress removed before version 8
   if (not data.internalVersion or data.internalVersion < 7) then
@@ -2312,7 +2367,6 @@ local function pAdd(data, simpleChange)
   if UIDtoID[data.uid] and UIDtoID[data.uid] ~= id then
     print("Improper? arguments to WeakAuras.Add - uid is assigned to a id. Uid:", data.uid, "assigned too:", UIDtoID[data.uid], "assigning now to", data.id)
   end
-
 
   local otherID = UIDtoID[data.uid]
   if not otherID then
@@ -2428,6 +2482,8 @@ local function pAdd(data, simpleChange)
         Private.ScanForLoads({[id] = true});
       end
     end
+
+    Private.UpdateSoundIcon(data)
   end
 end
 
@@ -2610,10 +2666,14 @@ function Private.ReleaseClone(id, cloneId, regionType)
   end
   local region = clones[id][cloneId];
   clones[id][cloneId] = nil;
-  clonePool[regionType][#clonePool[regionType] + 1] = region;
+  if region:IsProtected() then
+    WeakAuras.prettyPrint(L["Error '%s' created a secure clone. We advise deleting the aura. For more information:\nhttps://github.com/WeakAuras/WeakAuras2/wiki/Protected-Frames"]:format(id))
+  else
+    clonePool[regionType][#clonePool[regionType] + 1] = region;
+  end
 end
 
-function Private.HandleChatAction(message_type, message, message_dest, message_channel, r, g, b, region, customFunc, when, formatters)
+function Private.HandleChatAction(message_type, message, message_dest, message_dest_isunit, message_channel, r, g, b, region, customFunc, when, formatters)
   local useHiddenStates = when == "finish"
   if (message:find('%%')) then
     message = Private.ReplacePlaceHolders(message, region, customFunc, useHiddenStates, formatters);
@@ -2628,11 +2688,13 @@ function Private.HandleChatAction(message_type, message, message_dest, message_c
     end
   elseif(message_type == "WHISPER") then
     if(message_dest) then
-      if(message_dest == "target" or message_dest == "'target'" or message_dest == "\"target\"" or message_dest == "%t" or message_dest == "'%t'" or message_dest == "\"%t\"") then
-        pcall(function() SendChatMessage(message, "WHISPER", nil, UnitName("target")) end);
-      else
-        pcall(function() SendChatMessage(message, "WHISPER", nil, message_dest) end);
+      if (message_dest:find('%%')) then
+        message_dest = Private.ReplacePlaceHolders(message_dest, region, customFunc, useHiddenStates, formatters);
       end
+      if message_dest_isunit == true then
+        message_dest = UnitName(message_dest)
+      end
+      pcall(function() SendChatMessage(message, "WHISPER", nil, message_dest) end);
     end
   elseif(message_type == "SMARTRAID") then
     if UnitInBattleground("player") then
@@ -2852,7 +2914,7 @@ function Private.PerformActions(data, when, region)
 
   if(actions.do_message and actions.message_type and actions.message) then
     local customFunc = Private.customActionsFunctions[data.id][when .. "_message"];
-    Private.HandleChatAction(actions.message_type, actions.message, actions.message_dest, actions.message_channel, actions.r, actions.g, actions.b, region, customFunc, when, formatters);
+    Private.HandleChatAction(actions.message_type, actions.message, actions.message_dest, actions.message_dest_isunit, actions.message_channel, actions.r, actions.g, actions.b, region, customFunc, when, formatters);
   end
 
   if(actions.do_sound and actions.sound) then

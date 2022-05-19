@@ -33,27 +33,32 @@ local function UpdateWarning(uid, key, severity, message, printOnConsole)
       severity = severity,
       message = message
     }
+    Private.callbacks:Fire("AuraWarningsUpdated", uid)
   else
-    warnings[uid][key] = nil
+    if warnings[uid][key] then
+      warnings[uid][key] = nil
+      Private.callbacks:Fire("AuraWarningsUpdated", uid)
+    end
   end
-
-  Private.callbacks:Fire("AuraWarningsUpdated", uid)
 end
 
 local severityLevel = {
   info = 0,
-  warning = 1,
-  error = 2
+  sound = 1,
+  warning = 2,
+  error = 3
 }
 
 local icons = {
   info = [[Interface/friendsframe/informationicon.blp]],
+  sound = [[chatframe-button-icon-voicechat]],
   warning = [[Interface/buttons/adventureguidemicrobuttonalert.blp]],
   error =  [[Interface/DialogFrame/UI-Dialog-Icon-AlertNew]]
 }
 
 local titles = {
   info = L["Information"],
+  sound = L["Sound"],
   warning = L["Warning"],
   error = L["Error"]
 }
@@ -103,6 +108,7 @@ local function FormatWarnings(uid)
   local result = ""
   result = AddMessages(result, messagePerSeverity["error"], icons["error"], mixedSeverity)
   result = AddMessages(result, messagePerSeverity["warning"], icons["warning"], mixedSeverity)
+  result = AddMessages(result, messagePerSeverity["sound"], icons["sound"], mixedSeverity)
   result = AddMessages(result, messagePerSeverity["info"], icons["info"], mixedSeverity)
   return icons[maxSeverity], titles[maxSeverity], result
 end

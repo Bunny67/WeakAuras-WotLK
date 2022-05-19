@@ -481,7 +481,11 @@ local methods = {
           if (OptionsPrivate.IsDisplayPicked(self.data.id)) then
             OptionsPrivate.ClearPicks();
           else
-            WeakAuras.PickDisplay(self.data.id);
+            if self.data.controlledChildren then
+              WeakAuras.PickDisplay(self.data.id, "group")
+            else
+              WeakAuras.PickDisplay(self.data.id);
+            end
           end
           self:ReloadTooltip();
         end
@@ -1489,6 +1493,12 @@ local methods = {
       self:UpdateViewTexture()
 
       self:RecheckParentVisibility()
+    end
+  end,
+  ["SetVisibilityDirectly"] = function(self, visibility)
+    if self.data.parent and visibility ~= self.view.visibility then
+      self.view.visibility = visibility
+      self:UpdateViewTexture()
     end
   end,
   ["UpdateViewTexture"] = function(self)

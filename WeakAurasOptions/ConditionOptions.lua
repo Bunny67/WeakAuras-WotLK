@@ -700,18 +700,16 @@ local function addControlsForChange(args, order, data, conditionVariable, totalA
       return false;
     end
 
-    if WeakAuras.IsRetail() then
-      args["condition" .. i .. "value" .. j .. "message type warning"] = {
-        type = "description",
-        width = WeakAuras.doubleWidth,
-        name = L["Note: Automated Messages to SAY and YELL are blocked outside of Instances."],
-        order = order,
-        hidden = function()
-          return not (anyMessageType("SAY") or anyMessageType("YELL") or anyMessageType("SMARTRAID"));
-        end
-      }
-      order = order + 1;
-    end
+    args["condition" .. i .. "value" .. j .. "message type warning"] = {
+      type = "description",
+      width = WeakAuras.doubleWidth,
+      name = L["Note: Automated Messages to SAY and YELL are blocked outside of Instances."],
+      order = order,
+      hidden = function()
+        return not (anyMessageType("SAY") or anyMessageType("YELL") or anyMessageType("SMARTRAID"));
+      end
+    }
+    order = order + 1;
 
     args["condition" .. i .. "value" .. j .. "_indent"] = {
       type = "description",

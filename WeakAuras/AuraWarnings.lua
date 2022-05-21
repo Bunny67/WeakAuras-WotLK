@@ -51,8 +51,8 @@ local severityLevel = {
 
 local icons = {
   info = [[Interface/friendsframe/informationicon.blp]],
-  sound = [[chatframe-button-icon-voicechat]],
-  warning = [[Interface/buttons/adventureguidemicrobuttonalert.blp]],
+  sound = "Interface\\AddOns\\WeakAuras\\Media\\Textures\\voicechat",
+  warning = "Interface\\AddOns\\WeakAuras\\Media\\Textures\\alert",
   error =  [[Interface/DialogFrame/UI-Dialog-Icon-AlertNew]]
 }
 

@@ -1100,7 +1100,7 @@ end
 
 local function markForTriggerInfo(triggerInfo, unit)
   if triggerInfo.fetchRaidMark then
-    local rt = GetRaidTargetIndex(unit)
+    local rt = unit and GetRaidTargetIndex(unit)
     if rt then
       return "{rt" .. GetRaidTargetIndex(unit) .. "}"
     end

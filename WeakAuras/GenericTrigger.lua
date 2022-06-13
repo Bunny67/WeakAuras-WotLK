@@ -3143,7 +3143,7 @@ do
   local function findNewPlate(...)
     for i = lastChildern + 1, numChildren do
       local frame = select(i, ...)
-      local region, _, _, _, _, _, nameText = frame:GetRegions()
+      local region, _, _, nameText = frame:GetRegions()
       if (frame.UnitFrame or (region and region:GetObjectType() == "Texture" and region:GetTexture() == OVERLAY)) and not nameplateList[frame] then
         frame.nameText = nameText
         frame:HookScript("OnShow", nameplateShow)

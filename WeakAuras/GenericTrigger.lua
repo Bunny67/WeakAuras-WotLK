@@ -211,14 +211,18 @@ function ConstructTest(trigger, arg)
       test = "("..arg.test:format(tostring(trigger[name]) or "")..")";
     elseif(arg.type == "longstring" and trigger[name.."_operator"]) then
       test = TestForLongString(trigger, arg);
-    elseif (arg.type == "string" or arg.type == "select" or arg.type == "item") then
+    elseif (arg.type == "string" or arg.type == "select" or arg.type == "item") and not (type(trigger[name]) == "table") then
       test = "(".. name .." and "..name.."==" ..(number or "\""..(trigger[name] or "").."\"")..")";
     else
-      if(type(trigger[name]) == "table") then
-        trigger[name] = "error";
-      end
-      -- number
-      test = "(".. name .." and "..name..(trigger[name.."_operator"] or "==")..(number or "\""..(trigger[name] or "").."\"")..")";
+      -- if (type(trigger[name]) == "table") or type(trigger[name.."_operator"]) == "table" then
+        -- 3.4.0 auras fix
+        if (type(trigger[name]) == "table") then
+          trigger[name] = trigger[name][1] or "error";
+        end
+        if (type(trigger[name.."_operator"]) == "table") then
+          trigger[name.."_operator"] = trigger[name.."_operator"][1] or "error";
+        end
+      test = "(".. name .." and "..name..(trigger[name.."_operator"] or "==")..(number or ("\""..(trigger[name])) or ("".."\""))..")";
     end
   end
 

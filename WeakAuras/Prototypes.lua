@@ -14,6 +14,7 @@ local GetSpellInfo, GetItemInfo, GetItemCount, GetItemIcon = GetSpellInfo, GetIt
 local GetShapeshiftFormInfo, GetShapeshiftForm = GetShapeshiftFormInfo, GetShapeshiftForm
 local GetRuneCooldown, UnitCastingInfo, UnitChannelInfo = GetRuneCooldown, UnitCastingInfo, UnitChannelInfo
 local UnitDetailedThreatSituation, UnitThreatSituation = UnitDetailedThreatSituation, UnitThreatSituation
+local MAX_NUM_TALENTS = MAX_NUM_TALENTS or 40
 
 local WeakAuras = WeakAuras
 local L = WeakAuras.L
@@ -733,19 +734,8 @@ local function valuesForTalentFunction(trigger)
     end
 
     -- If a single specific class was found, load the specific list for it
-    if single_class and Private.talents_ids[single_class] then
-      if not Private.talent_types_specific[single_class] then
-        Private.talent_types_specific[single_class] = {}
-        for tab = 1, #Private.talents_ids[single_class] do
-          for num_talent = 1, #Private.talents_ids[single_class][tab] do
-            local spellName, _, spellIcon = GetSpellInfo(Private.talents_ids[single_class][tab][num_talent])
-            local talentId = (tab - 1) * MAX_NUM_TALENTS + num_talent
-            if spellName and spellIcon then
-              Private.talent_types_specific[single_class][talentId] = ("|T%s:24|t %s"):format(spellIcon, spellName)
-            end
-          end
-        end
-      end
+    if(single_class and Private.talent_types_specific[single_class]
+      and Private.talent_types_specific[single_class]) then
       return Private.talent_types_specific[single_class];
     else
       return Private.talent_types;

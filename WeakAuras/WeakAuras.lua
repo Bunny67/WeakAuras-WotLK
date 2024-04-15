@@ -1014,6 +1014,7 @@ end
 local frame = CreateFrame("FRAME", "WeakAurasFrame", UIParent);
 WeakAuras.frames["WeakAuras Main Frame"] = frame;
 frame:SetAllPoints(UIParent);
+frame:SetFrameStrata("BACKGROUND");
 
 local loadedFrame = CreateFrame("FRAME");
 WeakAuras.frames["Addon Initialization Handler"] = loadedFrame;

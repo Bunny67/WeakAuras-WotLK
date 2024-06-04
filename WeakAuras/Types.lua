@@ -2156,6 +2156,7 @@ end)
 
 -- register options font
 LSM:Register("font", "Fira Mono Medium", "Interface\\Addons\\WeakAuras\\Media\\Fonts\\FiraMono-Medium.ttf", LSM.LOCALE_BIT_western + LSM.LOCALE_BIT_ruRU)
+LSM:Register("font", "Expressway", [[Interface\AddOns\WeakAuras\Media\Fonts\Expressway.ttf]], LSM.LOCALE_BIT_ruRU + LSM.LOCALE_BIT_western)
 
 -- register plain white border
 LSM:Register("border", "Square Full White", [[Interface\AddOns\WeakAuras\Media\Textures\Square_FullWhite.tga]])

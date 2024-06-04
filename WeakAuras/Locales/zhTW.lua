@@ -1072,4 +1072,5 @@ L["Zone ID(s)"] = "區域 ID"
 L["Zone Name"] = "區域名稱"
 L["Zoom"] = "縮放"
 L["Zul'Gurub"] = "祖爾格拉布"
-
+--[[Translation missing --]]
+L["Subzone Name"] = "Subzone Name"

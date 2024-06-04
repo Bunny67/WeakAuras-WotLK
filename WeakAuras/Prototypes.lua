@@ -924,6 +924,15 @@ Private.load_prototype = {
 	  end
     },
     {
+      name = "subzone",
+      display = L["Subzone Name"],
+      type = "string",
+      init = "arg",
+      test = "WeakAuras.CheckString(%q, subzone)",
+      events = { "ZONE_CHANGED", "ZONE_CHANGED_INDOORS", "ZONE_CHANGED_NEW_AREA", "VEHICLE_UPDATE" },
+      desc = L["Supports multiple entries, separated by commas"]
+    },
+    {
       name = "size",
       display = L["Instance Size Type"],
       type = "multiselect",

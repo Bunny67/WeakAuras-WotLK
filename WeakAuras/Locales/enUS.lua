@@ -1059,7 +1059,7 @@ L["Zone ID(s)"] = "Zone ID(s)"
 L["Zone Name"] = "Zone Name"
 L["Zoom"] = "Zoom"
 L["Zul'Gurub"] = "Zul'Gurub"
-
+L["Subzone Name"] = "Subzone Name"
 
 -- Make missing translations available
 setmetatable(WeakAuras.L, {__index = function(self, key)

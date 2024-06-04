@@ -1179,4 +1179,5 @@ L["Zone ID(s)"] = "ID игровой зоны"
 L["Zone Name"] = "Название игровой зоны"
 L["Zoom"] = "Масштаб"
 L["Zul'Gurub"] = "Зул'Гуруб"
-
+--[[Translation missing --]]
+L["Subzone Name"] = "Subzone Name"
